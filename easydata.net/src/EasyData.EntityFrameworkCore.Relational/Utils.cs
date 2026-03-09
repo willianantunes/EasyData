@@ -43,11 +43,10 @@ namespace EasyData.EntityFrameworkCore
         {
             var result = entityType.GetSchema();
 
-#if NET
             if (result == null) {
                 result = entityType.GetViewSchema();
             }
-#endif
+
             return result;
         }
 
@@ -60,11 +59,10 @@ namespace EasyData.EntityFrameworkCore
         {
             var result = entityType.GetTableName();
 
-#if NET
             if (result == null) {
                 result = entityType.GetViewName();
             }
-#endif
+
             return result;
         }
 
@@ -75,7 +73,6 @@ namespace EasyData.EntityFrameworkCore
         /// <returns>System.String.</returns>
         public static string GetDbColumnName(this IProperty property)
         {
-#if NET
             var entityType = property.DeclaringType as IEntityType;
             if (entityType == null) return null;
             var tableName = entityType.GetDbTableName();
@@ -89,9 +86,6 @@ namespace EasyData.EntityFrameworkCore
             }
 
             return result;
-#else
-            return property.GetColumnName();
-#endif
         }
     }
 }

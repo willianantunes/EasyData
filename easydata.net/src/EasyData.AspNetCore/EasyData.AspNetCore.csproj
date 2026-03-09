@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
-		<CheckEolTargetFramework>false</CheckEolTargetFramework>		
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>EasyData.AspNetCore</RootNamespace>
     <Description>ASP.NET Core classes for EasyData library.</Description>
     <DocumentationFile>EasyData.AspNetCore.xml</DocumentationFile>
@@ -10,11 +9,7 @@
     <PackageTags>database crud middleware filtering</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
-    <Compile Remove="Middleware\EasyDataEndpointRouteBuilderExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0'">
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   

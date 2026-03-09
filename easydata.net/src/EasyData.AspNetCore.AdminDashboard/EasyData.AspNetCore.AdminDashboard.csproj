@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>EasyData.AspNetCore.AdminDashboard</RootNamespace>
+    <Description>Admin dashboard for EasyData library. Provides a Django-admin-style CRUD interface for EF Core DbContext models.</Description>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyData.Core\EasyData.Core.csproj" />
+    <ProjectReference Include="..\EasyData.AspNetCore\EasyData.AspNetCore.csproj" />
+    <ProjectReference Include="..\EasyData.EntityFrameworkCore.Relational\EasyData.EntityFrameworkCore.Relational.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\**\*" />
+  </ItemGroup>
+
+</Project>

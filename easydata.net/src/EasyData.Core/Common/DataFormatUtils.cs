@@ -73,7 +73,6 @@ namespace EasyData
 
                 return ts.ToString("c", CultureInfo.InvariantCulture);
             }
-#if NET6_0_OR_GREATER
             else if (val is DateOnly @do) {
                 if (!string.IsNullOrEmpty(displayFormat)) {
                     return string.Format(culture, displayFormat, val);
@@ -88,7 +87,6 @@ namespace EasyData
 
                 return to.ToString(culture.DateTimeFormat.ShortTimePattern, CultureInfo.InvariantCulture);
             }
-#endif
             else if (val is float || val is double || val is int || val is decimal) {
                 if (!string.IsNullOrEmpty(displayFormat))
                     return string.Format(culture, displayFormat, val);

@@ -141,12 +141,10 @@ namespace EasyData
             if (systemType == typeof(string))
                 return DataType.String;
 
-#if NET6_0
             if (systemType == typeof(DateOnly) || systemType == typeof(DateOnly?))
                 return DataType.Date;
             if (systemType == typeof(TimeOnly) || systemType == typeof(TimeOnly?))
                 return DataType.Time;
-#endif
 
             return DataType.Unknown;
         }

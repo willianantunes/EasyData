@@ -1,326 +1,134 @@
-# EasyData
+# EasyData Admin Dashboard
 
-| Build .NET | Build JS | Nuget | Npm |
-|---|---|---|---|
-| [![Build status](https://github.com/KorzhCom/EasyData/workflows/EasyData.NET%20Pipeline/badge.svg?branch=master&event=push)](https://github.com/KorzhCom/EasyData/actions?query=workflow%3A%22EasyData.NET+Pipeline%22+event%3Apush+branch%3Amaster)  | [![Build status](https://github.com/KorzhCom/EasyData/workflows/EasyData.JS%20Pipeline/badge.svg?branch=master&event=push)](https://github.com/KorzhCom/EasyData/actions?query=workflow%3A%22EasyData.JS+Pipeline%22+event%3Apush+branch%3Amaster) | [![NuGet](https://img.shields.io/nuget/v/EasyData.AspNetCore.svg)](https://www.nuget.org/packages/EasyData.AspNetCore) | [![Npm](https://img.shields.io/npm/v/@easydata/crud/latest)](https://www.npmjs.com/package/@easydata/crud) |
+A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Automatically generates a full admin interface from your `DbContext` — list views with pagination/search/sorting, create/edit forms with FK dropdowns, and delete confirmations.
 
-## The easiest way to do CRUD in ASP.NET Core projects!
+## What you get
 
-EasyData library lets you quickly build a UI for CRUD (Create, Read, Update, Delete) operations in any ASP.NET Core application that uses Entity Framework Core.
+- **Dashboard home** at `/admin/` listing all entities with Add/Change links
+- **List view** with search, column sorting, and pagination
+- **Create/Edit forms** that auto-detect fields, hide auto-generated properties (`Id`, `CreatedAt`, `UpdatedAt`), and render FK relationships as dropdowns
+- **Delete confirmation** page
+- **Sidebar** with model navigation and filtering
+- **Zero client-side framework dependency** — all HTML is server-rendered
 
-Basically, EasyData does the following two things:
- 
-* First, it “reads” your DbContext object in order to obtain the necessary metadata.
+## Quick start
 
-* Then, based on that metadata, it provides an API endpoint for all CRUD operations and renders the UI (pages and dialogs) that communicate with the API endpoint for data-management tasks.
+### 1. Install packages
 
-The real advantage here is that whenever you change something in your DbContext (add a new DbSet or a property in the model class), the UI automatically adjusts to those changes.
+Add a reference to the `EasyData.AspNetCore.AdminDashboard` project (or NuGet package when published).
 
-So, as you can see, EasyData can be very useful for quick prototyping of any database-related ASP.NET Core project. In just minutes you'll have a working web app with all CRUD forms for your database.
+### 2. Register services
 
-## Quick demo
-
-![EasyData quick demo](https://cdn.korzh.com/img/easydata-demo01.gif "EasyData quick demo")
-
-
-## Getting started
-
-First of all, to test EasyData you can open and run one of the [sample projects](https://github.com/korzh/EasyData/tree/master/samples) available in this repository. 
-
-Installing EasyData to your own project takes the following 3 simple steps:
-
-### 1. Install EasyData NuGet packages
-
-* EasyData.AspNetCore
-* EasyData.EntityFrameworkCore.Relational
-
-### 2. Add EasyData middleware 
-
-Here is an example for .NET 6 app with "Program.cs based" approach:
-
-```c#
-//Program.cs file
-using EasyData.Services;
-.    .    .    .    .
-
-var app = builder.Build();
-
-.    .    .    .    .
-
-app.MapEasyData(options => {
-    options.UseDbContext<AppDbContext>();
-});
-
-endpoints.MapRazorPages();
-
+```csharp
+// Program.cs or Startup.ConfigureServices
+services.AddEasyDataAdminDashboard<AppDbContext>();
 ```
 
-And here is an example for the old "Startup.cs based" way:
+### 3. Add the middleware
 
-
-```c#
-//Startup.cs file
-using EasyData.Services;
-.    .    .    .    .
-
-public class Startup 
+```csharp
+// Program.cs or Startup.Configure
+app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
 {
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
+    DashboardTitle = "My Admin",
+});
+```
+
+That's it. Navigate to `/admin/` and you have a working admin panel.
+
+## Configuration
+
+### Authorization
+
+```csharp
+using EasyData.AspNetCore.AdminDashboard.Authorization;
+
+// Allow all (development only)
+new AllowAllAdminDashboardAuthorizationFilter()
+
+// Restrict to localhost
+new LocalRequestsOnlyAuthorizationFilter()
+
+// Custom: implement IAdminDashboardAuthorizationFilter
+```
+
+### Options
+
+| Option | Default | Description |
+|---|---|---|
+| `DashboardTitle` | `"Admin Dashboard"` | Title shown in the header |
+| `AppPath` | `"/"` | Base path of your application |
+| `DefaultRecordsPerPage` | `25` | Pagination page size |
+| `IsReadOnly` | `false` | Disable all write operations |
+| `EntityGroups` | `null` | Group entities in the sidebar (dictionary of group name to entity names) |
+
+### Auto-generated fields
+
+Fields configured with `ValueGeneratedOnAdd` or `HasDefaultValueSql` in EF Core are automatically:
+- Hidden from create forms
+- Shown as read-only text on edit forms
+
+Example for timestamp fields:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+        .Where(t => typeof(StandardEntity).IsAssignableFrom(t.ClrType)))
     {
-        .    .    .    .
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapEasyData(options => {
-                options.UseDbContext<AppDbContext>();
-            });
+        modelBuilder.Entity(entityType.ClrType)
+            .Property(nameof(StandardEntity.CreatedAt))
+            .HasDefaultValueSql("GETUTCDATE()");
 
-            endpoints.MapRazorPages();
-        });
+        modelBuilder.Entity(entityType.ClrType)
+            .Property(nameof(StandardEntity.UpdatedAt))
+            .HasDefaultValueSql("GETUTCDATE()");
     }
-}       
-
-```
-
-In the middleware options we specify the type of the DbContext object that will be used as the source of the metadata.
-
-### 3. Set up a catch-all page for all CRUD operations
-
-If you're using Razor Pages, add a new page (for example `EasyData.chstml`). If it’s MVC, you'll need a controller and a view.
-This page will "catch" all URLs that begin with a certain prefix (`/easydata` by default but it's configurable). So, we use a special catch-all parameter in the route definition (`"/easydata/{**entity}"`).
-
-We also add EasyData styles and the script file (`easydata.min.js`), which renders the data-management UI and handles all CRUD operations on the client-side.
-
-```razor
-@page "/easydata/{**entity}"
-@{
-    ViewData["Title"] = "EasyData";
-}
-
-<link rel="stylesheet" href="https://cdn.korzh.com/ed/1.4.8/easydata.min.css" />
-
-<div id="EasyDataContainer"></div>
-
-@section Scripts {
-    <script src="https://cdn.korzh.com/ed/1.4.8/easydata.min.js" type="text/javascript"></script>
-    <script>
-        window.addEventListener('load', function () {
-            new easydata.crud.EasyDataViewDispatcher().run()
-        });
-    </script>
 }
 ```
 
-That’s it. Now you can run your web app, open the `/easydata` URL and enjoy CRUD functionality.
+## Sample project
 
+A working sample is at `./sample-project`. To run it:
 
-## Main features
+```bash
+# Start SQL Server (required)
+docker compose up -d db
 
-### 1.  Declarative approach
-
-All aspects of your CRUD UI are controlled by the data structure defined in DbContext. If you need to tune it up (for example, to hide a table or some fields, or, perhaps, to change their names), there are special attributes for your model classes and properties with which to do that.
-
-### 2. Automatic UI rendering
-
-All data forms and dialogs are rendered automatically by EasyData.JS script according to the metadata acquired from the DbContext and your annotations on model classes and their properties.
-
-The script can be used with any framework or library used on the client-side, such as Razor Pages, MVC Views, Angular, React, Vue, etc.
-
-### 3. Ad hoc data filtering
-
-In the data view mode, EasyData provides a data-filtering functionality, which works out of the box and requires no additional setup or coding.
-
-## Advanced tasks
-
-Sometimes you may need to make some adjustments to the default behavior of EasyData. Here we listed the solutions for the most common problems.
-
-### Filtering entities (tables) and their attributes (fields)
-
-By default, EasyData works with all entities (tables) defined in your DbContext. As well as with all fields in those tables. 
-However, very often you need to hide some tables or fields from your end-users.
-You can do it using `MetaEntity` and `MetaEntityAttr` annotations that can be specified for model classes and properties correspondingly. 
-
-Here is an example of how to hide the table defined by the `Customer` model class:
-
-```c#
-[MetaEntity(false)]
-public class Customer
-{
- .   .   .   .
-}
+# Run the app
+cd sample-project/src
+dotnet run -- api
 ```
 
-The same approach (but with `MetaEntityAttr` attribute now) we can use to hide some property (field):
+Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem).
 
-```c#
-public class User
-{
-    [MetaEntityAttr(false)]
-    public string PasswordHash { get; set; }
-}
+## Running tests
+
+```bash
+# Start SQL Server
+docker compose up -d db
+
+# Run all tests (159 total)
+dotnet test EasyData.Dev.sln
 ```
 
-Both these annotations also have other properties that allow you to adjust the way your tables and fields are represented in the CRUD UI.
+## Project structure
 
-For example, the following line:
-
-```c#
-[MetaEntity(DisplayName = "Client", DisplayNamePlural = "Clients", Description = "List of clients")]
-public class Customer
-{
- .   .   .   .
-}
 ```
-will set the display names and the description for the `Customers` table.
+easydata.net/src/
+  EasyData.Core/                              # Core metadata model
+  EasyData.AspNetCore/                        # ASP.NET Core integration
+  EasyData.EntityFrameworkCore.Relational/    # EF Core metadata loader
+  EasyData.AspNetCore.AdminDashboard/         # Admin dashboard (this package)
+    Authorization/                            # Auth filters
+    Configuration/                            # DI extensions and options
+    Dispatchers/                              # View rendering and API handlers
+    Middleware/                               # Request pipeline
+    Routing/                                  # URL dispatch
+    Services/                                 # Metadata and entity grouping
+    ViewModels/                               # Form and list models
+    wwwroot/                                  # Embedded CSS/JS
 
-
-Here is another example, now for a property in some model class:
-
-```c#
-public class BlogPost 
-{
-    [MetaEntityAttr(DisplayName = "Created", Editable = false, ShowOnView = true, ShowInLookup = false)]
-    public DateTime DateCreated { get; set;}
-    .    .    .    .    .
-}
+sample-project/                               # Working example app
 ```
-Here we change the default display name for this field, make it non-editable (since this value is set on record creation and it can’t be changed later), and tell EasyData to show this field in the main view (with data table) but hide it in lookup dialogs.
-
-`MetaEntityAttr` annotation also has `ShowOnCreate` and `ShowOnEdit` properties that allow you to show/hide the field from the "Create Record" or "Edit Record" dialog, respectively.
-
-
-### Fluent API
-
-Annotations on the model classes and properties can make your core code dependant on implementation. It's not a good approach especially considering Clean Architecture principles. To avoid this situation you can use our Fluent API to establish filters and to set different parameters of entities and their properties.
-
-```c#
-app.UseEndpoints(endpoints => {
-    endpoints.MapEasyData(options => {
-        options.UseDbContext<ApplicationDbContext>(opts => {
-            //here we tell the model loader to skip the Supplier entity completely
-            opts.Skip<Supplier>(); 
-            
-            //the following command will skip some properties in the Customer entity
-            opts.Skip<Customer>(c => Phone, c => PostCode, c => Fax);
-
-            //here we define the procedure that customizes our metadata 
-            //when it's loaded from a DbContext
-            opts.CustomizeModel(model => {
-                //setting the names of the Customer entity 
-                var entity = model.Entity<Customer>()
-                    .SetDisplayName("Client")
-                    .SetDisplayNamePlural("Clients");
-
-                //hiding Customer.Region and Customer.Address in the View mode
-                entity
-                    .Attribute(c => c.Region)
-                        .SetShowOnView(false);
-                entity
-                    .Attribute(c => c.Address)
-                        .SetShowOnView(false);
-
-                //chaning the caption and the description of the Customer.Country
-                entity
-                    .Attribute(c => c.Country)
-                        .SetDisplayName("Country name")
-                        .SetDescription("Country where the client lives");
-
-                //setting the display format of the Order.OrderDate
-                model.Entity<Order>()
-                    .Attribute(o => o.OrderDate)
-                        .SetDisplayFormat("{0:yyyy-MM-dd}");
-            });
-        });
-    });
-});
-```
-
-### Changing the default endpoint
-
-The default EasyData API endpoint is `/api/easydata/` but it’s very easy to change it to any possible path. 
-
-Server-side configuration:
-
-```c#
-app.UseEndpoints(endpoints => {
-    endpoints.MapEasyData(options => {
-        options.Endpoint = "/api/super-easy-crud";
-        options.UseDbContext<ApplicationDbContext>();
-    });
-     .     .     .     .     .
-});
-```
-
-On the client-side we can pass some options (including the endpoint) to the dispatcher’s constructor:
-
-```html
-    <script>
-        window.addEventListener('load', function () {
-            new easydata.crud.EasyDataViewDispatcher({
-                endpoint: '/api/super-easy-crud'
-            }).run()
-        });
-    </script>
-```
-
-### One entity CRUD page
-
-Sometimes you don't need CRUD for all entities in your database but only for a few of them (or even only one). So, you don't need to show that root page with entity selection. You just can start with a data table view for one particular entity. 
-
-Especially for this case, there is `rootEntity` option in `EasyDataViewDispatcher` class. If it's set, EasyData will no show the default root page with the list of entities but will render the view page for the specified entity (table) instead.
-
-```html
-<script>
-    window.addEventListener('load', function () {
-        new easydata.crud.EasyDataViewDispatcher({
-            rootEntity: 'Order'
-        }).run()
-    });
-</script>
-```
-### Display Formats
-
-It’s also possible to set the display format for each entity attribute (table field). The format looks like `{0:XX}` where `XX` here is a format string that has the same meaning as in [string.Format](https://docs.microsoft.com/en-us/dotnet/standard/base-types/composite-formatting#format-string-component) function. 
-
-Beloew you will find a few examples of using display formats.
-
-This one tells EasyData to use the default "Long Date" format for OrderDate values: 
-
-```c#
-[MetaEntityAttr(DisplayFormat = "{0:D}")]
-public DateTime? OrderDate { get; set; }
-```
-
-Here we use a custom format for date values:
-```c#
-[MetaEntityAttr(DisplayFormat = "{0:yyyy-MMM-dd}")]
-public DateTime? OrderDate { get; set; }
-```
-
-Here we make it to use a currency format with 2 decimal digits
-```c#
- [MetaEntityAttr(DisplayFormat = "{0:C2}")]
- public decimal Freight { get; set; }
-```
-
-With this format EasyData will show only digits (no grouping by thousands) and will add leading 0-s up to 8 digits totally (if necessary)
-```c#
- [MetaEntityAttr(DisplayFormat = "{0:D8}")]
- public int Amount { get; set; }
-```
-
-## FAQ
-
-__Q:__ **What versions of .NET and ASP.NET (Core) does EasyData support?**
-
-__A:__ Currently, EasyData supports .NET Core 3.1 and .NET 6 and, obviously, all versions of ASP.NET Core and Entity Framework Core that can work with these versions of .NET (Core). It’s not a great deal to add support for previous versions of .NET Core or even .NET Framework 4.x. If you really need it, please create a [GitHub issue](https://github.com/KorzhCom/EasyData/issues) about that.
-
-__Q:__ Is it possible to use EasyData API only without the UI?
-
-__A:__ Yes, of course. You can follow [the issue](https://github.com/KorzhCom/EasyData/issues/73) about this request to get an idea of the possible endpoints and the formats of the requests and responses. We are going to publish a complete API documentation after version 1.4.0 release.
-
-
-## Contact us
-
-If you want to be the first to know about project updates, just [follow Sergiy on Twitter](https://twitter.com/korzhs). 
-
-If you have a feature request or found a bug in EasyData, please [submit an issue](https://github.com/KorzhCom/EasyData/issues). We will try to fix the problem or implement new functionality (if the request is relevant) as soon as possible. However, please don't be too demanding with your requests :). Remember that EasyData is an open-source project, and we maintain it in our spare time.

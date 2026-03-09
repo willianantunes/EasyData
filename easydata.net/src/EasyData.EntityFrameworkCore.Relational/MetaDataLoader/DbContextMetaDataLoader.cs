@@ -271,13 +271,8 @@ namespace EasyData.EntityFrameworkCore
                                                             INavigation navigation, ref int attrCounter)
         {
             // do not process collections for now
-#if NET
             if (navigation.IsCollection)
                 return;
-#else
-            if (navigation.IsCollection())
-                return;
-#endif
 
             var foreignKey = navigation.ForeignKey;
             var property = foreignKey.Properties.First();
@@ -463,6 +458,8 @@ namespace EasyData.EntityFrameworkCore
                 entityAttr.ShowOnCreate = false;
             if (property.ValueGenerated.HasFlag(ValueGenerated.OnUpdate))
                 entityAttr.ShowOnEdit = false;
+            if (property.ValueGenerated != ValueGenerated.Never)
+                entityAttr.IsEditable = false;
          
             if (entityAttr.DataType == DataType.Blob) {
                 // DO NOT show blob fields in GRID

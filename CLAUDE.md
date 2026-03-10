@@ -13,7 +13,7 @@ docker compose up -d db
 # Build everything
 dotnet build EasyData.sln
 
-# Run all tests (~159 tests)
+# Run all tests (~217 tests)
 dotnet test EasyData.sln
 
 # Run a single test project
@@ -52,6 +52,7 @@ All projects target **net8.0**.
    - `RazorViewDispatcher` — renders HTML views (dashboard home, list, form, delete confirmation)
    - `ApiDispatcher` — handles form POST submissions (create, update, delete) and JSON lookups
    - `EmbeddedResourceDispatcher` — serves CSS/JS from embedded resources
+   - `SamlDispatcher` — handles `/saml/init/` (SP-initiated redirect to IdP) and ACS callback (validates SAMLResponse, creates/updates user, syncs groups, sets cookie)
 
 ### Key Data Flow
 
@@ -83,7 +84,12 @@ SQL Server must be running on `localhost:1433` (sa/Password1) — use `docker co
 
 EF Core properties with `HasDefaultValueSql()` or `ValueGeneratedOnAdd()` are automatically hidden from create forms and rendered as readonly text on edit forms. This is the intended pattern for timestamps (`CreatedAt`/`UpdatedAt`) and identity columns.
 
+## SAML SSO
+
+When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password login. The ACS callback (`/api/security/saml/callback`) is registered as a separate middleware branch via `app.Map()` outside the admin base path. IdP metadata can be auto-fetched at startup from `SamlMetadataUrl`, or certificate/SSO URL can be set manually. Group UUIDs from the SAML response are matched against `auth_group.name` to assign permissions. Uses the `AspNetSaml` NuGet package (v2.1.4).
+
 ## Known Gaps
 
+- **SP-initiated SAML login** does not work with AWS IAM Identity Center (IdP-initiated works). See `sample-project-sso/README.md` for details.
 - **M2M relationships** not yet supported in the dashboard (planned Phase 5)
 - Price fields with decimal types may show locale-specific formatting issues in HTML number inputs

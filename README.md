@@ -128,7 +128,37 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-## Sample project
+### SAML SSO (optional)
+
+The dashboard supports SAML 2.0 single sign-on as an additional login method alongside password authentication. When enabled, the login page shows a "Try single sign-on (SSO)" link.
+
+```csharp
+app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+{
+    RequireAuthentication = true,
+    EnableSaml = true,
+    SamlMetadataUrl = "https://portal.sso.us-east-1.amazonaws.com/saml/metadata/...",
+    SamlIssuer = "http://localhost:8000/admin",
+    SamlAcsUrl = "http://localhost:8000/api/security/saml/callback",
+    SamlGroupsAttribute = "http://schemas.xmlsoap.org/claims/Group",
+});
+```
+
+On SSO login, the dashboard maps IdP group UUIDs to `auth_group.name` entries. Create groups whose names match the IdP group UUIDs, assign permissions to those groups, and SSO users automatically inherit them. Group memberships are fully replaced on each login.
+
+| Option | Default | Description |
+|---|---|---|
+| `EnableSaml` | `false` | Show SSO link on login page and enable SAML endpoints |
+| `SamlMetadataUrl` | `null` | IdP metadata URL — auto-extracts certificate and SSO URL at startup |
+| `SamlIdpSsoUrl` | `null` | IdP SSO endpoint (extracted from metadata if not set) |
+| `SamlCertificate` | `null` | IdP X.509 signing certificate base64 (extracted from metadata if not set) |
+| `SamlIssuer` | `null` | SP entity ID — must match the SAML audience configured in the IdP |
+| `SamlAcsUrl` | `null` | Full ACS callback URL — must match the ACS URL configured in the IdP |
+| `SamlGroupsAttribute` | `"groups"` | SAML attribute name containing group IDs (AWS uses `http://schemas.xmlsoap.org/claims/Group`) |
+
+## Sample projects
+
+### sample-project
 
 A working sample is at `./sample-project`. To run it:
 
@@ -142,6 +172,10 @@ dotnet run -- api
 ```
 
 Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem).
+
+### sample-project-sso
+
+Demonstrates SAML SSO with AWS IAM Identity Center. See [`sample-project-sso/README.md`](sample-project-sso/README.md) for configuration details and known issues.
 
 ## Running tests
 
@@ -173,4 +207,5 @@ src/
 
 test/                                         # Integration & unit tests
 sample-project/                               # Working example app
+sample-project-sso/                           # SSO example (AWS IAM Identity Center)
 ```

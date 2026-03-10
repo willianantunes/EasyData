@@ -59,9 +59,35 @@ When `RequireAuthentication = true`, all dashboard pages require login. The auth
 2. Clears the auth cookie
 3. Redirects to `/admin/login/`
 
+### SAML SSO Login (sample-project-sso only)
+
+When `EnableSaml = true`, the login page shows a "Try single sign-on (SSO)" link pointing to `/admin/saml/init/`.
+
+**IdP-initiated flow (recommended with AWS IAM Identity Center):**
+
+1. Navigate to the AWS access portal (`https://<directory>.awsapps.com/start/#/?tab=applications`)
+2. Click the application (e.g., "Identity - DEV")
+3. AWS POSTs SAMLResponse to `/api/security/saml/callback`
+4. Dashboard creates/updates the user, syncs group memberships, sets auth cookie, redirects to `/admin/`
+
+**SP-initiated flow:**
+
+1. Click "Try single sign-on (SSO)" on the login page
+2. Browser redirects to the IdP SSO URL with a SAMLRequest
+3. IdP authenticates and POSTs SAMLResponse back to the ACS URL
+
+**Known issue:** SP-initiated login does not work with AWS IAM Identity Center — AWS returns 403 "No access" on its internal assertion endpoint. Use IdP-initiated login as a workaround.
+
+**Group/permission mapping:**
+
+- On each SSO login, the dashboard extracts group UUIDs from the SAML response attribute configured via `SamlGroupsAttribute`
+- All existing `auth_user_groups` for the user are deleted and replaced with groups matching the SAML response
+- Only groups whose `auth_group.name` matches a UUID from the SAML response are assigned
+- AWS IAM Identity Center uses `http://schemas.xmlsoap.org/claims/Group` as the attribute name (not `groups`)
+
 ### Auth-Exempt Paths
 
-These paths are served without authentication: `/css/*`, `/js/*`, `/login/`, `/logout/`
+These paths are served without authentication: `/css/*`, `/js/*`, `/login/`, `/logout/`, `/saml/*`
 
 ### Login Test Steps
 
@@ -361,13 +387,27 @@ When running a full E2E test pass, verify in this order:
 22. **Sorting** — click column header, verify sort direction toggle
 23. **Pagination** — AuthPermission list has 40 items (25/page), verify page 2
 
-### Phase 7: Logout
+### Phase 7: SAML SSO (requires sample-project-sso and AWS IAM Identity Center)
 
-24. **Logout** — click "Log out", verify redirect to login page
-25. **Session cleared** — accessing `/admin/` after logout redirects to login
+To run the SSO sample instead of the default sample project:
+
+```bash
+cd sample-project-sso/src && dotnet run -- api
+```
+
+24. **SSO link visible** — login page shows "Try single sign-on (SSO)" link
+25. **IdP-initiated login** — from the AWS access portal, click the application → lands on `/admin/` as the SSO user
+26. **Group sync** — create an `AuthGroup` with `name` matching an AWS group UUID, assign view permissions, logout, SSO login again → user can access model views
+27. **Password login still works** — can still login with `admin`/`admin` alongside SSO
+
+### Phase 8: Logout
+
+28. **Logout** — click "Log out", verify redirect to login page
+29. **Session cleared** — accessing `/admin/` after logout redirects to login
 
 ## What's NOT Tested (Known Gaps)
 
+- **SP-initiated SAML login:** Does not work with AWS IAM Identity Center (403 "No access"). Only IdP-initiated is testable.
 - **M2M relationships:** MenuItem ↔ Ingredient many-to-many is defined in EF Core but the dashboard has no multi-select UI for it yet (Phase 5)
 - **Read-only mode:** `AdminDashboardOptions.IsReadOnly = true` hides all write controls
 - **Custom authorization filters:** `LocalRequestsOnlyAuthorizationFilter`, custom `IAdminDashboardAuthorizationFilter`

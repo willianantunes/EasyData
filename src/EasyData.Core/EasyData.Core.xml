@@ -1805,6 +1805,13 @@
             <typeparam name="TFilter">The filter type</typeparam>
             <param name="filterClass">The filter class name</param>
         </member>
+        <member name="P:EasyData.Services.EasyDataOptions.PaginationCountTimeoutMs">
+            <summary>
+            Maximum time in milliseconds to wait for the COUNT query during pagination.
+            If exceeded, returns a fallback count. Default: 200ms.
+            Set to -1 to disable the timeout (wait indefinitely).
+            </summary>
+        </member>
         <member name="P:EasyData.Services.EasyDataOptions.ModelTuner">
             <summary>
             Gets the model tuner - an action which is called after the model loading and allows to "tune" your model before sending it to the client-side.

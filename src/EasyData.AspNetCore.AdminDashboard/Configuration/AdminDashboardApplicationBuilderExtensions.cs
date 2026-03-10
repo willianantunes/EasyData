@@ -32,6 +32,8 @@ namespace Microsoft.AspNetCore.Builder
                     "Call services.AddEasyDataAdminDashboard<TDbContext>() in ConfigureServices first.");
             }
 
+            easyDataOptions.PaginationCountTimeoutMs = options.PaginationCountTimeoutMs;
+
             if (options.RequireAuthentication)
             {
                 BootstrapAuthentication(app, options, easyDataOptions);

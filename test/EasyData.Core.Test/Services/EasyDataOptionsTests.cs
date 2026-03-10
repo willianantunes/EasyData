@@ -91,6 +91,16 @@ namespace EasyData.Core.Services.Tests
             _target.ManagerResolver(Mock.Of<IServiceProvider>(), _target).Should().BeOfType<DummyEasyDataManager>();
         }
 
+        [Fact]
+        public void PaginationCountTimeoutMs_DefaultValue_Is200()
+        {
+            // Arrange & Act
+            var options = new EasyDataOptions();
+
+            // Assert
+            Assert.Equal(200, options.PaginationCountTimeoutMs);
+        }
+
         private class DummyFilter : EasyFilter
         {
             public DummyFilter(MetaData model) : base(model) { }

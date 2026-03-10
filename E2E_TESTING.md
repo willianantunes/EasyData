@@ -387,7 +387,39 @@ When running a full E2E test pass, verify in this order:
 22. **Sorting** — click column header, verify sort direction toggle
 23. **Pagination** — AuthPermission list has 40 items (25/page), verify page 2
 
-### Phase 7: SAML SSO (requires sample-project-sso and AWS IAM Identity Center)
+### Phase 7: Time-Limited Pagination COUNT
+
+The dashboard runs `SELECT COUNT(*)` on every list view. On tables with millions of rows, this query can take seconds. The `PaginationCountTimeoutMs` option (default 200ms) cancels the COUNT query if it exceeds the timeout and displays a fallback value of 9,999,999,999 instead. Data rows load independently.
+
+#### Setup — Seed millions of categories
+
+From the **repository root**, with SQL Server and the sample app schema created:
+
+```bash
+docker exec -i easydata-db-1 /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P 'Password1' -C -d SampleProject \
+  -i /dev/stdin < sample-project/scripts/seed-millions-of-categories.sql
+```
+
+This inserts 5 million categories (~1–3 minutes).
+
+24. **Fallback count on large table** — Navigate to `/admin/Category/`. Verify the count shows "9999999999 categories" (the fallback). Page should load in under 1 second.
+25. **Data rows still render** — The first 25 categories should display normally despite the count timeout.
+26. **Sliding window pagination** — Pagination should show a window of up to 10 page links with ellipsis (`...`) and a link to the last page (400000000).
+27. **Page navigation works** — Click page 2. Verify different rows appear, count still shows the fallback.
+28. **Small table unaffected** — Navigate to `/admin/Restaurant/`. Verify the real count (e.g., "100 restaurants") is shown, not the fallback. Pagination shows exact page count.
+29. **Custom timeout (optional)** — Set `PaginationCountTimeoutMs = 5000` in `sample-project/src/Commands/ApiCommand.cs`, restart the app. Verify `/admin/Category/` now shows the real count (5000000) since 5 seconds is enough for the query to complete.
+30. **Disabled timeout (optional)** — Set `PaginationCountTimeoutMs = -1`, restart. Verify the real count shows (query runs to completion regardless of duration).
+
+#### Cleanup
+
+```bash
+docker exec -i easydata-db-1 /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P 'Password1' -C -d SampleProject \
+  -i /dev/stdin < sample-project/scripts/cleanup-seeded-categories.sql
+```
+
+### Phase 8: SAML SSO (requires sample-project-sso and AWS IAM Identity Center)
 
 To run the SSO sample instead of the default sample project:
 
@@ -395,15 +427,15 @@ To run the SSO sample instead of the default sample project:
 cd sample-project-sso/src && dotnet run -- api
 ```
 
-24. **SSO link visible** — login page shows "Try single sign-on (SSO)" link
-25. **IdP-initiated login** — from the AWS access portal, click the application → lands on `/admin/` as the SSO user
-26. **Group sync** — create an `AuthGroup` with `name` matching an AWS group UUID, assign view permissions, logout, SSO login again → user can access model views
-27. **Password login still works** — can still login with `admin`/`admin` alongside SSO
+31. **SSO link visible** — login page shows "Try single sign-on (SSO)" link
+32. **IdP-initiated login** — from the AWS access portal, click the application → lands on `/admin/` as the SSO user
+33. **Group sync** — create an `AuthGroup` with `name` matching an AWS group UUID, assign view permissions, logout, SSO login again → user can access model views
+34. **Password login still works** — can still login with `admin`/`admin` alongside SSO
 
-### Phase 8: Logout
+### Phase 9: Logout
 
-28. **Logout** — click "Log out", verify redirect to login page
-29. **Session cleared** — accessing `/admin/` after logout redirects to login
+35. **Logout** — click "Log out", verify redirect to login page
+36. **Session cleared** — accessing `/admin/` after logout redirects to login
 
 ## What's NOT Tested (Known Gaps)
 

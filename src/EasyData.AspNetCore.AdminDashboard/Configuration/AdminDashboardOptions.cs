@@ -30,6 +30,13 @@ namespace EasyData.AspNetCore.AdminDashboard
 
         public string DefaultAdminPassword { get; set; } = "admin";
 
+        /// <summary>
+        /// Maximum time in milliseconds to wait for the COUNT query during pagination.
+        /// If exceeded, returns a fallback count. Default: 200ms.
+        /// Set to -1 to disable the timeout (wait indefinitely).
+        /// </summary>
+        public int PaginationCountTimeoutMs { get; set; } = 200;
+
         // SAML SSO configuration
         public bool EnableSaml { get; set; } = false;
 

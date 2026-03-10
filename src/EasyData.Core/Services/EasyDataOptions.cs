@@ -86,6 +86,15 @@ namespace EasyData.Services
         public void RegisterFilter<TFilter>(string filterClass) where TFilter : EasyFilter
             => RegisterFilter(filterClass, typeof(TFilter));
 
+        public const long PaginationCountFallbackValue = 9_999_999_999;
+
+        /// <summary>
+        /// Maximum time in milliseconds to wait for the COUNT query during pagination.
+        /// If exceeded, returns a fallback count. Default: 200ms.
+        /// Set to -1 to disable the timeout (wait indefinitely).
+        /// </summary>
+        public int PaginationCountTimeoutMs { get; set; } = 200;
+
         /// <summary>
         /// Gets the model tuner - an action which is called after the model loading and allows to "tune" your model before sending it to the client-side.
         /// </summary>

@@ -88,6 +88,19 @@ EF Core properties with `HasDefaultValueSql()` or `ValueGeneratedOnAdd()` are au
 
 When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password login. The ACS callback (`/api/security/saml/callback`) is registered as a separate middleware branch via `app.Map()` outside the admin base path. IdP metadata can be auto-fetched at startup from `SamlMetadataUrl`, or certificate/SSO URL can be set manually. Group UUIDs from the SAML response are matched against `auth_group.name` to assign permissions. Uses the `AspNetSaml` NuGet package (v2.1.4).
 
+## Time-Limited Pagination COUNT
+
+On every list view the dashboard runs `SELECT COUNT(*)` to display the total record count and compute pagination. On tables with millions of rows this query can take seconds.
+
+`PaginationCountTimeoutMs` (default 200 ms, configurable on `AdminDashboardOptions` and `EasyDataOptions`) caps how long the COUNT query may run. If it exceeds the timeout, the dashboard returns the fallback value `EasyDataOptions.PaginationCountFallbackValue` (9,999,999,999) instead of blocking the page. Data rows load independently and are unaffected.
+
+Key implementation details:
+- `CountRecordsAsync<T>` in `EasyDataManagerEF.cs` uses `CancellationTokenSource.CreateLinkedTokenSource` to combine the HTTP request token with the timeout CTS, so client disconnects also cancel the query
+- `catch (OperationCanceledException) when (!callerToken.IsCancellationRequested)` ensures only timeout-caused cancellations return the fallback; caller cancellations propagate
+- A second `catch (Exception) when (...)` handles SQL Server wrapping cancellation in `SqlException`
+- Setting `PaginationCountTimeoutMs = -1` disables the timeout entirely
+- `ViewRenderer` renders a sliding window of max 10 pagination links with ellipsis to prevent OOM from the fallback count
+
 ## Known Gaps
 
 - **SP-initiated SAML login** does not work with AWS IAM Identity Center (IdP-initiated works). See `sample-project-sso/README.md` for details.

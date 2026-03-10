@@ -128,6 +128,8 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
             }
 
             var offset = (page - 1) * pageSize;
+            // COUNT and data fetch run sequentially because both share the same DbContext,
+            // which is not thread-safe. Do not parallelize with Task.WhenAll.
             var totalRecords = await metadataService.GetTotalRecordsAsync(entityId, filters, false, ct);
             var dataset = await metadataService.FetchDatasetAsync(entityId, filters, sorters, false, offset, pageSize, ct);
 
@@ -159,7 +161,8 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 rows.Add(dict);
             }
 
-            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var totalPagesLong = (long)Math.Ceiling((double)totalRecords / pageSize);
+            var totalPages = (int)Math.Min(totalPagesLong, int.MaxValue);
 
             var sidebarGroups = await BuildSidebarGroupsAsync(groupingService, ct);
 

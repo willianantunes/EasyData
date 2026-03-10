@@ -128,6 +128,23 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
+### Time-limited pagination COUNT
+
+On tables with millions of rows, `SELECT COUNT(*)` can take seconds and block the list view. The dashboard cancels the COUNT query if it exceeds `PaginationCountTimeoutMs` and shows a fallback value instead. Data rows load independently and are not affected.
+
+```csharp
+app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+{
+    PaginationCountTimeoutMs = 200,  // default: 200ms; set -1 to disable
+});
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `PaginationCountTimeoutMs` | `200` | Max time (ms) for the COUNT query. If exceeded, a fallback count is shown. Set to `-1` to disable. |
+
+To reproduce and test with large data, see [`sample-project/E2E_TESTING.md`](sample-project/E2E_TESTING.md).
+
 ### SAML SSO (optional)
 
 The dashboard supports SAML 2.0 single sign-on as an additional login method alongside password authentication. When enabled, the login page shows a "Try single sign-on (SSO)" link.

@@ -122,7 +122,7 @@ namespace EasyData.Services
             await GetModelAsync(modelId);
 
             var entityType = GetCurrentEntityType(DbContext, sourceId);
-            return GetRecordCount(DbContext, entityType.ClrType, filters, isLookup);
+            return await GetRecordCountAsync(DbContext, entityType.ClrType, filters, isLookup, ct);
         }
 
         public override Task<object> FetchRecordAsync(string modelId, string sourceId, 
@@ -258,7 +258,7 @@ namespace EasyData.Services
 
             _findRecordGeneric = methods.Single(m => m.Name == nameof(FetchRecord));
             _queryRecordsGeneric = methods.Single(m => m.Name == nameof(QueryRecords));
-            _countRecordsGeneric = methods.Single(m => m.Name == nameof(CountRecords));
+            _countRecordsGeneric = methods.Single(m => m.Name == nameof(CountRecordsAsync));
         }
 
         
@@ -284,10 +284,10 @@ namespace EasyData.Services
             return result;
         }
 
-        private long GetRecordCount(DbContext dbContext, Type entityType, IEnumerable<EasyFilter> filters, bool isLookup)
+        private async Task<long> GetRecordCountAsync(DbContext dbContext, Type entityType, IEnumerable<EasyFilter> filters, bool isLookup, CancellationToken ct = default)
         {
             var targetMethod = _countRecordsGeneric.MakeGenericMethod(entityType);
-            return (long)targetMethod.Invoke(this, new object[] { dbContext, filters, isLookup });
+            return await (Task<long>)targetMethod.Invoke(this, new object[] { dbContext, filters, isLookup, ct });
         }
 
         private T FetchRecord<T>(DbContext dbContext, IEnumerable<object> keys) where T : class
@@ -338,14 +338,31 @@ namespace EasyData.Services
             return query;
         }
 
-        private long CountRecords<T>(DbContext dbContext, IEnumerable<EasyFilter> filters, bool isLookup) where T : class
+        private async Task<long> CountRecordsAsync<T>(DbContext dbContext, IEnumerable<EasyFilter> filters, bool isLookup, CancellationToken callerToken = default) where T : class
         {
             var query = dbContext.Set<T>().AsQueryable();
             var entity = Model.EntityRoot.SubEntities.FirstOrDefault(ent => ent.ClrType == typeof(T));
             foreach (var filter in filters) {
                 query = (IQueryable<T>)filter.Apply(entity, isLookup, query);
             }
-            return query.LongCount();
+
+            if (Options.PaginationCountTimeoutMs <= 0)
+                return await query.LongCountAsync(callerToken);
+
+            using var timeoutCts = new CancellationTokenSource(Options.PaginationCountTimeoutMs);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutCts.Token);
+            try
+            {
+                return await query.LongCountAsync(linkedCts.Token);
+            }
+            catch (OperationCanceledException) when (!callerToken.IsCancellationRequested)
+            {
+                return EasyDataOptions.PaginationCountFallbackValue;
+            }
+            catch (Exception) when (!callerToken.IsCancellationRequested && timeoutCts.IsCancellationRequested)
+            {
+                return EasyDataOptions.PaginationCountFallbackValue;
+            }
         }
     }
 }

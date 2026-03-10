@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -159,11 +160,27 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
 
             content.Append("</tbody></table>");
 
-            // Pagination
+            // Pagination — render a sliding window of page links to avoid
+            // generating millions of links when the count falls back to a huge value.
+            const int maxPageLinks = 10;
             if (model.TotalPages > 1)
             {
                 content.Append("<div class=\"pagination\">");
-                for (int p = 1; p <= model.TotalPages; p++)
+
+                var half = maxPageLinks / 2;
+                var startPage = Math.Max(1, model.CurrentPage - half);
+                var endPage = Math.Min(model.TotalPages, startPage + maxPageLinks - 1);
+                startPage = Math.Max(1, endPage - maxPageLinks + 1);
+
+                if (startPage > 1)
+                {
+                    var qs = BuildPageQuery(model, 1);
+                    content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/?{qs}\">1</a> ");
+                    if (startPage > 2)
+                        content.Append("<span class=\"page-ellipsis\">&hellip;</span> ");
+                }
+
+                for (int p = startPage; p <= endPage; p++)
                 {
                     var qs = BuildPageQuery(model, p);
                     if (p == model.CurrentPage)
@@ -171,6 +188,15 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                     else
                         content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/?{qs}\">{p}</a> ");
                 }
+
+                if (endPage < model.TotalPages)
+                {
+                    if (endPage < model.TotalPages - 1)
+                        content.Append("<span class=\"page-ellipsis\">&hellip;</span> ");
+                    var qs = BuildPageQuery(model, model.TotalPages);
+                    content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/?{qs}\">{model.TotalPages}</a> ");
+                }
+
                 content.Append("</div>");
             }
 

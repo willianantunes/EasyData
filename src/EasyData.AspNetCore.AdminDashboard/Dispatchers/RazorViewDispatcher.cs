@@ -76,7 +76,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 viewModel.Groups[group.Key] = items;
             }
 
-            await ViewRenderer.RenderDashboardViewAsync(context.HttpContext, viewModel);
+            await ViewRenderer.RenderDashboardViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
 
         private async Task RenderEntityListAsync(AdminDashboardContext context, DashboardRouteMatch match,
@@ -184,7 +184,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 SidebarGroups = sidebarGroups
             };
 
-            await ViewRenderer.RenderEntityListViewAsync(context.HttpContext, viewModel);
+            await ViewRenderer.RenderEntityListViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
 
         private async Task RenderEntityFormAsync(AdminDashboardContext context, DashboardRouteMatch match,
@@ -295,7 +295,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 SidebarGroups = sidebarGroups
             };
 
-            await ViewRenderer.RenderEntityFormViewAsync(context.HttpContext, viewModel);
+            await ViewRenderer.RenderEntityFormViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
 
         private async Task RenderEntityDeleteAsync(AdminDashboardContext context, DashboardRouteMatch match,
@@ -340,7 +340,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 SidebarGroups = sidebarGroups
             };
 
-            await ViewRenderer.RenderEntityDeleteViewAsync(context.HttpContext, viewModel);
+            await ViewRenderer.RenderEntityDeleteViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
 
         private List<LookupItem> BuildLookupItems(MetaEntity lookupEntity, EasyDataResultSet dataset)

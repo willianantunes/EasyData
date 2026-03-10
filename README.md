@@ -63,6 +63,46 @@ new LocalRequestsOnlyAuthorizationFilter()
 | `IsReadOnly` | `false` | Disable all write operations |
 | `EntityGroups` | `null` | Group entities in the sidebar (dictionary of group name to entity names) |
 
+### Authentication (optional)
+
+The dashboard supports built-in cookie-based authentication with users, groups, and permissions — similar to Django Admin. Auth tables are created automatically in your existing database on startup.
+
+```csharp
+app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+{
+    DashboardTitle = "My Admin",
+    RequireAuthentication = true,
+    CreateDefaultAdminUser = true,
+    DefaultAdminPassword = "admin",
+});
+```
+
+When `RequireAuthentication` is enabled:
+- All dashboard pages require login (unauthenticated requests redirect to `/admin/login/`)
+- A default superuser `admin` is created on first startup (when `CreateDefaultAdminUser = true`)
+- Permissions are auto-generated for every entity (`add_`, `view_`, `change_`, `delete_`)
+- Superusers bypass all permission checks; regular users need permissions assigned through groups
+- Auth entities (Users, Groups, Permissions) appear in the dashboard under "Authentication and Authorization" and are manageable through the same CRUD interface
+
+| Option | Default | Description |
+|---|---|---|
+| `RequireAuthentication` | `false` | Enable login and permission enforcement |
+| `CreateDefaultAdminUser` | `false` | Create an `admin` superuser on startup if it doesn't exist |
+| `DefaultAdminPassword` | `"admin"` | Password for the default admin user |
+| `CookieName` | `".EasyData.Admin.Auth"` | Name of the authentication cookie |
+| `CookieExpiration` | `24 hours` | How long the session cookie remains valid |
+
+**Important:** Your database must exist before the auth bootstrap runs. If you use `EnsureCreated()`, call it **before** `UseEasyDataAdminDashboard()`:
+
+```csharp
+// Correct order
+using var scope = app.ApplicationServices.CreateScope();
+using var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+db.Database.EnsureCreated();
+
+app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions { ... });
+```
+
 ### Auto-generated fields
 
 Fields configured with `ValueGeneratedOnAdd` or `HasDefaultValueSql` in EF Core are automatically:
@@ -109,7 +149,7 @@ Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain 
 # Start SQL Server
 docker compose up -d db
 
-# Run all tests (159 total)
+# Run all tests
 dotnet test EasyData.sln
 ```
 
@@ -121,12 +161,13 @@ src/
   EasyData.AspNetCore/                        # ASP.NET Core integration
   EasyData.EntityFrameworkCore.Relational/    # EF Core metadata loader
   EasyData.AspNetCore.AdminDashboard/         # Admin dashboard (this package)
+    Authentication/                           # Login, permissions, password hashing, auth DB
     Authorization/                            # Auth filters
     Configuration/                            # DI extensions and options
     Dispatchers/                              # View rendering and API handlers
     Middleware/                               # Request pipeline
     Routing/                                  # URL dispatch
-    Services/                                 # Metadata and entity grouping
+    Services/                                 # Metadata, entity grouping, composite manager
     ViewModels/                               # Form and list models
     wwwroot/                                  # Embedded CSS/JS
 

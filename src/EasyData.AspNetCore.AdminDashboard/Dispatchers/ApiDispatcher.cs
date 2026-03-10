@@ -177,10 +177,12 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                     var value = formValue.FirstOrDefault();
                     if (value != null)
                     {
+                        if (string.IsNullOrEmpty(value) && dataType != DataType.String)
+                            continue;
                         props[propName] = JToken.FromObject(ConvertValue(value, dataType));
                     }
                 }
-                else if (dataType == DataType.Bool)
+                else if (dataType == DataType.Bool && attr.IsEditable)
                 {
                     props[propName] = false;
                 }

@@ -15,6 +15,9 @@ cd sample-project/src && dotnet run -- api
 - **App URL:** `http://localhost:8000/admin/`
 - **DB:** SQL Server on `localhost:1433`, sa/Password1, database `SampleProject`
 - **Auto-setup:** The app calls `EnsureCreated()` on startup — no migrations needed
+- **Authentication:** The sample project has `RequireAuthentication = true` and `CreateDefaultAdminUser = true`. Default credentials: **admin / admin**
+
+**Important:** `EnsureCreated()` must run **before** `UseEasyDataAdminDashboard()` in `Configure()`. The auth bootstrap creates tables in the existing database — if the database doesn't exist yet, it will fail.
 
 If port 8000 is already in use, kill the existing process first:
 ```bash
@@ -37,9 +40,44 @@ Use the `mcp__playwright__browser_*` tools. Key tools:
 rm -rf ~/Library/Caches/ms-playwright/mcp-chrome-*
 ```
 
+## Authentication Flow
+
+When `RequireAuthentication = true`, all dashboard pages require login. The auth system uses cookie-based sessions with DataProtection encryption.
+
+### Login
+
+1. Any unauthenticated request to `/admin/*` redirects to `/admin/login/?next={originalPath}`
+2. The login page shows a form with Username and Password fields and a "Log in" button
+3. POST `/admin/login/` validates credentials against the `auth_user` table (SHA256 hash)
+4. On success: sets `.EasyData.Admin.Auth` cookie, redirects to `?next` param or `/admin/`
+5. On failure: re-renders login page with "Invalid credentials" error
+6. Inactive users (`is_active = false`) are treated as invalid credentials
+
+### Logout
+
+1. Navigate to `/admin/logout/` or click "Log out" in the header
+2. Clears the auth cookie
+3. Redirects to `/admin/login/`
+
+### Auth-Exempt Paths
+
+These paths are served without authentication: `/css/*`, `/js/*`, `/login/`, `/logout/`
+
+### Login Test Steps
+
+1. Navigate to `/admin/` → should redirect to `/admin/login/?next=/admin/`
+2. Verify login form has Username, Password fields and "Log in" button
+3. Submit with wrong credentials → stays on login page with error
+4. Submit with `admin` / `admin` → redirects to `/admin/`
+5. Verify header shows "Welcome, admin" and "Log out" link
+6. Click "Log out" → redirected to login page
+7. Try to access `/admin/` again → redirected to login (cookie cleared)
+
 ## Dashboard Structure
 
-The admin home at `/admin/` shows all 5 models in a table with Add/Change links:
+The admin home at `/admin/` shows models organized in sections:
+
+### User Models
 
 | Model | URL prefix | Relationships |
 |---|---|---|
@@ -48,6 +86,18 @@ The admin home at `/admin/` shows all 5 models in a table with Add/Change links:
 | RestaurantProfile | `/admin/RestaurantProfile/` | FK dropdown → Restaurant (1:1) |
 | Ingredient | `/admin/Ingredient/` | Standalone (has M2M with MenuItem, not yet supported in UI) |
 | MenuItem | `/admin/MenuItem/` | FK dropdown → Restaurant (N:1) |
+
+### Authentication and Authorization (when auth enabled)
+
+| Model | URL prefix | Notes |
+|---|---|---|
+| AuthUser | `/admin/AuthUser/` | Username, Password (hashed), IsSuperuser, IsActive, LastLogin, DateJoined |
+| AuthGroup | `/admin/AuthGroup/` | Named groups for permission assignment |
+| AuthPermission | `/admin/AuthPermission/` | Auto-generated per entity (add/change/delete/view) |
+| AuthGroupPermission | `/admin/AuthGroupPermission/` | Links groups to permissions |
+| AuthUserGroup | `/admin/AuthUserGroup/` | Links users to groups |
+
+These appear under the "Authentication and Authorization" heading in the sidebar and dashboard home.
 
 ## URL Patterns
 
@@ -156,6 +206,91 @@ All models inherit from `StandardEntity` which has `Id`, `CreatedAt`, `UpdatedAt
 
 **Price locale note:** The list view may display prices with comma as decimal separator (e.g., `14,99`) depending on server locale. The form uses `<input type="number" step="any">`.
 
+## Auth Entity Details
+
+### AuthUser
+
+**Editable fields on create form:**
+- `Username` — textbox, required, unique
+- `Password` — textbox, required (stored as SHA256 hex hash — the composite manager intercepts create/update to hash)
+
+**Auto-generated / readonly fields:**
+- `Id` — identity PK
+- `IsSuperuser` — BIT, default false (value-generated, readonly)
+- `IsActive` — BIT, default true (value-generated, readonly)
+- `LastLogin` — DATETIME2, nullable (not shown on create form)
+- `DateJoined` — DATETIME2, default GETUTCDATE() (not shown on create form)
+
+**Test steps:**
+1. Login as admin, navigate to `/admin/AuthUser/add/`
+2. Fill Username and Password
+3. Click Save → redirects to `/admin/AuthUser/` list
+4. Verify user appears in list with `IsActive = True` (database default preserved)
+5. Edit: verify Password shows the hashed value, not plaintext
+
+**Known behavior:**
+- Empty `LastLogin` on create is correctly skipped (not sent as empty string to DB)
+- `IsActive` defaults to `true` via DB default — the form does NOT override this with `false`
+- `IsSuperuser` defaults to `false` via DB default
+
+### AuthGroup
+
+**Editable fields:** `Name` — textbox, required, unique
+
+### AuthPermission
+
+**Fields:** `Name` (display name), `Codename` (unique, e.g., `add_category`)
+
+Permissions are auto-generated at startup for every entity. Four per entity:
+- `add_{entityname_lower}` / "Can add {EntityName}"
+- `change_{entityname_lower}` / "Can change {EntityName}"
+- `delete_{entityname_lower}` / "Can delete {EntityName}"
+- `view_{entityname_lower}` / "Can view {EntityName}"
+
+With 10 entities (5 user + 5 auth), expect 40 permissions total (25 per page, paginated).
+
+### AuthGroupPermission
+
+**Editable fields:**
+- `GroupId` — FK dropdown to AuthGroup
+- `PermissionId` — FK dropdown to AuthPermission
+
+### AuthUserGroup
+
+**Editable fields:**
+- `UserId` — FK dropdown to AuthUser
+- `GroupId` — FK dropdown to AuthGroup
+
+## Permission Enforcement
+
+Superusers (`is_superuser = true`) bypass all permission checks. For non-superuser users, permissions are resolved through groups:
+
+`auth_user` → `auth_user_groups` → `auth_group` → `auth_group_permissions` → `auth_permission`
+
+| Route | Required Permission |
+|---|---|
+| GET `/{entityId}/` | `view_{entityname}` |
+| GET `/{entityId}/add/` | `add_{entityname}` |
+| POST `/{entityId}/add/` | `add_{entityname}` |
+| GET `/{entityId}/{id}/change/` | `change_{entityname}` |
+| POST `/{entityId}/{id}/change/` | `change_{entityname}` |
+| GET `/{entityId}/{id}/delete/` | `delete_{entityname}` |
+| POST `/{entityId}/{id}/delete/` | `delete_{entityname}` |
+
+Missing permission → 403 Forbidden.
+
+### Permission Enforcement Test Steps
+
+1. **Create a group** with specific permissions (e.g., `view_category`, `add_category`)
+2. **Create a non-superuser** via `/admin/AuthUser/add/`
+3. **Assign user to group** via `/admin/AuthUserGroup/add/`
+4. **Login as the non-superuser**
+5. Verify: can view Category list (`/admin/Category/`) → 200 OK
+6. Verify: can access Category add form → 200 OK
+7. Verify: cannot edit Category (no `change_category` perm) → 403
+8. Verify: cannot delete Category (no `delete_category` perm) → 403
+9. Verify: cannot access other entities without permissions → 403
+
 ## Save Actions
 
 Every create/edit form has three save buttons:
@@ -177,26 +312,64 @@ Every create/edit form has three save buttons:
 
 All pages (except dashboard home) have a left sidebar with:
 - A text filter input ("Filter models...")
-- All 5 models listed as links under "Models" heading
+- User models listed under "Models" heading
+- Auth models listed under "Authentication and Authorization" heading (when auth enabled)
 - Client-side JS filters the list as you type
 
 ## Verification Checklist
 
-When running a full E2E test pass, verify in this order (respects FK dependencies):
+When running a full E2E test pass, verify in this order:
 
-1. **Dashboard home** — `/admin/` loads, shows all 5 models with Add/Change links
-2. **Category** — full CRUD (create, list, edit, delete)
-3. **Ingredient** — create with boolean field, edit, delete
-4. **Restaurant** — full CRUD
-5. **RestaurantProfile** — create with FK dropdown to Restaurant, edit, delete
-6. **MenuItem** — create with FK dropdown to Restaurant, edit, delete
-7. **Search** — search on any list page, verify filtered results
-8. **Sorting** — click column header, verify sort direction toggle
+### Phase 1: Authentication
+
+1. **Login redirect** — `/admin/` redirects to `/admin/login/?next=/admin/`
+2. **Login page** — shows Username, Password fields and "Log in" button
+3. **Invalid login** — wrong credentials show error, stay on login page
+4. **Valid login** — `admin`/`admin` redirects to dashboard, cookie set
+5. **Header** — shows "Welcome, admin" and "Log out" link
+
+### Phase 2: Dashboard Home & Sidebar
+
+6. **Dashboard home** — `/admin/` loads, shows user models and "Authentication and Authorization" section
+7. **Sidebar** — shows "Models" section and "Authentication and Authorization" section with all 10 entities
+
+### Phase 3: User Entity CRUD (respects FK dependencies)
+
+8. **Category** — full CRUD (create, list, edit, delete)
+9. **Ingredient** — create with boolean field, edit, delete
+10. **Restaurant** — full CRUD
+11. **RestaurantProfile** — create with FK dropdown to Restaurant, edit, delete
+12. **MenuItem** — create with FK dropdown to Restaurant, edit, delete
+
+### Phase 4: Auth Entity CRUD
+
+13. **AuthPermission list** — verify auto-generated permissions exist (e.g., `add_category`, `view_category`)
+14. **AuthGroup** — create a group
+15. **AuthGroupPermission** — assign permissions to the group
+16. **AuthUser** — create a non-superuser (verify `IsActive` defaults to `true`)
+17. **AuthUserGroup** — assign user to group
+
+### Phase 5: Permission Enforcement
+
+18. **Login as non-superuser** — logout admin, login as new user
+19. **Allowed actions** — verify user can perform actions matching assigned permissions
+20. **Denied actions** — verify 403 for actions without permissions
+
+### Phase 6: List Features
+
+21. **Search** — search on any list page, verify filtered results
+22. **Sorting** — click column header, verify sort direction toggle
+23. **Pagination** — AuthPermission list has 40 items (25/page), verify page 2
+
+### Phase 7: Logout
+
+24. **Logout** — click "Log out", verify redirect to login page
+25. **Session cleared** — accessing `/admin/` after logout redirects to login
 
 ## What's NOT Tested (Known Gaps)
 
 - **M2M relationships:** MenuItem ↔ Ingredient many-to-many is defined in EF Core but the dashboard has no multi-select UI for it yet (Phase 5)
-- **Pagination:** Only testable with 25+ records in a single model
 - **Read-only mode:** `AdminDashboardOptions.IsReadOnly = true` hides all write controls
-- **Authorization filters:** `LocalRequestsOnlyAuthorizationFilter`, custom `IAdminDashboardAuthorizationFilter`
-- **Entity groups:** `AdminDashboardOptions.EntityGroups` for sidebar grouping
+- **Custom authorization filters:** `LocalRequestsOnlyAuthorizationFilter`, custom `IAdminDashboardAuthorizationFilter`
+- **Cookie expiration:** Default 24h, configurable via `AdminDashboardOptions.CookieExpiration`
+- **Permission caching:** Permissions are cached in `HttpContext.Items` per request — no cross-request caching test

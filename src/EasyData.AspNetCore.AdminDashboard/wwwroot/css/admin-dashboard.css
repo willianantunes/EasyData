@@ -48,6 +48,15 @@ a:hover { text-decoration: underline; }
 #header a { color: var(--header-text); text-decoration: none; }
 #header a:hover { text-decoration: underline; }
 
+#user-tools {
+    float: right;
+    font-size: 12px;
+    padding-top: 4px;
+    color: var(--header-text);
+}
+
+#user-tools a { color: var(--header-text); font-weight: 600; }
+
 /* Breadcrumbs */
 .breadcrumbs {
     background: var(--breadcrumb-bg);
@@ -376,6 +385,62 @@ fieldset.module {
     border-radius: 4px;
     font-size: 13px;
     background: #fff;
+}
+
+/* Login page */
+body.login { background: var(--body-bg); }
+
+.login-content {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 30px;
+    background: var(--content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.login-form .form-row {
+    flex-direction: column;
+    padding: 8px 0;
+}
+
+.login-form .form-row label {
+    width: 100%;
+    padding-bottom: 4px;
+    font-size: 13px;
+}
+
+.login-form .form-row input[type="text"],
+.login-form .form-row input[type="password"] {
+    width: 100%;
+    max-width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.login-form .submit-row {
+    background: transparent;
+    border: none;
+    padding: 15px 0 0;
+    justify-content: center;
+}
+
+.login-form .submit-row button.default {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.errornote {
+    background: #ffc;
+    border: 1px solid #dda;
+    padding: 10px 14px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    color: var(--btn-danger);
+    font-size: 13px;
 }
 
 /* Responsive */

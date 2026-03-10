@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,11 @@ namespace EasyData.AspNetCore.AdminDashboard.Services
         private readonly AdminMetadataService _metadataService;
         private readonly AdminDashboardOptions _options;
 
+        private static readonly HashSet<string> AuthEntityNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "AuthUser", "AuthGroup", "AuthPermission", "AuthGroupPermission", "AuthUserGroup"
+        };
+
         public EntityGroupingService(AdminMetadataService metadataService, AdminDashboardOptions options)
         {
             _metadataService = metadataService;
@@ -21,6 +27,18 @@ namespace EasyData.AspNetCore.AdminDashboard.Services
             var entities = await _metadataService.GetEntitiesAsync(ct);
             var groups = new Dictionary<string, List<MetaEntity>>();
 
+            var authEntities = new List<MetaEntity>();
+            var nonAuthEntities = new List<MetaEntity>();
+
+            foreach (var entity in entities)
+            {
+                var name = AdminMetadataService.GetEntityName(entity);
+                if (_options.RequireAuthentication && AuthEntityNames.Contains(name))
+                    authEntities.Add(entity);
+                else
+                    nonAuthEntities.Add(entity);
+            }
+
             if (_options.EntityGroups != null && _options.EntityGroups.Count > 0)
             {
                 var assigned = new HashSet<string>();
@@ -29,7 +47,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Services
                     var groupEntities = new List<MetaEntity>();
                     foreach (var entityName in group.Value)
                     {
-                        var entity = entities.FirstOrDefault(e =>
+                        var entity = nonAuthEntities.FirstOrDefault(e =>
                             AdminMetadataService.GetEntityName(e) == entityName);
                         if (entity != null)
                         {
@@ -41,7 +59,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Services
                         groups[group.Key] = groupEntities;
                 }
 
-                var ungrouped = entities
+                var ungrouped = nonAuthEntities
                     .Where(e => !assigned.Contains(AdminMetadataService.GetEntityName(e)))
                     .ToList();
 
@@ -50,7 +68,13 @@ namespace EasyData.AspNetCore.AdminDashboard.Services
             }
             else
             {
-                groups["Models"] = entities.ToList();
+                if (nonAuthEntities.Count > 0)
+                    groups["Models"] = nonAuthEntities;
+            }
+
+            if (authEntities.Count > 0)
+            {
+                groups["Authentication and Authorization"] = authEntities;
             }
 
             return groups;

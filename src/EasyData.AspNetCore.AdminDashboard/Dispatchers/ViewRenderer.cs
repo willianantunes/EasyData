@@ -11,7 +11,52 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
 {
     internal static class ViewRenderer
     {
-        public static async Task RenderDashboardViewAsync(HttpContext httpContext, DashboardViewModel model)
+        public static async Task RenderLoginViewAsync(HttpContext httpContext, LoginViewModel model)
+        {
+            httpContext.Response.ContentType = "text/html; charset=utf-8";
+            httpContext.Response.StatusCode = 200;
+
+            var sb = new StringBuilder();
+            sb.Append("<!DOCTYPE html><html lang=\"en\"><head>");
+            sb.Append("<meta charset=\"utf-8\" />");
+            sb.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
+            sb.Append($"<title>Log in | {Encode(model.Title)}</title>");
+            sb.Append($"<link rel=\"stylesheet\" href=\"{model.BasePath}/css/admin-dashboard.css\" />");
+            sb.Append("</head><body class=\"login\">");
+
+            sb.Append("<div id=\"container\">");
+            sb.Append("<div id=\"header\">");
+            sb.Append($"<h1 id=\"site-name\"><a href=\"{model.BasePath}/\">{Encode(model.Title)}</a></h1>");
+            sb.Append("</div>");
+
+            sb.Append("<div id=\"content\" class=\"login-content\">");
+            sb.Append("<h1>Log in</h1>");
+
+            if (!string.IsNullOrEmpty(model.ErrorMessage))
+            {
+                sb.Append($"<p class=\"errornote\">{Encode(model.ErrorMessage)}</p>");
+            }
+
+            sb.Append($"<form method=\"post\" action=\"{model.BasePath}/login/\" class=\"login-form\">");
+            if (!string.IsNullOrEmpty(model.NextUrl))
+            {
+                sb.Append($"<input type=\"hidden\" name=\"next\" value=\"{Encode(model.NextUrl)}\" />");
+            }
+            sb.Append("<div class=\"form-row\"><label for=\"id_username\">Username:</label>");
+            sb.Append("<input type=\"text\" id=\"id_username\" name=\"username\" autofocus required maxlength=\"150\" /></div>");
+            sb.Append("<div class=\"form-row\"><label for=\"id_password\">Password:</label>");
+            sb.Append("<input type=\"password\" id=\"id_password\" name=\"password\" required /></div>");
+            sb.Append("<div class=\"submit-row\"><button type=\"submit\" class=\"default\">Log in</button></div>");
+            sb.Append("</form>");
+
+            sb.Append("</div>");
+            sb.Append("</div>");
+            sb.Append("</body></html>");
+
+            await httpContext.Response.WriteAsync(sb.ToString());
+        }
+
+        public static async Task RenderDashboardViewAsync(HttpContext httpContext, DashboardViewModel model, string authenticatedUsername = null)
         {
             var content = new StringBuilder();
             content.Append("<div id=\"content-start\"></div>");
@@ -39,10 +84,10 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
 
             content.Append("</div>");
 
-            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Home", content.ToString(), null, null);
+            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Home", content.ToString(), null, null, authenticatedUsername);
         }
 
-        public static async Task RenderEntityListViewAsync(HttpContext httpContext, EntityListViewModel model)
+        public static async Task RenderEntityListViewAsync(HttpContext httpContext, EntityListViewModel model, string authenticatedUsername = null)
         {
             var content = new StringBuilder();
             content.Append($"<h1>Select {Encode(model.EntityNamePlural.ToLower())} to change</h1>");
@@ -125,10 +170,10 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
             content.Append("</div>");
 
             var breadcrumbs = new[] { ("Home", model.BasePath + "/"), (model.EntityNamePlural, (string)null) };
-            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, model.EntityNamePlural, content.ToString(), model.SidebarGroups, breadcrumbs);
+            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, model.EntityNamePlural, content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
         }
 
-        public static async Task RenderEntityFormViewAsync(HttpContext httpContext, EntityFormViewModel model)
+        public static async Task RenderEntityFormViewAsync(HttpContext httpContext, EntityFormViewModel model, string authenticatedUsername = null)
         {
             var actionLabel = model.IsEdit ? "Change" : "Add";
             var content = new StringBuilder();
@@ -189,10 +234,10 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 (model.EntityName, $"{model.BasePath}/{model.EntityId}/"),
                 (actionLabel, (string)null)
             };
-            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, $"{actionLabel} {model.EntityName.ToLower()}", content.ToString(), model.SidebarGroups, breadcrumbs);
+            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, $"{actionLabel} {model.EntityName.ToLower()}", content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
         }
 
-        public static async Task RenderEntityDeleteViewAsync(HttpContext httpContext, EntityDeleteViewModel model)
+        public static async Task RenderEntityDeleteViewAsync(HttpContext httpContext, EntityDeleteViewModel model, string authenticatedUsername = null)
         {
             var content = new StringBuilder();
             content.Append($"<h1>Are you sure?</h1>");
@@ -218,7 +263,7 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
                 (model.EntityName, $"{model.BasePath}/{model.EntityId}/"),
                 ("Delete", (string)null)
             };
-            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Delete confirmation", content.ToString(), model.SidebarGroups, breadcrumbs);
+            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Delete confirmation", content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
         }
 
         private static void RenderInputField(StringBuilder content, FieldViewModel field)
@@ -286,10 +331,11 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
             content.Append("</select>");
         }
 
-        private static async Task WriteLayoutAsync(HttpContext httpContext, string title, string basePath,
+        internal static async Task WriteLayoutAsync(HttpContext httpContext, string title, string basePath,
             string pageTitle, string bodyContent,
             Dictionary<string, List<EntityGroupItem>> sidebarGroups,
-            IEnumerable<(string Label, string Url)> breadcrumbs)
+            IEnumerable<(string Label, string Url)> breadcrumbs,
+            string authenticatedUsername = null)
         {
             httpContext.Response.ContentType = "text/html; charset=utf-8";
             httpContext.Response.StatusCode = 200;
@@ -306,6 +352,13 @@ namespace EasyData.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("<div id=\"container\">");
             sb.Append("<div id=\"header\">");
             sb.Append($"<h1 id=\"site-name\"><a href=\"{basePath}/\">{Encode(title)}</a></h1>");
+            if (!string.IsNullOrEmpty(authenticatedUsername))
+            {
+                sb.Append("<div id=\"user-tools\">");
+                sb.Append($"Welcome, <strong>{Encode(authenticatedUsername)}</strong>. ");
+                sb.Append($"<a href=\"{basePath}/logout/\">Log out</a>");
+                sb.Append("</div>");
+            }
             sb.Append("</div>");
 
             // Breadcrumbs

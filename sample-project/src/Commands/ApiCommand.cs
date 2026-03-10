@@ -38,10 +38,19 @@ public class ApiCommand : ICommand
         {
             app.UseRouting();
 
+            {
+                using var scope = app.ApplicationServices.CreateScope();
+                using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.EnsureCreated();
+            }
+
             app.UseEasyDataAdminDashboard("/admin", new EasyData.AspNetCore.AdminDashboard.AdminDashboardOptions
             {
                 Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
                 DashboardTitle = "Sample Admin",
+                RequireAuthentication = true,
+                CreateDefaultAdminUser = true,
+                DefaultAdminPassword = "admin",
             });
 
             app.UseSwagger();
@@ -62,12 +71,6 @@ public class ApiCommand : ICommand
                         AllowCachingResponses = false,
                         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                     });
-
-            {
-                using var scope = app.ApplicationServices.CreateScope();
-                using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.EnsureCreated();
-            }
 
             app.UseEndpoints(endpoints =>
             {

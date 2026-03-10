@@ -14,6 +14,11 @@ namespace EasyData.AspNetCore.AdminDashboard.Routing
             routes.Add("GET", @"^/css/(.+)$", new[] { "file" }, new EmbeddedResourceDispatcher("text/css", "css"));
             routes.Add("GET", @"^/js/(.+)$", new[] { "file" }, new EmbeddedResourceDispatcher("application/javascript", "js"));
 
+            // Auth routes
+            routes.Add("GET", @"^/login/$", System.Array.Empty<string>(), new AuthDispatcher("login"));
+            routes.Add("POST", @"^/login/$", System.Array.Empty<string>(), new AuthDispatcher("login_post"));
+            routes.Add("GET", @"^/logout/$", System.Array.Empty<string>(), new AuthDispatcher("logout"));
+
             // Dashboard home
             routes.Add("GET", @"^/?$", System.Array.Empty<string>(), new RazorViewDispatcher("Dashboard/Index"));
 

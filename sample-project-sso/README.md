@@ -1,6 +1,6 @@
 # Sample Project SSO
 
-Demonstrates SAML SSO integration with the EasyData Admin Dashboard using AWS IAM Identity Center as the IdP.
+Demonstrates SAML SSO integration with the NDjango.Admin Admin Dashboard using AWS IAM Identity Center as the IdP.
 
 ## Running
 

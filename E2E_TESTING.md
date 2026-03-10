@@ -1,6 +1,6 @@
 # E2E Testing Guide
 
-End-to-end testing of the EasyData Admin Dashboard using the sample project and Playwright MCP.
+End-to-end testing of the NDjango.Admin Admin Dashboard using the sample project and Playwright MCP.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ cd sample-project/src && dotnet run -- api
 - **Auto-setup:** The app calls `EnsureCreated()` on startup — no migrations needed
 - **Authentication:** The sample project has `RequireAuthentication = true` and `CreateDefaultAdminUser = true`. Default credentials: **admin / admin**
 
-**Important:** `EnsureCreated()` must run **before** `UseEasyDataAdminDashboard()` in `Configure()`. The auth bootstrap creates tables in the existing database — if the database doesn't exist yet, it will fail.
+**Important:** `EnsureCreated()` must run **before** `UseNDjangoAdminDashboard()` in `Configure()`. The auth bootstrap creates tables in the existing database — if the database doesn't exist yet, it will fail.
 
 If port 8000 is already in use, kill the existing process first:
 ```bash
@@ -49,7 +49,7 @@ When `RequireAuthentication = true`, all dashboard pages require login. The auth
 1. Any unauthenticated request to `/admin/*` redirects to `/admin/login/?next={originalPath}`
 2. The login page shows a form with Username and Password fields and a "Log in" button
 3. POST `/admin/login/` validates credentials against the `auth_user` table (SHA256 hash)
-4. On success: sets `.EasyData.Admin.Auth` cookie, redirects to `?next` param or `/admin/`
+4. On success: sets `.NDjango.Admin.Auth` cookie, redirects to `?next` param or `/admin/`
 5. On failure: re-renders login page with "Invalid credentials" error
 6. Inactive users (`is_active = false`) are treated as invalid credentials
 
@@ -396,7 +396,7 @@ The dashboard runs `SELECT COUNT(*)` on every list view. On tables with millions
 From the **repository root**, with SQL Server and the sample app schema created:
 
 ```bash
-docker exec -i easydata-db-1 /opt/mssql-tools18/bin/sqlcmd \
+docker exec -i ndjangoadmin-db-1 /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'Password1' -C -d SampleProject \
   -i /dev/stdin < sample-project/scripts/seed-millions-of-categories.sql
 ```
@@ -414,7 +414,7 @@ This inserts 5 million categories (~1–3 minutes).
 #### Cleanup
 
 ```bash
-docker exec -i easydata-db-1 /opt/mssql-tools18/bin/sqlcmd \
+docker exec -i ndjangoadmin-db-1 /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'Password1' -C -d SampleProject \
   -i /dev/stdin < sample-project/scripts/cleanup-seeded-categories.sql
 ```

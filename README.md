@@ -1,4 +1,4 @@
-# EasyData Admin Dashboard
+# NDjango.Admin Admin Dashboard
 
 A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Automatically generates a full admin interface from your `DbContext` — list views with pagination/search/sorting, create/edit forms with FK dropdowns, and delete confirmations.
 
@@ -15,20 +15,20 @@ A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core.
 
 ### 1. Install packages
 
-Add a reference to the `EasyData.AspNetCore.AdminDashboard` project (or NuGet package when published).
+Add a reference to the `NDjango.Admin.AspNetCore.AdminDashboard` project (or NuGet package when published).
 
 ### 2. Register services
 
 ```csharp
 // Program.cs or Startup.ConfigureServices
-services.AddEasyDataAdminDashboard<AppDbContext>();
+services.AddNDjangoAdminDashboard<AppDbContext>();
 ```
 
 ### 3. Add the middleware
 
 ```csharp
 // Program.cs or Startup.Configure
-app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+app.UseNDjangoAdminDashboard("/admin", new AdminDashboardOptions
 {
     Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
     DashboardTitle = "My Admin",
@@ -42,7 +42,7 @@ That's it. Navigate to `/admin/` and you have a working admin panel.
 ### Authorization
 
 ```csharp
-using EasyData.AspNetCore.AdminDashboard.Authorization;
+using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 
 // Allow all (development only)
 new AllowAllAdminDashboardAuthorizationFilter()
@@ -68,7 +68,7 @@ new LocalRequestsOnlyAuthorizationFilter()
 The dashboard supports built-in cookie-based authentication with users, groups, and permissions — similar to Django Admin. Auth tables are created automatically in your existing database on startup.
 
 ```csharp
-app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+app.UseNDjangoAdminDashboard("/admin", new AdminDashboardOptions
 {
     DashboardTitle = "My Admin",
     RequireAuthentication = true,
@@ -89,10 +89,10 @@ When `RequireAuthentication` is enabled:
 | `RequireAuthentication` | `false` | Enable login and permission enforcement |
 | `CreateDefaultAdminUser` | `false` | Create an `admin` superuser on startup if it doesn't exist |
 | `DefaultAdminPassword` | `"admin"` | Password for the default admin user |
-| `CookieName` | `".EasyData.Admin.Auth"` | Name of the authentication cookie |
+| `CookieName` | `".NDjango.Admin.Auth"` | Name of the authentication cookie |
 | `CookieExpiration` | `24 hours` | How long the session cookie remains valid |
 
-**Important:** Your database must exist before the auth bootstrap runs. If you use `EnsureCreated()`, call it **before** `UseEasyDataAdminDashboard()`:
+**Important:** Your database must exist before the auth bootstrap runs. If you use `EnsureCreated()`, call it **before** `UseNDjangoAdminDashboard()`:
 
 ```csharp
 // Correct order
@@ -100,7 +100,7 @@ using var scope = app.ApplicationServices.CreateScope();
 using var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 db.Database.EnsureCreated();
 
-app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions { ... });
+app.UseNDjangoAdminDashboard("/admin", new AdminDashboardOptions { ... });
 ```
 
 ### Auto-generated fields
@@ -133,7 +133,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 On tables with millions of rows, `SELECT COUNT(*)` can take seconds and block the list view. The dashboard cancels the COUNT query if it exceeds `PaginationCountTimeoutMs` and shows a fallback value instead. Data rows load independently and are not affected.
 
 ```csharp
-app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+app.UseNDjangoAdminDashboard("/admin", new AdminDashboardOptions
 {
     PaginationCountTimeoutMs = 200,  // default: 200ms; set -1 to disable
 });
@@ -150,7 +150,7 @@ To reproduce and test with large data, see [`sample-project/E2E_TESTING.md`](sam
 The dashboard supports SAML 2.0 single sign-on as an additional login method alongside password authentication. When enabled, the login page shows a "Try single sign-on (SSO)" link.
 
 ```csharp
-app.UseEasyDataAdminDashboard("/admin", new AdminDashboardOptions
+app.UseNDjangoAdminDashboard("/admin", new AdminDashboardOptions
 {
     RequireAuthentication = true,
     EnableSaml = true,
@@ -201,17 +201,17 @@ Demonstrates SAML SSO with AWS IAM Identity Center. See [`sample-project-sso/REA
 docker compose up -d db
 
 # Run all tests
-dotnet test EasyData.sln
+dotnet test NDjango.Admin.sln
 ```
 
 ## Project structure
 
 ```
 src/
-  EasyData.Core/                              # Core metadata model
-  EasyData.AspNetCore/                        # ASP.NET Core integration
-  EasyData.EntityFrameworkCore.Relational/    # EF Core metadata loader
-  EasyData.AspNetCore.AdminDashboard/         # Admin dashboard (this package)
+  NDjango.Admin.Core/                              # Core metadata model
+  NDjango.Admin.AspNetCore/                        # ASP.NET Core integration
+  NDjango.Admin.EntityFrameworkCore.Relational/    # EF Core metadata loader
+  NDjango.Admin.AspNetCore.AdminDashboard/         # Admin dashboard (this package)
     Authentication/                           # Login, permissions, password hashing, auth DB
     Authorization/                            # Auth filters
     Configuration/                            # DI extensions and options

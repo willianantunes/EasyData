@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NDjango.Admin.AspNetCore</RootNamespace>
+    <Description>ASP.NET Core classes for NDjango.Admin library.</Description>
+    <DocumentationFile>NDjango.Admin.AspNetCore.xml</DocumentationFile>
+    <PackageId>NDjango.Admin.AspNetCore</PackageId>
+    <PackageTags>database crud middleware filtering</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\NDjango.Admin.Core\NDjango.Admin.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -350,13 +350,13 @@ MigrationBackup/
 .ionide/
 
 # JS files generated on build
-easydata.js/**/docs
+ndjango-admin.js/**/docs
 
 package-lock.json
 dist/
 
-/samples/**/wwwroot/js/easydata.js
-/samples/**/wwwroot/js/easydata.js.map
+/samples/**/wwwroot/js/ndjango-admin.js
+/samples/**/wwwroot/js/ndjango-admin.js.map
 /samples/**/ts/**/*.js
 !/samples/**/ts/styles.js
 
@@ -365,36 +365,36 @@ dist/
 /samples/**/*.db-shm
 /samples/**/*.db-wal
 
-/playground/**/wwwroot/js/easydata.js
-/playground/**/wwwroot/js/easydata.js.map
+/playground/**/wwwroot/js/ndjango-admin.js
+/playground/**/wwwroot/js/ndjango-admin.js.map
 /playground/**/ts/**/*.js
 !/playground/**/ts/styles.js
-/easydata.net/src/**/EasyData*.xml
-/playground/**/wwwroot/css/easydata.css
-/playground/**/wwwroot/css/easydata.css.map
-/playground/EasyDataTest
-/playground/EasyDataTest02
-/playground/EasyDataAspNetCoreTest04
-/EasyData.Dev2.sln
-playground/EasyDataAspNetCoreTest01/EasyDataTest01.db
-playground/EasyDataAspNetCoreTest01/EasyDataTest01.db-shm
-playground/EasyDataAspNetCoreTest01/EasyDataTest01.db-wal
-playground/EasyDataAspNetCoreTest01/wwwroot/js/dashboard.js
-playground/EasyDataAspNetCoreTest01/wwwroot/js/dashboard.js.map
+/ndjango-admin.net/src/**/NDjango.Admin*.xml
+/playground/**/wwwroot/css/ndjango-admin.css
+/playground/**/wwwroot/css/ndjango-admin.css.map
+/playground/NDjangoAdminTest
+/playground/NDjangoAdminTest02
+/playground/NDjangoAdminAspNetCoreTest04
+/NDjango.Admin.Dev2.sln
+playground/NDjangoAdminAspNetCoreTest01/NDjangoAdminTest01.db
+playground/NDjangoAdminAspNetCoreTest01/NDjangoAdminTest01.db-shm
+playground/NDjangoAdminAspNetCoreTest01/NDjangoAdminTest01.db-wal
+playground/NDjangoAdminAspNetCoreTest01/wwwroot/js/dashboard.js
+playground/NDjangoAdminAspNetCoreTest01/wwwroot/js/dashboard.js.map
 
 .idea
 dist2
 docs2
 .nx
-/playground/EasyDataAspNetCoreTest01/wwwroot/js/easydata.min.js
-/playground/EasyDataAspNetCoreTest03/wwwroot/css
-/playground/EasyDataAspNetCoreTest03/wwwroot/js
-/playground/EasyDataAspNetCoreTest01/wwwroot/js/easydata-all.js
-/playground/EasyDataAspNetCoreTest01/wwwroot/js/easydata-all.min.js
-easydata.js/.npmrc
-/playground/EasyDataAspNetCoreTest01/eqdemo-sqlite.db
-/playground/EasyDataAspNetCoreTest01/eqdemo-sqlite.db-shm
-/playground/EasyDataAspNetCoreTest01/eqdemo-sqlite.db-wal
+/playground/NDjangoAdminAspNetCoreTest01/wwwroot/js/ndjango-admin.min.js
+/playground/NDjangoAdminAspNetCoreTest03/wwwroot/css
+/playground/NDjangoAdminAspNetCoreTest03/wwwroot/js
+/playground/NDjangoAdminAspNetCoreTest01/wwwroot/js/ndjango-admin-all.js
+/playground/NDjangoAdminAspNetCoreTest01/wwwroot/js/ndjango-admin-all.min.js
+ndjango-admin.js/.npmrc
+/playground/NDjangoAdminAspNetCoreTest01/eqdemo-sqlite.db
+/playground/NDjangoAdminAspNetCoreTest01/eqdemo-sqlite.db-shm
+/playground/NDjangoAdminAspNetCoreTest01/eqdemo-sqlite.db-wal
 
 prompts
 .claude/rules/shared

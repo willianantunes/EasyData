@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\EasyData.AspNetCore.AdminDashboard\EasyData.AspNetCore.AdminDashboard.csproj" />
+    <ProjectReference Include="..\..\src\NDjango.Admin.AspNetCore.AdminDashboard\NDjango.Admin.AspNetCore.AdminDashboard.csproj" />
   </ItemGroup>
 
 </Project>

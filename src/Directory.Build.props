@@ -8,12 +8,12 @@
     <Authors>Korzh.com</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2020-$([System.DateTime]::Now.Year) (c) Korzh.com. All rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/KorzhCom/EasyData</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/KorzhCom/NDjango.Admin</PackageProjectUrl>
     <PackageIcon>easydata-icon02.png</PackageIcon>
     <PackageIconUrl>https://cdn.korzh.com/img/easydata-icon02.png</PackageIconUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\EasyData.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\NDjango.Admin.snk</AssemblyOriginatorKeyFile>
 
     <NoWarn>CS1591,CS1574</NoWarn>
   </PropertyGroup>

@@ -1,8 +1,8 @@
-# EasyData
+# NDjango.Admin
 
 ## What This Is
 
-EasyData Admin Dashboard — a Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Auto-generates a full admin interface from a `DbContext`: list views with pagination/search/sorting, create/edit forms with FK dropdowns, and delete confirmations. All server-rendered HTML, no client-side framework.
+NDjango.Admin — a Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Auto-generates a full admin interface from a `DbContext`: list views with pagination/search/sorting, create/edit forms with FK dropdowns, and delete confirmations. All server-rendered HTML, no client-side framework.
 
 ## Build & Test Commands
 
@@ -11,34 +11,34 @@ EasyData Admin Dashboard — a Django-admin-inspired CRUD dashboard for ASP.NET 
 docker compose up -d db
 
 # Build everything
-dotnet build EasyData.sln
+dotnet build NDjango.Admin.sln
 
 # Run all tests (~217 tests)
-dotnet test EasyData.sln
+dotnet test NDjango.Admin.sln
 
 # Run a single test project
-dotnet test test/EasyData.AspNetCore.AdminDashboard.Tests/
+dotnet test test/NDjango.Admin.AspNetCore.AdminDashboard.Tests/
 
 # Run a single test
-dotnet test EasyData.sln --filter "FullyQualifiedName~ForeignKeyTests.RestaurantAddForm_RendersCategory_DropdownAsync"
+dotnet test NDjango.Admin.sln --filter "FullyQualifiedName~ForeignKeyTests.RestaurantAddForm_RendersCategory_DropdownAsync"
 
 # Run the sample project (requires SQL Server running)
 cd sample-project/src && dotnet run -- api
 # Dashboard at http://localhost:8000/admin/
 ```
 
-**Solution file:** `EasyData.sln` — includes all source and test projects.
+**Solution file:** `NDjango.Admin.sln` — includes all source and test projects.
 
 ## Architecture
 
 ### Project Dependency Graph
 
 ```
-EasyData.Core                              # Metadata model (MetaData, MetaEntity, MetaEntityAttr)
-├── EasyData.AspNetCore                    # ASP.NET Core integration (EasyDataManager, middleware)
-├── EasyData.EntityFrameworkCore.Relational # EF Core → metadata loader (DbContextMetaDataLoader)
+NDjango.Admin.Core                              # Metadata model (MetaData, MetaEntity, MetaEntityAttr)
+├── NDjango.Admin.AspNetCore                    # ASP.NET Core integration (NDjangoAdminManager, middleware)
+├── NDjango.Admin.EntityFrameworkCore.Relational # EF Core → metadata loader (DbContextMetaDataLoader)
 │
-EasyData.AspNetCore.AdminDashboard         # The admin dashboard (depends on all three above)
+NDjango.Admin.AspNetCore.AdminDashboard         # The admin dashboard (depends on all three above)
 ```
 
 All projects target **net8.0**.
@@ -56,7 +56,7 @@ All projects target **net8.0**.
 
 ### Key Data Flow
 
-`DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData` (entities + attributes). The dashboard reads this metadata to auto-generate views. CRUD operations go through `EasyDataManager` → `EasyDataManagerEF` which uses EF Core directly.
+`DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData` (entities + attributes). The dashboard reads this metadata to auto-generate views. CRUD operations go through `NDjangoAdminManager` → `NDjangoAdminManagerEF` which uses EF Core directly.
 
 ### Important Metadata Properties
 
@@ -68,7 +68,7 @@ On `MetaEntityAttr`:
 
 ### Form POST Handling
 
-`ApiDispatcher.FormToJObject()` maps HTML form fields to a `JObject` for `EasyDataManagerEF`. For FK dropdowns, it uses `attr.DataAttr.PropName` (e.g., `CategoryId`) — the select element `name` attribute must match this.
+`ApiDispatcher.FormToJObject()` maps HTML form fields to a `JObject` for `NDjangoAdminManagerEF`. For FK dropdowns, it uses `attr.DataAttr.PropName` (e.g., `CategoryId`) — the select element `name` attribute must match this.
 
 ### URL Routing Pattern
 
@@ -92,10 +92,10 @@ When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password log
 
 On every list view the dashboard runs `SELECT COUNT(*)` to display the total record count and compute pagination. On tables with millions of rows this query can take seconds.
 
-`PaginationCountTimeoutMs` (default 200 ms, configurable on `AdminDashboardOptions` and `EasyDataOptions`) caps how long the COUNT query may run. If it exceeds the timeout, the dashboard returns the fallback value `EasyDataOptions.PaginationCountFallbackValue` (9,999,999,999) instead of blocking the page. Data rows load independently and are unaffected.
+`PaginationCountTimeoutMs` (default 200 ms, configurable on `AdminDashboardOptions` and `NDjangoAdminOptions`) caps how long the COUNT query may run. If it exceeds the timeout, the dashboard returns the fallback value `NDjangoAdminOptions.PaginationCountFallbackValue` (9,999,999,999) instead of blocking the page. Data rows load independently and are unaffected.
 
 Key implementation details:
-- `CountRecordsAsync<T>` in `EasyDataManagerEF.cs` uses `CancellationTokenSource.CreateLinkedTokenSource` to combine the HTTP request token with the timeout CTS, so client disconnects also cancel the query
+- `CountRecordsAsync<T>` in `NDjangoAdminManagerEF.cs` uses `CancellationTokenSource.CreateLinkedTokenSource` to combine the HTTP request token with the timeout CTS, so client disconnects also cancel the query
 - `catch (OperationCanceledException) when (!callerToken.IsCancellationRequested)` ensures only timeout-caused cancellations return the fallback; caller cancellations propagate
 - A second `catch (Exception) when (...)` handles SQL Server wrapping cancellation in `SqlException`
 - Setting `PaginationCountTimeoutMs = -1` disables the timeout entirely

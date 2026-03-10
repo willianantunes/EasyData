@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace NDjango.Admin.EntityFrameworkCore
+{
+    /// <summary>
+    /// Represents exception class for <see cref="DbContextMetaDataLoader"/>
+    /// </summary>
+    public class DbContextMetaDataLoaderException : Exception
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DbContextMetaDataLoaderException" /> class.
+        /// </summary>
+        /// <param name="message">The error message.</param>
+        public DbContextMetaDataLoaderException(string message) : base(message)
+        {
+
+        }
+    }
+}

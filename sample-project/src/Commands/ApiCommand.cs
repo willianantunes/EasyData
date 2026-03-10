@@ -1,7 +1,7 @@
 using CliFx;
 using CliFx.Attributes;
 using CliFx.Infrastructure;
-using EasyData.AspNetCore.AdminDashboard.Authorization;
+using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,7 @@ public class ApiCommand : ICommand
         {
             services.ConfigureSharedServices(_configuration);
 
-            services.AddEasyDataAdminDashboard<AppDbContext>();
+            services.AddNDjangoAdminDashboard<AppDbContext>();
 
             services.AddControllers();
             services.AddEndpointsApiExplorer();
@@ -44,7 +44,7 @@ public class ApiCommand : ICommand
                 dbContext.Database.EnsureCreated();
             }
 
-            app.UseEasyDataAdminDashboard("/admin", new EasyData.AspNetCore.AdminDashboard.AdminDashboardOptions
+            app.UseNDjangoAdminDashboard("/admin", new NDjango.Admin.AspNetCore.AdminDashboard.AdminDashboardOptions
             {
                 Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
                 DashboardTitle = "Sample Admin",

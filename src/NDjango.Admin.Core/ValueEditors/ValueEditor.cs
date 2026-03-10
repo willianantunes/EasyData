@@ -64,8 +64,7 @@ namespace NDjango.Admin
     {
         public ValueEditor Create(string tag)
         {
-            switch (tag)
-            {
+            switch (tag) {
                 case EditorTags.Text:
                     return new TextValueEditor();
 
@@ -176,7 +175,7 @@ namespace NDjango.Admin
         public ValueEditor(string id)
         {
             if (string.IsNullOrEmpty(id)) {
-                throw new ArgumentNullException("id");                
+                throw new ArgumentNullException("id");
             }
             Id = id;
         }
@@ -200,8 +199,7 @@ namespace NDjango.Admin
         /// Gets the base part of identifier.
         /// </summary>
         /// <value>The identifier base.</value>
-        public virtual string IdBase
-        {
+        public virtual string IdBase {
             get {
                 return GetType().Name;
             }
@@ -211,8 +209,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        public static string STypeCaption
-        {
+        public static string STypeCaption {
             get { return ""; }
         }
 
@@ -230,8 +227,7 @@ namespace NDjango.Admin
         /// This defenition can be used for creation necessary row element 
         /// which represents current value editor in XListBox control.
         /// </remarks>
-        public virtual string XmlDefinition
-        {
+        public virtual string XmlDefinition {
             get { return ""; }
         }
 
@@ -348,8 +344,7 @@ namespace NDjango.Admin
             }
 
             while (await reader.ReadAsync(ct).ConfigureAwait(false)
-                && reader.TokenType != JsonToken.EndObject)
-            {
+                && reader.TokenType != JsonToken.EndObject) {
 
                 var propertyName = reader.Value.ToString();
                 await ReadOnePropFromJsonAsync(reader, propertyName, ct).ConfigureAwait(false);
@@ -433,10 +428,10 @@ namespace NDjango.Admin
         /// <returns>Operator index in the list or -1 if operator with specified ID was not found</returns>
         public int IndexById(string editorId)
         {
-            if (_idSearchIndex.TryGetValue(editorId, out var index))  {
+            if (_idSearchIndex.TryGetValue(editorId, out var index)) {
                 return index;
             }
-           
+
             return -1;
         }
 
@@ -509,14 +504,12 @@ namespace NDjango.Admin
         /// <returns></returns>
         public async Task ReadFromJsonAsync(JsonReader reader, CancellationToken ct = default)
         {
-            if (reader.TokenType != JsonToken.StartArray)
-            {
+            if (reader.TokenType != JsonToken.StartArray) {
                 throw new BadJsonFormatException(reader.Path);
             }
 
             while (await reader.ReadAsync(ct).ConfigureAwait(false)
-                && reader.TokenType != JsonToken.EndArray)
-            {
+                && reader.TokenType != JsonToken.EndArray) {
 
                 var editor = await ValueEditor.ReadFromJsonAsync(reader, ct)
                     .ConfigureAwait(false);
@@ -531,7 +524,7 @@ namespace NDjango.Admin
         /// Converts the old "special dates" value editor to the new one
         /// </summary>
         /// <param name="editor"></param>
-        internal ValueEditor ConvertOldSpecialDateTimeEditor(ValueEditor editor) 
+        internal ValueEditor ConvertOldSpecialDateTimeEditor(ValueEditor editor)
         {
             if (editor != null && editor is CustomListValueEditor clEditor
                 && (clEditor.ListName == "_DSDE" || clEditor.ListName == "_DSTE")) {
@@ -593,8 +586,7 @@ namespace NDjango.Admin
         /// </summary>
         protected override void ClearItems()
         {
-            foreach (var item in this)
-            {
+            foreach (var item in this) {
                 item.Model = null;
             }
             base.ClearItems();

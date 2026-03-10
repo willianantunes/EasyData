@@ -118,7 +118,7 @@ namespace NDjango.Admin.Core.Services.Tests
 
         private class DummyNDjangoAdminManager : NDjangoAdminManager
         {
-            public DummyNDjangoAdminManager(IServiceProvider services, NDjangoAdminOptions options): base(services, options)
+            public DummyNDjangoAdminManager(IServiceProvider services, NDjangoAdminOptions options) : base(services, options)
             {
 
             }

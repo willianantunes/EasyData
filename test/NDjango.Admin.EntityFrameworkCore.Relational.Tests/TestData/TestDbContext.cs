@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
 {
-    class TestDbContext: DbContext
+    class TestDbContext : DbContext
     {
         public TestDbContext(DbContextOptions options)
            : base(options)
@@ -61,7 +61,7 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
 
         public string CategoryName { get; set; }
 
-        [MetaEntityAttr(Index=2)]
+        [MetaEntityAttr(Index = 2)]
         public string Description { get; set; }
 
         [ScaffoldColumn(false)]
@@ -118,7 +118,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
         [NotMapped]
         public string FullName
         {
-            get {
+            get
+            {
                 string res = this.FirstName;
 
                 if (!string.IsNullOrEmpty(res))
@@ -182,7 +183,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
         [NotMapped]
         public string Name
         {
-            get {
+            get
+            {
                 return string.Format("{0:0000}-{1:yyyy-MM-dd}", this.Id, this.OrderDate);
             }
         }

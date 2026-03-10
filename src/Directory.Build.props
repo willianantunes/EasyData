@@ -1,20 +1,18 @@
 <Project>
 
-  <PropertyGroup>
-	<Version>1.5.9</Version>
-    <AssemblyVersion>1.5.9.1</AssemblyVersion>
-    <Configurations>Debug;Release</Configurations>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <!-- Version is configured in the build pipeline -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Authors>willianantunes</Authors>
+        <Description>Adaptive CRUD for .NET that is rendered pretty much like Django Admin.</Description>
+        <PackageLicenseUrl>https://github.com/juntossomosmais/NDjango.Admin/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/juntossomosmais/NDjango.Admin</RepositoryUrl>
+        <PackageTags>admin django ndjango pagination crud</PackageTags>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Nullable>enable</Nullable>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    </PropertyGroup>
 
-    <Authors>Korzh.com</Authors>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright 2020-$([System.DateTime]::Now.Year) (c) Korzh.com. All rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/KorzhCom/NDjango.Admin</PackageProjectUrl>
-    <PackageIcon>easydata-icon02.png</PackageIcon>
-    <PackageIconUrl>https://cdn.korzh.com/img/easydata-icon02.png</PackageIconUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\NDjango.Admin.snk</AssemblyOriginatorKeyFile>
-
-    <NoWarn>CS1591,CS1574</NoWarn>
-  </PropertyGroup>
 </Project>

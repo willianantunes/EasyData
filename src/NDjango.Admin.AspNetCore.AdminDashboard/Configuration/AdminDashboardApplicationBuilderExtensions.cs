@@ -25,8 +25,7 @@ namespace Microsoft.AspNetCore.Builder
             path = "/" + path.Trim('/');
 
             var ndjangoAdminOptions = (NDjangoAdminOptions)app.ApplicationServices.GetService(typeof(NDjangoAdminOptions));
-            if (ndjangoAdminOptions == null)
-            {
+            if (ndjangoAdminOptions == null) {
                 throw new InvalidOperationException(
                     "NDjangoAdminOptions is not registered. " +
                     "Call services.AddNDjangoAdminDashboard<TDbContext>() in ConfigureServices first.");
@@ -34,13 +33,11 @@ namespace Microsoft.AspNetCore.Builder
 
             ndjangoAdminOptions.PaginationCountTimeoutMs = options.PaginationCountTimeoutMs;
 
-            if (options.RequireAuthentication)
-            {
+            if (options.RequireAuthentication) {
                 BootstrapAuthentication(app, options, ndjangoAdminOptions);
             }
 
-            if (options.EnableSaml)
-            {
+            if (options.EnableSaml) {
                 ResolveSamlMetadata(options);
                 RegisterSamlCallbackMiddleware(app, options, ndjangoAdminOptions, path);
             }
@@ -66,8 +63,7 @@ namespace Microsoft.AspNetCore.Builder
 
             var dbContextType = AdminDashboardServiceCollectionExtensions.DbContextType;
 
-            ndjangoAdminOptions.UseManager((services, opts) =>
-            {
+            ndjangoAdminOptions.UseManager((services, opts) => {
                 var userManager = originalResolver(services, opts);
                 var authManager = authNDjangoAdminOptions.ManagerResolver(services, authNDjangoAdminOptions);
                 var userDbContext = (DbContext)services.GetService(dbContextType);
@@ -86,8 +82,7 @@ namespace Microsoft.AspNetCore.Builder
             seeder.SeedPermissionsAsync(model).GetAwaiter().GetResult();
 
             // Create default admin user
-            if (options.CreateDefaultAdminUser)
-            {
+            if (options.CreateDefaultAdminUser) {
                 queries.CreateDefaultAdminUserAsync(options.DefaultAdminPassword).GetAwaiter().GetResult();
             }
         }
@@ -123,20 +118,16 @@ namespace Microsoft.AspNetCore.Builder
             var acsUri = new Uri(options.SamlAcsUrl);
             var acsPath = acsUri.AbsolutePath;
 
-            app.Map(acsPath, branch =>
-            {
-                branch.Run(async httpContext =>
-                {
-                    if (httpContext.Request.Method != "POST")
-                    {
+            app.Map(acsPath, branch => {
+                branch.Run(async httpContext => {
+                    if (httpContext.Request.Method != "POST") {
                         httpContext.Response.StatusCode = 405;
                         return;
                     }
 
                     // Create cookie auth service for the callback
                     var dataProtectionProvider = httpContext.RequestServices.GetService<IDataProtectionProvider>();
-                    if (dataProtectionProvider != null)
-                    {
+                    if (dataProtectionProvider != null) {
                         var cookieService = new AdminCookieAuthService(dataProtectionProvider, options);
                         httpContext.Items["NDjango.Admin.CookieAuthService"] = cookieService;
                     }

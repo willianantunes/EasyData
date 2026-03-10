@@ -49,7 +49,7 @@ namespace NDjango.Admin.Export
         /// The culture
         /// </summary>
         public CultureInfo Culture { get; set; }
-  
+
         /// <summary>
         /// Returns the default instance of <see cref="BasicDataExportSettings"/>.
         /// </summary>

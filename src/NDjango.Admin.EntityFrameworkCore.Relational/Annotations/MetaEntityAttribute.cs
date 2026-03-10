@@ -3,7 +3,7 @@
 namespace NDjango.Admin.EntityFrameworkCore
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class MetaEntityAttribute: Attribute
+    public class MetaEntityAttribute : Attribute
     {
         public MetaEntityAttribute(bool enabled = true)
         {

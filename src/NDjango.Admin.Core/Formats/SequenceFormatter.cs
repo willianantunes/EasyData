@@ -14,7 +14,7 @@ namespace NDjango.Admin
         private readonly Dictionary<long, string> _values;
 
         public SequenceFormatter(string format) : this(format, CultureInfo.InvariantCulture)
-        {            
+        {
         }
 
         public SequenceFormatter(string format, CultureInfo culture)
@@ -46,7 +46,7 @@ namespace NDjango.Admin
                 }
 
             }
-           
+
         }
 
         public object GetFormat(Type formatType)
@@ -57,7 +57,7 @@ namespace NDjango.Admin
                 return null;
         }
 
-        private static HashSet<Type> _appliedTypes = new HashSet<Type> 
+        private static HashSet<Type> _appliedTypes = new HashSet<Type>
         {
             typeof(bool),
             typeof(sbyte),
@@ -93,7 +93,7 @@ namespace NDjango.Admin
 
                 return arg.ToString();
             }
-            else 
+            else
                 return "";
         }
 

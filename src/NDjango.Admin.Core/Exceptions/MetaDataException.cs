@@ -2,7 +2,7 @@
 
 namespace NDjango.Admin
 {
-    public class MetaDataException: Exception
+    public class MetaDataException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Error"/> class.

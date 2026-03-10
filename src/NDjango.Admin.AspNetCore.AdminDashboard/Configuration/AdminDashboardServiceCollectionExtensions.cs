@@ -23,8 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             _dbContextType = typeof(TDbContext);
 
-            services.AddSingleton(sp =>
-            {
+            services.AddSingleton(sp => {
                 var ndjangoAdminOptions = new NDjangoAdminOptions();
                 ndjangoAdminOptions.UseDbContext<TDbContext>(loaderOptionsBuilder);
                 return ndjangoAdminOptions;
@@ -41,8 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.AddDataProtection();
 
-            services.AddDbContext<AuthDbContext>((sp, options) =>
-            {
+            services.AddDbContext<AuthDbContext>((sp, options) => {
                 var userDbContext = sp.GetRequiredService<TDbContext>();
                 var connectionString = userDbContext.Database.GetConnectionString();
                 options.UseSqlServer(connectionString);

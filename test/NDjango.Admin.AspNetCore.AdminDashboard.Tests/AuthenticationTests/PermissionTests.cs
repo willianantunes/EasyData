@@ -25,8 +25,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
         private readonly string _dbName;
         private readonly IHost _host;
 
-        private const string ConnectionStringTemplate =
-            "Server=localhost,1433;Database={0};User Id=sa;Password=Password1;TrustServerCertificate=true;";
+        private static string ConnectionStringTemplate =
+            TestConnectionHelper.ConnectionStringTemplate;
 
         public PermissionTests()
         {
@@ -130,11 +130,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
             foreach (var codename in new[] { "add_category", "view_category", "change_category", "delete_category" })
             {
                 await authDbContext.Database.ExecuteSqlRawAsync(
-                    $@"DECLARE @groupId INT = (SELECT id FROM auth_group WHERE name = N'CategoryManagers')
-                       DECLARE @permId INT = (SELECT id FROM auth_permission WHERE codename = N'{codename}')
+                    @"DECLARE @groupId INT = (SELECT id FROM auth_group WHERE name = N'CategoryManagers')
+                       DECLARE @permId INT = (SELECT id FROM auth_permission WHERE codename = {0})
                        IF @groupId IS NOT NULL AND @permId IS NOT NULL
                        AND NOT EXISTS (SELECT 1 FROM auth_group_permissions WHERE group_id = @groupId AND permission_id = @permId)
-                       INSERT INTO auth_group_permissions (group_id, permission_id) VALUES (@groupId, @permId)");
+                       INSERT INTO auth_group_permissions (group_id, permission_id) VALUES (@groupId, @permId)",
+                    codename);
             }
 
             await authDbContext.Database.ExecuteSqlRawAsync(

@@ -18,33 +18,28 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AuthUser>(entity =>
-            {
+            modelBuilder.Entity<AuthUser>(entity => {
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.IsSuperuser).HasDefaultValue(false);
                 entity.Property(e => e.DateJoined).HasDefaultValueSql("GETUTCDATE()");
             });
 
-            modelBuilder.Entity<AuthGroup>(entity =>
-            {
+            modelBuilder.Entity<AuthGroup>(entity => {
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
-            modelBuilder.Entity<AuthPermission>(entity =>
-            {
+            modelBuilder.Entity<AuthPermission>(entity => {
                 entity.HasIndex(e => e.Codename).IsUnique();
             });
 
-            modelBuilder.Entity<AuthGroupPermission>(entity =>
-            {
+            modelBuilder.Entity<AuthGroupPermission>(entity => {
                 entity.HasIndex(e => new { e.GroupId, e.PermissionId }).IsUnique();
                 entity.HasOne(e => e.Group).WithMany().HasForeignKey(e => e.GroupId);
                 entity.HasOne(e => e.Permission).WithMany().HasForeignKey(e => e.PermissionId);
             });
 
-            modelBuilder.Entity<AuthUserGroup>(entity =>
-            {
+            modelBuilder.Entity<AuthUserGroup>(entity => {
                 entity.HasIndex(e => new { e.UserId, e.GroupId }).IsUnique();
                 entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
                 entity.HasOne(e => e.Group).WithMany().HasForeignKey(e => e.GroupId);

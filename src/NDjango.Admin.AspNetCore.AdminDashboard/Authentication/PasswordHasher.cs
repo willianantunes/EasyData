@@ -10,8 +10,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
             var sb = new StringBuilder(bytes.Length * 2);
-            foreach (var b in bytes)
-            {
+            foreach (var b in bytes) {
                 sb.Append(b.ToString("x2"));
             }
             return sb.ToString();

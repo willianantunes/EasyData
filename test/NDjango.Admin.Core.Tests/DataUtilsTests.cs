@@ -104,7 +104,7 @@ namespace NDjango.Admin.Core.Tests
         }
 
         private enum TestEnum1
-        { 
+        {
             Zero,
             One,
             Two,
@@ -137,7 +137,7 @@ namespace NDjango.Admin.Core.Tests
             var str = DataUtils.DateTimeToInternalFormat(dateTime, dataType);
             str.Should().Be(expectedStr);
         }
-     
+
         public static IEnumerable<object[]> DateTimeToInternalFormatData()
         {
             var dateTime = new DateTime(2012, 12, 20, 20, 12, 20);

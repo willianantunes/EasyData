@@ -28,11 +28,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Routing
                 return null;
 
             var values = new Dictionary<string, string>();
-            for (int i = 0; i < GroupNames.Length; i++)
-            {
+            for (int i = 0; i < GroupNames.Length; i++) {
                 var group = match.Groups[i + 1];
-                if (group.Success)
-                {
+                if (group.Success) {
                     values[GroupNames[i]] = group.Value;
                 }
             }

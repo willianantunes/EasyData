@@ -22,30 +22,25 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
         public static SamlIdpMetadataResult Parse(string xml)
         {
             XDocument doc;
-            try
-            {
+            try {
                 doc = XDocument.Parse(xml);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 throw new InvalidOperationException("Failed to parse SAML IdP metadata XML.", ex);
             }
 
             var entityDescriptor = doc.Root;
-            if (entityDescriptor == null || entityDescriptor.Name.LocalName != "EntityDescriptor")
-            {
+            if (entityDescriptor == null || entityDescriptor.Name.LocalName != "EntityDescriptor") {
                 throw new InvalidOperationException("SAML metadata XML does not contain an EntityDescriptor root element.");
             }
 
             var entityId = entityDescriptor.Attribute("entityID")?.Value;
-            if (string.IsNullOrEmpty(entityId))
-            {
+            if (string.IsNullOrEmpty(entityId)) {
                 throw new InvalidOperationException("SAML metadata XML is missing the entityID attribute.");
             }
 
             var idpDescriptor = entityDescriptor.Element(Md + "IDPSSODescriptor");
-            if (idpDescriptor == null)
-            {
+            if (idpDescriptor == null) {
                 throw new InvalidOperationException("SAML metadata XML does not contain an IDPSSODescriptor element.");
             }
 
@@ -57,8 +52,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
                 .Select(cert => cert.Value.Trim())
                 .FirstOrDefault();
 
-            if (string.IsNullOrEmpty(certificate))
-            {
+            if (string.IsNullOrEmpty(certificate)) {
                 throw new InvalidOperationException("SAML metadata XML does not contain a signing certificate.");
             }
 
@@ -69,8 +63,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
                 .Select(sso => sso.Attribute("Location")?.Value)
                 .FirstOrDefault();
 
-            if (string.IsNullOrEmpty(ssoUrl))
-            {
+            if (string.IsNullOrEmpty(ssoUrl)) {
                 throw new InvalidOperationException("SAML metadata XML does not contain a SingleSignOnService with HTTP-Redirect binding.");
             }
 

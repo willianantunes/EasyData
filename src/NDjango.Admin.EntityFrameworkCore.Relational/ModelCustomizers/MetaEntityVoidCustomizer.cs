@@ -66,7 +66,7 @@ namespace NDjango.Admin.EntityFrameworkCore
 
         public IMetaEntityAttrCustomizer Attribute(Expression<Func<TEntity, object>> propertySelector)
         {
-            if (_emptyAttrBuilder == null) { 
+            if (_emptyAttrBuilder == null) {
                 _emptyAttrBuilder = new MetaEntityAttrVoidCustomizer();
             }
             return _emptyAttrBuilder;

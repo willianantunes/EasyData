@@ -20,15 +20,15 @@ namespace NDjango.Admin.Core.Tests
         public void Constructor_should_create_with_dict()
         {
             var dict = new Dictionary<DataType, List<DisplayFormatDescriptor>>
-            { 
+            {
                 [DataType.Date] = new List<DisplayFormatDescriptor>
-                { 
+                {
                     new DisplayFormatDescriptor("DefaultFormat", "{0:G}"){ IsDefault = true},
                     new DisplayFormatDescriptor("Format1", "{0:F}"),
                     new DisplayFormatDescriptor("Format2", "{0:f}")
                 },
                 [DataType.Int32] = new List<DisplayFormatDescriptor>
-                { 
+                {
                     new DisplayFormatDescriptor("DefaultFormat", "{0:D}") { IsDefault = true }
                 }
             };
@@ -69,12 +69,12 @@ namespace NDjango.Admin.Core.Tests
 
         [Fact]
         public void SetAttrDisplayFormat_should_throw_error_on_wrong_formats()
-        { 
+        {
             var meta = new MetaData();
             var attr = meta.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = meta.EntityRoot, DataType = DataType.String });
-            
+
             //the following assignments must be processed correctly
-            attr.DisplayFormat = "{0:d}"; 
+            attr.DisplayFormat = "{0:d}";
             attr.DisplayFormat = "Total: {0:C2} грн";
             attr.DisplayFormat = "{0:yyyy-MM-dd}";
 

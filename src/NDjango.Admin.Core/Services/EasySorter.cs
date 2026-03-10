@@ -7,7 +7,7 @@ namespace NDjango.Admin.Services
 {
     public class EasySorter
     {
-       
+
         public SortDirection Direction { get; set; } = SortDirection.Ascending;
 
         public string FieldName { get; set; }

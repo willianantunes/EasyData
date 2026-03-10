@@ -47,8 +47,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             if (!httpContext.Request.Cookies.TryGetValue(_cookieName, out var cookieValue))
                 return null;
 
-            try
-            {
+            try {
                 var decrypted = _protector.Unprotect(cookieValue);
                 var payload = JObject.Parse(decrypted);
 
@@ -64,8 +63,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
 
                 return (userId, username);
             }
-            catch
-            {
+            catch {
                 return null;
             }
         }

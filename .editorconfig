@@ -1,0 +1,4 @@
+[*.cs]
+# warning EF1002: Method 'ExecuteSqlRaw' inserts interpolated strings directly into the SQL, without any protection against SQL injection. 
+# Consider using 'ExecuteSql' instead, which protects against SQL injection, or make sure that the value is sanitized and suppress the warning.
+dotnet_diagnostic.EF1002.severity = none

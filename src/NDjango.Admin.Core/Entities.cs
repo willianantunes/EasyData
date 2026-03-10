@@ -38,7 +38,7 @@ namespace NDjango.Admin
         }
 
         protected virtual MetaEntityStore CreateEntityStore()
-        { 
+        {
             return new MetaEntityStore(this);
         }
 
@@ -106,12 +106,10 @@ namespace NDjango.Admin
         /// <value>
         ///   <c>true</c> if this entity has no attributes and all its subentities don't have attributes; otherwise, <c>false</c>.
         /// </value>
-        public bool IsEmpty
-        {
+        public bool IsEmpty {
             get {
                 if (Attributes.Count != 0) return false;
-                foreach (MetaEntity subEntity in SubEntities)
-                {
+                foreach (MetaEntity subEntity in SubEntities) {
                     if (!subEntity.IsEmpty) return false;
                 }
                 return true;
@@ -125,8 +123,7 @@ namespace NDjango.Admin
         /// <value>
         ///   <c>true</c> if this instance is root; otherwise, <c>false</c>.
         /// </value>
-        public bool IsRoot
-        {
+        public bool IsRoot {
             get { return Parent == null; }
         }
 
@@ -195,8 +192,7 @@ namespace NDjango.Admin
         {
             if (Attributes.Count > 0) return Attributes[0];
             MetaEntityAttr result;
-            foreach (MetaEntity subEntity in SubEntities)
-            {
+            foreach (MetaEntity subEntity in SubEntities) {
                 result = subEntity.GetFirstLeaf();
                 if (result != null) return result;
             }
@@ -265,7 +261,7 @@ namespace NDjango.Admin
         {
             MetaEntity result = null;
             foreach (MetaEntity subEntity in SubEntities) {
-                if (string.Equals(subEntity.Name, entityName, 
+                if (string.Equals(subEntity.Name, entityName,
                     StringComparison.InvariantCultureIgnoreCase)) {
                     result = subEntity;
                     break;
@@ -416,7 +412,7 @@ namespace NDjango.Admin
                 await writer.WriteValueAsync(NamePlural, ct).ConfigureAwait(false);
             }
 
-            if (!string.IsNullOrEmpty(Description))  {
+            if (!string.IsNullOrEmpty(Description)) {
                 await writer.WritePropertyNameAsync("desc", ct).ConfigureAwait(false);
                 await writer.WriteValueAsync(Description, ct).ConfigureAwait(false);
             }
@@ -477,8 +473,7 @@ namespace NDjango.Admin
         /// <returns>Task.</returns>
         protected virtual async Task ReadOnePropertyFromJsonAsync(JsonReader reader, string propName, CancellationToken ct)
         {
-            switch (propName)
-            {
+            switch (propName) {
                 case "id":
                     Id = await reader.ReadAsStringAsync(ct).ConfigureAwait(false);
                     break;
@@ -510,7 +505,7 @@ namespace NDjango.Admin
     /// Represents list of entities
     /// </summary>
     public class MetaEntityList : Collection<MetaEntity>
-    { 
+    {
         /// <summary>
         /// Sorts all items in this list by their names.
         /// </summary>
@@ -536,7 +531,7 @@ namespace NDjango.Admin
     /// <summary>
     /// Represents storage of entities
     /// </summary>
-    public class MetaEntityStore: MetaEntityList
+    public class MetaEntityStore : MetaEntityList
     {
         private MetaEntity _parentEntity = null;
 
@@ -582,7 +577,7 @@ namespace NDjango.Admin
         protected virtual void OnEntityInsertion(MetaEntity entity, int index)
         {
             entity.Parent = _parentEntity;
-            if (_parentEntity.Model != null) 
+            if (_parentEntity.Model != null)
                 entity.OnModelAssignment();
         }
 
@@ -613,8 +608,7 @@ namespace NDjango.Admin
             }
 
             while ((await reader.ReadAsync(ct).ConfigureAwait(false))
-                && reader.TokenType != JsonToken.EndArray)
-            {
+                && reader.TokenType != JsonToken.EndArray) {
                 var ent = Model.CreateEntity(_parentEntity);
                 await ent.ReadFromJsonAsync(reader, ct).ConfigureAwait(false);
                 Add(ent);

@@ -20,8 +20,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
         {
             var permissions = new List<(string Codename, string Name)>();
 
-            foreach (var entity in model.EntityRoot.SubEntities)
-            {
+            foreach (var entity in model.EntityRoot.SubEntities) {
                 var entityName = AdminMetadataService.GetEntityName(entity);
                 var entityNameLower = entityName.ToLowerInvariant();
                 var displayName = entity.Name;

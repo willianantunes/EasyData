@@ -33,14 +33,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("<div id=\"content\" class=\"login-content\">");
             sb.Append("<h1>Log in</h1>");
 
-            if (!string.IsNullOrEmpty(model.ErrorMessage))
-            {
+            if (!string.IsNullOrEmpty(model.ErrorMessage)) {
                 sb.Append($"<p class=\"errornote\">{Encode(model.ErrorMessage)}</p>");
             }
 
             sb.Append($"<form method=\"post\" action=\"{model.BasePath}/login/\" class=\"login-form\">");
-            if (!string.IsNullOrEmpty(model.NextUrl))
-            {
+            if (!string.IsNullOrEmpty(model.NextUrl)) {
                 sb.Append($"<input type=\"hidden\" name=\"next\" value=\"{Encode(model.NextUrl)}\" />");
             }
             sb.Append("<div class=\"form-row\"><label for=\"id_username\">Username:</label>");
@@ -50,8 +48,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("<div class=\"submit-row\"><button type=\"submit\" class=\"default\">Log in</button></div>");
             sb.Append("</form>");
 
-            if (model.EnableSaml)
-            {
+            if (model.EnableSaml) {
                 sb.Append("<section class=\"alternative-login-section\">");
                 sb.Append($"<a href=\"{model.BasePath}/saml/init/\">Try single sign-on (SSO) &#128272;</a>");
                 sb.Append("</section>");
@@ -71,15 +68,13 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append($"<h1>Site administration</h1>");
             content.Append("<div id=\"content-main\">");
 
-            foreach (var group in model.Groups)
-            {
+            foreach (var group in model.Groups) {
                 content.Append("<div class=\"app-module\">");
                 content.Append($"<table><caption><a href=\"#\">{Encode(group.Key)}</a></caption>");
                 content.Append("<thead><tr><th>Model name</th><th>Add</th><th>Change</th></tr></thead>");
                 content.Append("<tbody>");
 
-                foreach (var item in group.Value)
-                {
+                foreach (var item in group.Value) {
                     content.Append("<tr>");
                     content.Append($"<th><a href=\"{model.BasePath}/{item.EntityId}/\">{Encode(item.NamePlural)}</a></th>");
                     content.Append($"<td><a href=\"{model.BasePath}/{item.EntityId}/add/\" class=\"addlink\">Add</a></td>");
@@ -108,8 +103,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append($"<input type=\"text\" name=\"q\" value=\"{Encode(model.SearchQuery ?? "")}\" placeholder=\"Search...\" />");
             content.Append("<button type=\"submit\">Search</button>");
             content.Append("</div></form>");
-            if (!model.IsReadOnly)
-            {
+            if (!model.IsReadOnly) {
                 content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/add/\" class=\"addlink\">Add {Encode(model.EntityName.ToLower())}</a>");
             }
             content.Append("</div>");
@@ -119,38 +113,31 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             // Table
             content.Append("<table id=\"result_list\"><thead><tr>");
-            foreach (var col in model.Columns)
-            {
+            foreach (var col in model.Columns) {
                 var sortLink = $"{model.BasePath}/{model.EntityId}/?sort={col.PropName}";
                 var currentDir = "asc";
-                if (model.SortField == col.PropName)
-                {
+                if (model.SortField == col.PropName) {
                     currentDir = model.SortDirection == "asc" ? "desc" : "asc";
                     var arrow = model.SortDirection == "asc" ? " &#9650;" : " &#9660;";
                     content.Append($"<th class=\"sorted\"><a href=\"{sortLink}&dir={currentDir}\">{Encode(col.Caption)}{arrow}</a></th>");
                 }
-                else
-                {
+                else {
                     content.Append($"<th><a href=\"{sortLink}&dir=asc\">{Encode(col.Caption)}</a></th>");
                 }
             }
             content.Append("</tr></thead><tbody>");
 
-            foreach (var row in model.Rows)
-            {
+            foreach (var row in model.Rows) {
                 content.Append("<tr>");
                 bool first = true;
-                foreach (var col in model.Columns)
-                {
+                foreach (var col in model.Columns) {
                     row.TryGetValue(col.PropName, out var cellVal);
                     var displayValue = cellVal?.ToString() ?? "";
-                    if (first && model.PrimaryKeyField != null)
-                    {
+                    if (first && model.PrimaryKeyField != null) {
                         row.TryGetValue(model.PrimaryKeyField, out var pkVal);
                         content.Append($"<td><a href=\"{model.BasePath}/{model.EntityId}/{Encode(pkVal?.ToString() ?? "")}/change/\">{Encode(displayValue)}</a></td>");
                     }
-                    else
-                    {
+                    else {
                         content.Append($"<td>{Encode(displayValue)}</td>");
                     }
                     first = false;
@@ -163,8 +150,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             // Pagination — render a sliding window of page links to avoid
             // generating millions of links when the count falls back to a huge value.
             const int maxPageLinks = 10;
-            if (model.TotalPages > 1)
-            {
+            if (model.TotalPages > 1) {
                 content.Append("<div class=\"pagination\">");
 
                 var half = maxPageLinks / 2;
@@ -172,16 +158,14 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 var endPage = Math.Min(model.TotalPages, startPage + maxPageLinks - 1);
                 startPage = Math.Max(1, endPage - maxPageLinks + 1);
 
-                if (startPage > 1)
-                {
+                if (startPage > 1) {
                     var qs = BuildPageQuery(model, 1);
                     content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/?{qs}\">1</a> ");
                     if (startPage > 2)
                         content.Append("<span class=\"page-ellipsis\">&hellip;</span> ");
                 }
 
-                for (int p = startPage; p <= endPage; p++)
-                {
+                for (int p = startPage; p <= endPage; p++) {
                     var qs = BuildPageQuery(model, p);
                     if (p == model.CurrentPage)
                         content.Append($"<span class=\"this-page\">{p}</span> ");
@@ -189,8 +173,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                         content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/?{qs}\">{p}</a> ");
                 }
 
-                if (endPage < model.TotalPages)
-                {
+                if (endPage < model.TotalPages) {
                     if (endPage < model.TotalPages - 1)
                         content.Append("<span class=\"page-ellipsis\">&hellip;</span> ");
                     var qs = BuildPageQuery(model, model.TotalPages);
@@ -219,25 +202,21 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append($"<form method=\"post\" action=\"{formAction}\" class=\"entity-form\">");
             content.Append("<fieldset class=\"module aligned\">");
 
-            foreach (var field in model.Fields)
-            {
+            foreach (var field in model.Fields) {
                 content.Append("<div class=\"form-row\">");
                 content.Append($"<label for=\"id_{field.PropName}\">{Encode(field.Caption)}:");
                 if (field.IsEditable && field.IsRequired)
                     content.Append(" <span class=\"required\">*</span>");
                 content.Append("</label>");
 
-                if (!field.IsEditable)
-                {
+                if (!field.IsEditable) {
                     var displayValue = field.Value?.ToString() ?? "-";
                     content.Append($"<span class=\"readonly-value\">{Encode(displayValue)}</span>");
                 }
-                else if (field.Kind == EntityAttrKind.Lookup)
-                {
+                else if (field.Kind == EntityAttrKind.Lookup) {
                     RenderSelectField(content, field);
                 }
-                else
-                {
+                else {
                     RenderInputField(content, field);
                 }
 
@@ -246,14 +225,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             content.Append("</fieldset>");
 
-            if (!model.IsReadOnly)
-            {
+            if (!model.IsReadOnly) {
                 content.Append("<div class=\"submit-row\">");
                 content.Append("<button type=\"submit\" name=\"_save_action\" value=\"save\" class=\"default\">Save</button>");
                 content.Append("<button type=\"submit\" name=\"_save_action\" value=\"add_another\">Save and add another</button>");
                 content.Append("<button type=\"submit\" name=\"_save_action\" value=\"continue\">Save and continue editing</button>");
-                if (model.IsEdit)
-                {
+                if (model.IsEdit) {
                     content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/{model.RecordId}/delete/\" class=\"deletelink\">Delete</a>");
                 }
                 content.Append("</div>");
@@ -278,8 +255,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             content.Append("<div class=\"delete-summary\">");
             content.Append("<ul>");
-            foreach (var kv in model.RecordValues)
-            {
+            foreach (var kv in model.RecordValues) {
                 content.Append($"<li><strong>{Encode(kv.Key)}:</strong> {Encode(kv.Value?.ToString() ?? "")}</li>");
             }
             content.Append("</ul></div>");
@@ -306,8 +282,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var required = field.IsRequired ? " required" : "";
             var readOnly = !field.IsEditable ? " readonly" : "";
 
-            switch (field.DataType)
-            {
+            switch (field.DataType) {
                 case DataType.Bool:
                     var isChecked = field.Value is true ? " checked" : "";
                     content.Append($"<input type=\"checkbox\" id=\"{id}\" name=\"{field.PropName}\"{isChecked}{readOnly} />");
@@ -332,12 +307,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                     content.Append($"<textarea id=\"{id}\" name=\"{field.PropName}\" rows=\"5\"{required}{readOnly}>{Encode(value)}</textarea>");
                     break;
                 default:
-                    if (field.IsPrimaryKey && !field.IsEditable)
-                    {
+                    if (field.IsPrimaryKey && !field.IsEditable) {
                         content.Append($"<span class=\"readonly-value\">{Encode(value)}</span>");
                     }
-                    else
-                    {
+                    else {
                         content.Append($"<input type=\"text\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\"{required}{readOnly} />");
                     }
                     break;
@@ -352,10 +325,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             if (!field.IsRequired)
                 content.Append("<option value=\"\">---------</option>");
 
-            if (field.LookupItems != null)
-            {
-                foreach (var item in field.LookupItems)
-                {
+            if (field.LookupItems != null) {
+                foreach (var item in field.LookupItems) {
                     var selected = field.Value?.ToString() == item.Id ? " selected" : "";
                     content.Append($"<option value=\"{Encode(item.Id)}\"{selected}>{Encode(item.Text)}</option>");
                 }
@@ -385,8 +356,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("<div id=\"container\">");
             sb.Append("<div id=\"header\">");
             sb.Append($"<h1 id=\"site-name\"><a href=\"{basePath}/\">{Encode(title)}</a></h1>");
-            if (!string.IsNullOrEmpty(authenticatedUsername))
-            {
+            if (!string.IsNullOrEmpty(authenticatedUsername)) {
                 sb.Append("<div id=\"user-tools\">");
                 sb.Append($"Welcome, <strong>{Encode(authenticatedUsername)}</strong>. ");
                 sb.Append($"<a href=\"{basePath}/logout/\">Log out</a>");
@@ -395,11 +365,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("</div>");
 
             // Breadcrumbs
-            if (breadcrumbs != null)
-            {
+            if (breadcrumbs != null) {
                 sb.Append("<div class=\"breadcrumbs\">");
-                foreach (var (label, url) in breadcrumbs)
-                {
+                foreach (var (label, url) in breadcrumbs) {
                     if (url != null)
                         sb.Append($"<a href=\"{url}\">{Encode(label)}</a> &rsaquo; ");
                     else
@@ -411,20 +379,17 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("<div id=\"main\">");
 
             // Sidebar
-            if (sidebarGroups != null && sidebarGroups.Count > 0)
-            {
+            if (sidebarGroups != null && sidebarGroups.Count > 0) {
                 sb.Append("<div id=\"sidebar\">");
                 sb.Append("<h2>Navigation</h2>");
                 sb.Append("<div id=\"sidebar-filter\">");
                 sb.Append("<input type=\"text\" id=\"sidebar-search\" placeholder=\"Filter models...\" />");
                 sb.Append("</div>");
 
-                foreach (var group in sidebarGroups)
-                {
+                foreach (var group in sidebarGroups) {
                     sb.Append($"<h3>{Encode(group.Key)}</h3>");
                     sb.Append("<ul class=\"sidebar-models\">");
-                    foreach (var item in group.Value)
-                    {
+                    foreach (var item in group.Value) {
                         sb.Append($"<li class=\"sidebar-model-item\"><a href=\"{basePath}/{item.EntityId}/\">{Encode(item.NamePlural)}</a></li>");
                     }
                     sb.Append("</ul>");
@@ -452,8 +417,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var parts = new List<string> { $"page={page}" };
             if (!string.IsNullOrEmpty(model.SearchQuery))
                 parts.Add($"q={System.Net.WebUtility.UrlEncode(model.SearchQuery)}");
-            if (!string.IsNullOrEmpty(model.SortField))
-            {
+            if (!string.IsNullOrEmpty(model.SortField)) {
                 parts.Add($"sort={model.SortField}");
                 parts.Add($"dir={model.SortDirection}");
             }

@@ -252,7 +252,7 @@ namespace NDjango.Admin.AspNetCore
                 await WriteOkJsonResponseAsync(HttpContext, async (jsonWriter, cancellationToken) => {
                     await WriteDeleteRecordResponseAsync(jsonWriter, cancellationToken);
                 }, ct);
-            }          
+            }
         }
 
         protected virtual Task WriteDeleteRecordResponseAsync(JsonWriter jsonWriter, CancellationToken ct)

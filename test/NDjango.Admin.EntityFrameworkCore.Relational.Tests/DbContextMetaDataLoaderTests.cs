@@ -40,7 +40,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
                 ["Supplier"] = 12
             };
 
-            foreach (var entity in meta.EntityRoot.SubEntities) {
+            foreach (var entity in meta.EntityRoot.SubEntities)
+            {
                 entity.Attributes.Should().HaveCount(entityAttrCount[entity.Name]);
             }
         }

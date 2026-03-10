@@ -105,7 +105,8 @@ namespace NDjango.Admin.AspNetCore.Tests
         [NotMapped]
         public string FullName
         {
-            get {
+            get
+            {
                 string res = this.FirstName;
 
                 if (!string.IsNullOrEmpty(res))
@@ -170,7 +171,8 @@ namespace NDjango.Admin.AspNetCore.Tests
         [NotMapped]
         public string Name
         {
-            get {
+            get
+            {
                 return string.Format("{0:0000}-{1:yyyy-MM-dd}", this.Id, this.OrderDate);
             }
         }

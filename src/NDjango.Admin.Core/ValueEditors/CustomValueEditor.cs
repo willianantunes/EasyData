@@ -34,7 +34,7 @@ namespace NDjango.Admin
         /// </summary>
         /// <value>The name of the value editor type.</value>
         public override string Tag => _tag;
-        
+
         /// <summary>
         /// Gets the full name of the value editor class type.
         /// </summary>
@@ -56,8 +56,7 @@ namespace NDjango.Admin
         /// Gets or sets the default value.
         /// </summary>
         /// <value>The default value</value>
-        public override string DefaultValue
-        {
+        public override string DefaultValue {
             get { return ""; }
             set { }
         }
@@ -66,8 +65,7 @@ namespace NDjango.Admin
         /// Gets or sets the default text.
         /// </summary>
         /// <value>The default text.</value>
-        public override string DefaultText
-        {
+        public override string DefaultText {
             get { return ""; }
             set { }
         }
@@ -81,8 +79,7 @@ namespace NDjango.Admin
         /// <returns>Task</returns>
         protected override async Task ReadOnePropFromJsonAsync(JsonReader reader, string propName, CancellationToken ct)
         {
-            switch (propName)
-            {
+            switch (propName) {
                 case "data":
                     Data = await reader.ReadAsStringAsync(ct).ConfigureAwait(false);
                     break;

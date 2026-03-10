@@ -16,8 +16,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <returns><c>true</c> if is inherited from the type specified byt its full type name; otherwise, <c>false</c>.</returns>
         public static bool IsInheritedFrom(this Type type, string fullTypeName)
         {
-            while (type != null)
-            {
+            while (type != null) {
                 if (type.FullName.Equals(fullTypeName)) return true;
                 type = type.GetTypeInfo().BaseType;
             }
@@ -43,15 +42,13 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <returns></returns>
         public static bool IsInheritedFromGeneric(this Type type, Type baseType)
         {
-            if (!baseType.IsGenericType())
-            {
+            if (!baseType.IsGenericType()) {
                 return false;
             }
 
             var baseTypeDef = baseType.GetGenericTypeDefinition();
 
-            while (type != null)
-            {
+            while (type != null) {
                 if (type.IsGenericType() && type.GetGenericTypeDefinition() == baseTypeDef)
                     return true;
 
@@ -99,8 +96,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         {
             //return Attribute.IsDefined(typeToCheck, typeof(ComplexTypeAttribute))
             var attrs = typeToCheck.GetTypeInfo().GetCustomAttributes();
-            foreach (System.Attribute attr in attrs)
-            {
+            foreach (System.Attribute attr in attrs) {
                 if (attr.GetType().Name == "ComplexTypeAttribute")
                     return true;
             }
@@ -146,8 +142,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         public static bool IsAttributeDefined(this PropertyInfo pi, string attrName)
         {
             var attrs = pi.GetCustomAttributes();
-            foreach (System.Attribute attr in attrs)
-            {
+            foreach (System.Attribute attr in attrs) {
                 Type attrType = attr.GetType();
                 if (attrType.Name == attrName)
                     return true;
@@ -181,7 +176,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             }
 
             foreach (Type type in typeToCheck.GetInterfaces()) {
-                if (type == typeof(IEnumerable) || 
+                if (type == typeof(IEnumerable) ||
                     (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
                     return true;
             }

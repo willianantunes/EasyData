@@ -13,8 +13,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Routing
 
         public DashboardRouteMatch FindMatch(string path, string method)
         {
-            foreach (var route in _routes)
-            {
+            foreach (var route in _routes) {
                 var match = route.Match(path, method);
                 if (match != null)
                     return match;

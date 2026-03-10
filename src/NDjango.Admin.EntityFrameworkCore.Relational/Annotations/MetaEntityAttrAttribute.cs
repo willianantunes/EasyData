@@ -24,7 +24,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         public bool ShowOnView { get; set; } = true;
 
         public bool ShowOnEdit { get; set; } = true;
-        
+
         public bool ShowOnCreate { get; set; } = true;
 
         public int Sorting { get; set; } = 0;

@@ -12,12 +12,12 @@ namespace NDjango.Admin.EntityFrameworkCore
         private readonly EntityClrTypeCache _entityCache;
 
         public MetadataCustomizer(MetaData metadata)
-        { 
+        {
             _metadata = metadata;
             _entityCache = new EntityClrTypeCache(_metadata);
         }
 
-        private Dictionary<Type, object> _builderCache = new Dictionary<Type, object> ();
+        private Dictionary<Type, object> _builderCache = new Dictionary<Type, object>();
 
         /// <summary>
         /// Gets the customizer for an entity by its type.

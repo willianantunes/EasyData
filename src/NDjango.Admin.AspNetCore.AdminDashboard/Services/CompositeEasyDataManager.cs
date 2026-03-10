@@ -85,8 +85,7 @@ namespace NDjango.Admin.Services
         public override async Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props,
             CancellationToken ct = default)
         {
-            if (sourceId == nameof(AuthUser))
-            {
+            if (sourceId == nameof(AuthUser)) {
                 HashPasswordInProps(props);
             }
             return await GetManagerFor(sourceId).CreateRecordAsync(modelId, sourceId, props, ct);
@@ -95,8 +94,7 @@ namespace NDjango.Admin.Services
         public override async Task<object> UpdateRecordAsync(string modelId, string sourceId, JObject props,
             CancellationToken ct = default)
         {
-            if (sourceId == nameof(AuthUser))
-            {
+            if (sourceId == nameof(AuthUser)) {
                 HashPasswordInProps(props);
             }
             return await GetManagerFor(sourceId).UpdateRecordAsync(modelId, sourceId, props, ct);
@@ -116,11 +114,9 @@ namespace NDjango.Admin.Services
 
         private static void HashPasswordInProps(JObject props)
         {
-            if (props.TryGetValue("Password", out var passwordToken))
-            {
+            if (props.TryGetValue("Password", out var passwordToken)) {
                 var password = passwordToken.Value<string>();
-                if (!string.IsNullOrEmpty(password))
-                {
+                if (!string.IsNullOrEmpty(password)) {
                     props["Password"] = PasswordHasher.HashPassword(password);
                 }
             }

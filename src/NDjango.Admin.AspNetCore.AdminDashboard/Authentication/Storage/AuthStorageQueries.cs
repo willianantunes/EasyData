@@ -22,8 +22,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
         {
             var conn = _dbContext.Database.GetDbConnection();
             await conn.OpenAsync(ct);
-            try
-            {
+            try {
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "SELECT id, username, password, is_superuser, is_active FROM dbo.auth_user WHERE username = @username";
                 var param = cmd.CreateParameter();
@@ -32,8 +31,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
                 cmd.Parameters.Add(param);
 
                 using var reader = await cmd.ExecuteReaderAsync(ct);
-                if (await reader.ReadAsync(ct))
-                {
+                if (await reader.ReadAsync(ct)) {
                     return (
                         reader.GetInt32(0),
                         reader.GetString(1),
@@ -44,8 +42,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
                 }
                 return null;
             }
-            finally
-            {
+            finally {
                 await conn.CloseAsync();
             }
         }
@@ -63,8 +60,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
             var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var conn = _dbContext.Database.GetDbConnection();
             await conn.OpenAsync(ct);
-            try
-            {
+            try {
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
 SELECT DISTINCT p.codename FROM auth_permission p
@@ -77,13 +73,11 @@ WHERE ug.user_id = @userId";
                 cmd.Parameters.Add(param);
 
                 using var reader = await cmd.ExecuteReaderAsync(ct);
-                while (await reader.ReadAsync(ct))
-                {
+                while (await reader.ReadAsync(ct)) {
                     permissions.Add(reader.GetString(0));
                 }
             }
-            finally
-            {
+            finally {
                 await conn.CloseAsync();
             }
             return permissions;
@@ -91,8 +85,7 @@ WHERE ug.user_id = @userId";
 
         public async Task SeedPermissionsAsync(IEnumerable<(string Codename, string Name)> permissions, CancellationToken ct = default)
         {
-            foreach (var (codename, name) in permissions)
-            {
+            foreach (var (codename, name) in permissions) {
                 await _dbContext.Database.ExecuteSqlRawAsync(
                     @"IF NOT EXISTS (SELECT 1 FROM auth_permission WHERE codename = {0})
                       INSERT INTO auth_permission (name, codename) VALUES ({1}, {0})",
@@ -127,8 +120,7 @@ WHERE ug.user_id = @userId";
 
             var conn = _dbContext.Database.GetDbConnection();
             await conn.OpenAsync(ct);
-            try
-            {
+            try {
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "SELECT id FROM dbo.auth_user WHERE username = @username";
                 var param = cmd.CreateParameter();
@@ -139,8 +131,7 @@ WHERE ug.user_id = @userId";
                 var result = await cmd.ExecuteScalarAsync(ct);
                 return Convert.ToInt32(result);
             }
-            finally
-            {
+            finally {
                 await conn.CloseAsync();
             }
         }
@@ -159,13 +150,11 @@ WHERE ug.user_id = @userId";
             // Add memberships for matching groups using parameterized query
             var conn = _dbContext.Database.GetDbConnection();
             await conn.OpenAsync(ct);
-            try
-            {
+            try {
                 using var cmd = conn.CreateCommand();
 
                 var paramNames = new List<string>();
-                for (int i = 0; i < samlGroupIds.Count; i++)
-                {
+                for (int i = 0; i < samlGroupIds.Count; i++) {
                     var paramName = $"@g{i}";
                     paramNames.Add(paramName);
                     var param = cmd.CreateParameter();
@@ -184,8 +173,7 @@ WHERE ug.user_id = @userId";
 
                 await cmd.ExecuteNonQueryAsync(ct);
             }
-            finally
-            {
+            finally {
                 await conn.CloseAsync();
             }
         }

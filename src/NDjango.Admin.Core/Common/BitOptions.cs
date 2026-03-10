@@ -4,7 +4,7 @@ using System.Text;
 
 namespace NDjango.Admin
 {
-    public class BitOptions 
+    public class BitOptions
     {
         private ulong _signature = 0;
 

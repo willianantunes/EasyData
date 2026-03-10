@@ -14,7 +14,7 @@ namespace NDjango.Admin
 
         public string Name { get; }
 
-        public string Format {get; set;}
+        public string Format { get; set; }
 
         public bool IsDefault { get; set; } = false;
     }
@@ -24,7 +24,7 @@ namespace NDjango.Admin
         private readonly Dictionary<DataType, List<DisplayFormatDescriptor>> _dict = new Dictionary<DataType, List<DisplayFormatDescriptor>>();
 
         public DisplayFormatStore()
-        {        
+        {
         }
 
         public DisplayFormatStore(Dictionary<DataType, List<DisplayFormatDescriptor>> dict)
@@ -56,7 +56,7 @@ namespace NDjango.Admin
                     _dict.Add(type, new List<DisplayFormatDescriptor>() { desc });
                 }
             }
-               
+
             return desc;
         }
 

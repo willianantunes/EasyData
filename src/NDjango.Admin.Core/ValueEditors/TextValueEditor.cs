@@ -63,8 +63,7 @@ namespace NDjango.Admin
         /// Gets or sets the default value.
         /// </summary>
         /// <value>The default value</value>
-        public override string DefaultValue
-        {
+        public override string DefaultValue {
             get { return defaultValue; }
             set { defaultValue = value; }
         }
@@ -73,8 +72,7 @@ namespace NDjango.Admin
         /// Gets or sets the default text.
         /// </summary>
         /// <value>The default text.</value>
-        public override string DefaultText
-        {
+        public override string DefaultText {
             get { return defaultValue; }
             set { }
         }
@@ -87,8 +85,7 @@ namespace NDjango.Admin
         /// <value>
         /// The data type of edited values.
         /// </value>
-        public override DataType ResultType
-        {
+        public override DataType ResultType {
             get {
                 return resultType;
             }

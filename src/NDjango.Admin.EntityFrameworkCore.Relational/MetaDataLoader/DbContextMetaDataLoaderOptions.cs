@@ -59,7 +59,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <param name="filter">The filter.</param>
         /// <returns>DbContextMetaDataLoaderOptions (to use in chained calls).</returns>
         public DbContextMetaDataLoaderOptions AddPropertyFilter(PropertyFilter filter)
-        { 
+        {
             _propertyFilters.Add(filter);
             return this;
         }
@@ -72,7 +72,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// (or some of its properties should be skipped).</typeparam>
         /// <param name="propertySelectors">The list of property selectors. Each selector defines a property that should be skipped during the metadata loading.</param>
         /// <returns>DbContextMetaDataLoaderOptions (to use in chained calls).</returns>
-        public DbContextMetaDataLoaderOptions Skip<TEntity>(params Expression<Func<TEntity, object>>[] propertySelectors) 
+        public DbContextMetaDataLoaderOptions Skip<TEntity>(params Expression<Func<TEntity, object>>[] propertySelectors)
             where TEntity : class
         {
             if (propertySelectors == null || propertySelectors.Length == 0) {

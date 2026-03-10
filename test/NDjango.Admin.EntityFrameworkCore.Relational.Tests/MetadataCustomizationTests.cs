@@ -30,7 +30,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
             var editable = Faker.Boolean.Random();
 
             var loaderOptions = new DbContextMetaDataLoaderOptions();
-            loaderOptions.CustomizeModel(model => {
+            loaderOptions.CustomizeModel(model =>
+            {
                 model.Entity<Category>()
                     .SetDisplayName(displayName)
                     .SetDisplayNamePlural(displayNamePlural)
@@ -103,7 +104,7 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
             var entity = metaData.EntityRoot.FindSubEntity(e => e.ClrType == typeof(Category));
             entity.Should().NotBeNull();
             var attr = entity.FindAttribute(a => a.PropName == "Description");
-            attr.Should().NotBeNull();  
+            attr.Should().NotBeNull();
             attr.Caption.Should().Be(displayName);
             attr.Description.Should().Be(description);
             attr.IsEditable.Should().Be(editable);

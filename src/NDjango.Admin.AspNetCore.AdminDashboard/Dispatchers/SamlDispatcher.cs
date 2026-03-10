@@ -24,8 +24,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
         public async Task DispatchAsync(AdminDashboardContext context, DashboardRouteMatch match)
         {
-            switch (_action)
-            {
+            switch (_action) {
                 case "init":
                     HandleSamlInit(context);
                     break;
@@ -39,8 +38,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
         {
             var options = context.Options;
 
-            if (!options.EnableSaml || string.IsNullOrEmpty(options.SamlIdpSsoUrl))
-            {
+            if (!options.EnableSaml || string.IsNullOrEmpty(options.SamlIdpSsoUrl)) {
                 context.HttpContext.Response.StatusCode = 404;
                 return;
             }
@@ -57,8 +55,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var httpContext = context.HttpContext;
             var ct = httpContext.RequestAborted;
 
-            if (!options.EnableSaml || string.IsNullOrEmpty(options.SamlCertificate))
-            {
+            if (!options.EnableSaml || string.IsNullOrEmpty(options.SamlCertificate)) {
                 httpContext.Response.StatusCode = 404;
                 return;
             }
@@ -66,35 +63,30 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var form = await httpContext.Request.ReadFormAsync(ct);
             var samlResponseEncoded = form["SAMLResponse"].ToString();
 
-            if (string.IsNullOrEmpty(samlResponseEncoded))
-            {
+            if (string.IsNullOrEmpty(samlResponseEncoded)) {
                 httpContext.Response.StatusCode = 401;
                 await httpContext.Response.WriteAsync("Missing SAMLResponse.");
                 return;
             }
 
             Response samlResponse;
-            try
-            {
+            try {
                 samlResponse = new Response(options.SamlCertificate, samlResponseEncoded);
             }
-            catch
-            {
+            catch {
                 httpContext.Response.StatusCode = 401;
                 await httpContext.Response.WriteAsync("Invalid SAMLResponse.");
                 return;
             }
 
-            if (!samlResponse.IsValid())
-            {
+            if (!samlResponse.IsValid()) {
                 httpContext.Response.StatusCode = 401;
                 await httpContext.Response.WriteAsync("SAML response validation failed.");
                 return;
             }
 
             var username = samlResponse.GetNameID();
-            if (string.IsNullOrEmpty(username))
-            {
+            if (string.IsNullOrEmpty(username)) {
                 httpContext.Response.StatusCode = 401;
                 await httpContext.Response.WriteAsync("SAML response does not contain a NameID.");
                 return;
@@ -107,8 +99,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             // Create or update user and sync groups
             var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-            if (authDbContext == null)
-            {
+            if (authDbContext == null) {
                 httpContext.Response.StatusCode = 500;
                 await httpContext.Response.WriteAsync("Auth database not available.");
                 return;

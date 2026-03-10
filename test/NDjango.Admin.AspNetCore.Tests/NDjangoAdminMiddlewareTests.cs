@@ -19,11 +19,11 @@ using FluentAssertions.Json;
 
 namespace NDjango.Admin.AspNetCore.Tests
 {
-    public class NDjangoAdminMiddlewareTests: IClassFixture<NDjangoAdminMiddlewareFixture>
+    public class NDjangoAdminMiddlewareTests : IClassFixture<NDjangoAdminMiddlewareFixture>
     {
         private readonly IHost _host;
 
-        public NDjangoAdminMiddlewareTests(NDjangoAdminMiddlewareFixture fixture) 
+        public NDjangoAdminMiddlewareTests(NDjangoAdminMiddlewareFixture fixture)
         {
             _host = fixture.GetTestHost();
         }
@@ -92,7 +92,7 @@ namespace NDjango.Admin.AspNetCore.Tests
             var response = await client.GetAsync($"{endpoint}/models/__default/sources/{sourceId}/fetch?{keyProperty}={recordId}");
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-      
+
             response.Content.Headers.ContentType
                     .ToString().Should().StartWith("application/json");
 
@@ -119,13 +119,15 @@ namespace NDjango.Admin.AspNetCore.Tests
 
             var dbContext = _host.Services.GetRequiredService<TestDbContext>();
 
-            if (sourceId == "Category") {
+            if (sourceId == "Category")
+            {
                 var id = data["Id"].ToObject<int>();
                 var result = await dbContext.Set<Category>().FindAsync(id);
                 result.Should().NotBeNull();
                 CompareWithJObject(result, data);
             }
-            else if (sourceId == "Shipper") {
+            else if (sourceId == "Shipper")
+            {
                 var id = data["Id"].ToObject<int>();
                 var result = await dbContext.Set<Shipper>().FindAsync(id);
                 result.Should().NotBeNull();
@@ -135,10 +137,12 @@ namespace NDjango.Admin.AspNetCore.Tests
 
         private void CompareWithJObject(object obj, JObject jobj)
         {
-            foreach (var kv in jobj) {
+            foreach (var kv in jobj)
+            {
 
                 var prop = obj.GetType().GetProperty(kv.Key);
-                if (prop != null) {
+                if (prop != null)
+                {
                     prop.GetValue(obj).Should().Be(kv.Value.ToObject(prop.PropertyType));
                 }
             }
@@ -147,9 +151,9 @@ namespace NDjango.Admin.AspNetCore.Tests
         public static IEnumerable<object[]> GetAddRecordData()
             => new List<object[]>() {
                 new object[] {
-                    "/api/ndjango-admin", 
-                    "Category", 
-                    new JObject() { 
+                    "/api/ndjango-admin",
+                    "Category",
+                    new JObject() {
                         ["Id"] = 20,
                         ["CategoryName"] = "Test 20"
                     }
@@ -195,13 +199,15 @@ namespace NDjango.Admin.AspNetCore.Tests
 
             var dbContext = _host.Services.GetRequiredService<TestDbContext>();
 
-            if (sourceId == "Category") {
+            if (sourceId == "Category")
+            {
                 var id = data["Id"].ToObject<int>();
                 var result = await dbContext.Set<Category>().FindAsync(id);
                 result.Should().NotBeNull();
                 CompareWithJObject(result, data);
             }
-            else if (sourceId == "Employee") {
+            else if (sourceId == "Employee")
+            {
                 var id = data["Id"].ToObject<int>();
                 var result = await dbContext.Set<Employee>().FindAsync(id);
                 result.Should().NotBeNull();
@@ -263,11 +269,13 @@ namespace NDjango.Admin.AspNetCore.Tests
 
             var dbContext = _host.Services.GetRequiredService<TestDbContext>();
 
-            if (sourceId == "Category") {
+            if (sourceId == "Category")
+            {
                 var result = await dbContext.Set<Category>().FindAsync(int.Parse(entityId));
                 result.Should().BeNull();
             }
-            else if (sourceId == "Shipper") {
+            else if (sourceId == "Shipper")
+            {
                 var result = await dbContext.Set<Shipper>().FindAsync(int.Parse(entityId));
                 result.Should().BeNull();
             }

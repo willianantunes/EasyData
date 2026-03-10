@@ -29,8 +29,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var ct = context.HttpContext.RequestAborted;
             var metadataService = new AdminMetadataService(context.Manager);
 
-            switch (_action)
-            {
+            switch (_action) {
                 case "create":
                     await HandleCreateAsync(context, match, metadataService, ct);
                     break;
@@ -54,8 +53,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
         {
             var entityId = match.Values["entityId"];
             var entity = await metadataService.GetEntityAsync(entityId, ct);
-            if (entity == null)
-            {
+            if (entity == null) {
                 context.HttpContext.Response.StatusCode = 404;
                 return;
             }
@@ -84,8 +82,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
         {
             var entityId = match.Values["entityId"];
             var entity = await metadataService.GetEntityAsync(entityId, ct);
-            if (entity == null)
-            {
+            if (entity == null) {
                 context.HttpContext.Response.StatusCode = 404;
                 return;
             }
@@ -95,8 +92,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var props = FormToJObject(form, entity);
 
             var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr != null)
-            {
+            if (pkAttr != null) {
                 props[pkAttr.PropName] = JToken.FromObject(ConvertValue(recordId, pkAttr.DataType));
             }
 
@@ -118,16 +114,14 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
         {
             var entityId = match.Values["entityId"];
             var entity = await metadataService.GetEntityAsync(entityId, ct);
-            if (entity == null)
-            {
+            if (entity == null) {
                 context.HttpContext.Response.StatusCode = 404;
                 return;
             }
 
             var recordId = match.Values["id"];
             var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr == null)
-            {
+            if (pkAttr == null) {
                 context.HttpContext.Response.StatusCode = 400;
                 return;
             }
@@ -155,35 +149,29 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
         private static JObject FormToJObject(IFormCollection form, MetaEntity entity)
         {
             var props = new JObject();
-            foreach (var attr in entity.Attributes)
-            {
+            foreach (var attr in entity.Attributes) {
                 string propName;
                 DataType dataType;
 
-                if (attr.Kind == EntityAttrKind.Lookup)
-                {
+                if (attr.Kind == EntityAttrKind.Lookup) {
                     if (attr.DataAttr == null) continue;
                     propName = attr.DataAttr.PropName;
                     dataType = attr.DataAttr.DataType;
                 }
-                else
-                {
+                else {
                     propName = attr.PropName;
                     dataType = attr.DataType;
                 }
 
-                if (form.TryGetValue(propName, out var formValue))
-                {
+                if (form.TryGetValue(propName, out var formValue)) {
                     var value = formValue.FirstOrDefault();
-                    if (value != null)
-                    {
+                    if (value != null) {
                         if (string.IsNullOrEmpty(value) && dataType != DataType.String)
                             continue;
                         props[propName] = JToken.FromObject(ConvertValue(value, dataType));
                     }
                 }
-                else if (dataType == DataType.Bool && attr.IsEditable)
-                {
+                else if (dataType == DataType.Bool && attr.IsEditable) {
                     props[propName] = false;
                 }
             }

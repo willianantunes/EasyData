@@ -18,8 +18,7 @@ namespace NDjango.Admin
         /// <summary>
         /// Gets the list of default values
         /// </summary>
-        ConstValueList DefaultValues
-        {
+        ConstValueList DefaultValues {
             get;
         }
     }
@@ -48,8 +47,7 @@ namespace NDjango.Admin
         /// Gets the list of default values
         /// </summary>
         /// <value></value>
-		public ConstValueList DefaultValues
-        {
+		public ConstValueList DefaultValues {
             get { return _defaultValues; }
         }
 
@@ -78,8 +76,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption
-        {
+        new public static string STypeCaption {
             get { return "Date time value editor"; }
         }
 
@@ -87,8 +84,7 @@ namespace NDjango.Admin
         /// Gets the name of the value editor type.
         /// </summary>
         /// <value>The name of the value editor type.</value>
-        public override string Tag
-        {
+        public override string Tag {
             get { return EditorTags.DateTime; }
         }
 
@@ -100,12 +96,10 @@ namespace NDjango.Admin
         /// This definition can be used for creation necessary row element
         /// which represents current value editor in XListBox control.
         /// </remarks>
-        public override string XmlDefinition
-        {
+        public override string XmlDefinition {
             get {
                 string subTypeName;
-                switch (SubType)
-                {
+                switch (SubType) {
                     case DataType.Time:
                         subTypeName = "TIME";
                         break;
@@ -166,8 +160,7 @@ namespace NDjango.Admin
         /// Gets or sets the default value.
         /// </summary>
         /// <value>The default value</value>
-        public override string DefaultValue
-        {
+        public override string DefaultValue {
             get { return _defaultValue; }
             set {
                 _defaultValue = value;

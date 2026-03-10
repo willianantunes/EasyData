@@ -73,7 +73,7 @@ namespace NDjango.Admin.Aggregation
         }
 
         public void Clear()
-        { 
+        {
             Groups.Clear();
             Aggregates.Clear();
         }

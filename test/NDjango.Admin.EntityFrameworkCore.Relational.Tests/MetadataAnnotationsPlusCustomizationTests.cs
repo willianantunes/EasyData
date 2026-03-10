@@ -34,7 +34,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
             var optionsDisplayNamePlural = Faker.Lorem.Sentence();
             var editable = Faker.Boolean.Random();
 
-            loaderOptions.CustomizeModel(model => {
+            loaderOptions.CustomizeModel(model =>
+            {
                 model.Entity<Category>().SetDisplayName(optionsDisplayName)
                     .SetDisplayNamePlural(optionsDisplayNamePlural).SetEditable(editable);
             });
@@ -60,7 +61,8 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
             var optionsDisplayName = Faker.Lorem.Sentence();
             var optionsDescription = Faker.Lorem.Sentence();
 
-            loaderOptions.CustomizeModel(model => {
+            loaderOptions.CustomizeModel(model =>
+            {
                 model.Entity<Category>()
                     .Attribute(category => category.Description)
                     .SetDisplayName(optionsDisplayName)

@@ -69,8 +69,7 @@ namespace NDjango.Admin
                 || name.EndsWith("o")
                 || name.EndsWith("ss")
                 || name.EndsWith("sh")
-                || name.EndsWith("ch"))
-            {
+                || name.EndsWith("ch")) {
                 name += "es";
             }
             else if (name.EndsWith("fe")) {
@@ -85,11 +84,11 @@ namespace NDjango.Admin
             else {
                 name += "s";
             }
-             
+
 
             return name;
         }
-           
+
         public static string ComposeKey(string parent, string child)
         {
             if (string.IsNullOrEmpty(parent) && string.IsNullOrEmpty(child))
@@ -116,7 +115,7 @@ namespace NDjango.Admin
                 return DataType.Blob;
             if (systemType == typeof(Guid) || systemType == typeof(Guid?))
                 return DataType.Guid;
-            if (systemType == typeof(byte) || systemType == typeof(char) || systemType == typeof(sbyte) 
+            if (systemType == typeof(byte) || systemType == typeof(char) || systemType == typeof(sbyte)
                 || systemType == typeof(byte?) || systemType == typeof(char?) || systemType == typeof(sbyte?))
                 return DataType.Byte;
             if (systemType == typeof(DateTime) || systemType == typeof(DateTime?)
@@ -126,16 +125,16 @@ namespace NDjango.Admin
                 return DataType.Time;
             if (systemType == typeof(decimal) || systemType == typeof(decimal?))
                 return DataType.Currency;
-            if (systemType == typeof(double) || systemType == typeof(float) 
+            if (systemType == typeof(double) || systemType == typeof(float)
                 || systemType == typeof(double?) || systemType == typeof(float?))
                 return DataType.Float;
-            if (systemType == typeof(short) || systemType == typeof(ushort) 
+            if (systemType == typeof(short) || systemType == typeof(ushort)
                 || systemType == typeof(short?) || systemType == typeof(ushort?))
                 return DataType.Word;
-            if (systemType == typeof(int) || systemType == typeof(uint) 
+            if (systemType == typeof(int) || systemType == typeof(uint)
                 || systemType == typeof(int?) || systemType == typeof(uint?))
                 return DataType.Int32;
-            if (systemType == typeof(long) || systemType == typeof(ulong) 
+            if (systemType == typeof(long) || systemType == typeof(ulong)
                 || systemType == typeof(long?) || systemType == typeof(ulong?))
                 return DataType.Int64;
             if (systemType == typeof(string))
@@ -162,11 +161,11 @@ namespace NDjango.Admin
             var result = string.Join("|", enumType.GetFields()
                 .Where(f => f.Name != "value__")
                 .Select(f => $"{f.Name}={f.GetRawConstantValue()}"));
-           
+
             return "{0:S" + result + "}";
         }
 
-   
+
 
         /// <summary>
         /// Convert string representation in internal format to DateTime value.
@@ -180,11 +179,9 @@ namespace NDjango.Admin
                 return DateTime.Now;
             string format = GetDateTimeInternalFormat(dataType);
             DateTime result;
-            if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result))
-            {
+            if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result)) {
                 format = GetDateTimeInternalFormat(DataType.Date);
-                if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result))
-                {
+                if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result)) {
                     format = GetDateTimeInternalFormat(DataType.DateTime, true);
                     if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result))
                         throw new ArgumentException("Wrong date/time format: " + val);
@@ -216,13 +213,12 @@ namespace NDjango.Admin
         /// <value></value>
         public static string GetDateTimeInternalFormat(DataType dataType, bool shortTime = false)
         {
-            switch (dataType)
-            {
-                case DataType.Date: 
+            switch (dataType) {
+                case DataType.Date:
                     return internalDateFormat;
-                case DataType.Time: 
+                case DataType.Time:
                     return internalTimeFormat;
-                default: 
+                default:
                     return $"{internalDateFormat} {(shortTime ? internalShortTimeFormat : internalTimeFormat)}";
             }
 
@@ -237,8 +233,7 @@ namespace NDjango.Admin
         /// <value>The internal format provider.</value>
         public static IFormatProvider GetInternalFormatProvider()
         {
-            if (_internalFormatProvider == null)
-            {
+            if (_internalFormatProvider == null) {
                 var ci = new CultureInfo("en-US");
                 ci.DateTimeFormat.LongDatePattern = internalDateFormat;
                 ci.DateTimeFormat.LongTimePattern = internalTimeFormat;
@@ -262,7 +257,7 @@ namespace NDjango.Admin
         /// </summary>
         /// <value>The internal time format.</value>
 		public static string InternalTimeFormat => internalTimeFormat;
-      
+
 
         /// <summary>
         /// Converts DateTime value to its string representation in current system format.
@@ -270,11 +265,10 @@ namespace NDjango.Admin
         /// <param name="dt">A DateTime value.</param>
         /// <param name="dataType">Type of the data. Can be Date, DateTime or Time.</param>
         /// <returns></returns>
-		public static string DateTimeToUserFormat(DateTime dt, DataType dataType)
+        public static string DateTimeToUserFormat(DateTime dt, DataType dataType)
         {
             string format;
-            switch (dataType)
-            {
+            switch (dataType) {
                 case DataType.Date: format = "d"; break;
                 case DataType.Time: format = "T"; break;
                 default: format = "G"; break;
@@ -288,16 +282,16 @@ namespace NDjango.Admin
         /// <param name="value">The object to investigate.</param>
         public static bool IsNumber(object value)
         {
-            return value is byte 
-                    || value is sbyte 
-                    || value is short 
-                    || value is ushort 
-                    || value is int 
-                    || value is uint 
-                    || value is long 
-                    || value is ulong 
-                    || value is float 
-                    || value is double 
+            return value is byte
+                    || value is sbyte
+                    || value is short
+                    || value is ushort
+                    || value is int
+                    || value is uint
+                    || value is long
+                    || value is ulong
+                    || value is float
+                    || value is double
                     || value is decimal;
         }
     }

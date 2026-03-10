@@ -16,7 +16,7 @@ using Korzh.DbUtils;
 namespace NDjango.Admin.AspNetCore.Tests
 {
 
-    public class NDjangoAdminMiddlewareFixture: IDisposable
+    public class NDjangoAdminMiddlewareFixture : IDisposable
     {
 
         private readonly IHost _host;
@@ -35,7 +35,8 @@ namespace NDjango.Admin.AspNetCore.Tests
                      .ConfigureServices(services =>
                      {
                          services.AddEntityFrameworkSqlite();
-                         services.AddDbContext<TestDbContext>(options => {
+                         services.AddDbContext<TestDbContext>(options =>
+                         {
                              options.UseSqlite(_connection);
                              options.UseInternalServiceProvider(services.BuildServiceProvider());
                          });
@@ -44,7 +45,8 @@ namespace NDjango.Admin.AspNetCore.Tests
                      })
                      .Configure(app =>
                      {
-                         app.UseNDjangoAdmin(options => {
+                         app.UseNDjangoAdmin(options =>
+                         {
                              options.UseDbContext<TestDbContext>();
                          });
 
@@ -52,7 +54,8 @@ namespace NDjango.Admin.AspNetCore.Tests
 
                          app.UseEndpoints(endpoints =>
                          {
-                             endpoints.MapNDjangoAdmin((options) => {
+                             endpoints.MapNDjangoAdmin((options) =>
+                             {
                                  options.Endpoint = "/api/data";
                                  options.UseDbContext<TestDbContext>();
                              });
@@ -70,8 +73,10 @@ namespace NDjango.Admin.AspNetCore.Tests
             using (var context = scope.ServiceProvider.GetService<TestDbContext>())
             {
                 context.Database.OpenConnection();
-                if (context.Database.EnsureCreated()) {
-                    DbInitializer.Create(options => {
+                if (context.Database.EnsureCreated())
+                {
+                    DbInitializer.Create(options =>
+                    {
                         options.UseSqlite(_connection);
                         options.UseJsonImporter();
                         options.UseResourceFileUnpacker(typeof(NDjangoAdminMiddlewareFixture).Assembly, "Resources\\Nwind");

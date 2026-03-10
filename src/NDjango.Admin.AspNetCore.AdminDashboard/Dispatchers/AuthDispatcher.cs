@@ -18,8 +18,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
         public async Task DispatchAsync(AdminDashboardContext context, DashboardRouteMatch match)
         {
-            switch (_action)
-            {
+            switch (_action) {
                 case "login":
                     await HandleLoginAsync(context);
                     break;
@@ -57,8 +56,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var queries = new AuthStorageQueries(authDbContext);
             var user = await queries.GetUserByUsernameAsync(username, ct);
 
-            if (user == null || !user.Value.IsActive || !PasswordHasher.VerifyPassword(password, user.Value.PasswordHash))
-            {
+            if (user == null || !user.Value.IsActive || !PasswordHasher.VerifyPassword(password, user.Value.PasswordHash)) {
                 var model = new LoginViewModel
                 {
                     Title = context.Options.DashboardTitle,

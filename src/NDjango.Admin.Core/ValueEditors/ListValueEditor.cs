@@ -170,7 +170,7 @@ namespace NDjango.Admin
         /// This defenition can be used for creation necessary row element
         /// which represents current value editor in XListBox control.
         /// </remarks>
-        public override string XmlDefinition => 
+        public override string XmlDefinition =>
             "<List id=\"" + Id + "\" listName=\"" + ListName + "\" controlType=\"" + ControlType + "\" multiselect=\"" + Multiselect.ToString() + "\"   />\r\n";
 
         /// <summary>
@@ -281,8 +281,7 @@ namespace NDjango.Admin
         /// This defenition can be used for creation necessary row element
         /// which represents current value editor in XListBox control.
         /// </remarks>
-        public override string XmlDefinition
-        {
+        public override string XmlDefinition {
             get {
                 string defID = "", defText = "";
 
@@ -322,8 +321,7 @@ namespace NDjango.Admin
         /// Gets the list of available values.
         /// </summary>
         /// <value>The list of available values.</value>
-        public virtual ConstValueList Values
-        {
+        public virtual ConstValueList Values {
             get { return _values; }
         }
 
@@ -358,8 +356,7 @@ namespace NDjango.Admin
         /// Gets or sets the default value.
         /// </summary>
         /// <value>The default value</value>
-        public override string DefaultValue
-        {
+        public override string DefaultValue {
             get {
                 if (Values.Count > 0)
                     return Values[0].Id;
@@ -373,8 +370,7 @@ namespace NDjango.Admin
         /// Gets or sets the default text.
         /// </summary>
         /// <value>The default text.</value>
-        public override string DefaultText
-        {
+        public override string DefaultText {
             get {
                 if (Values.Count > 0)
                     return Values[0].Text;

@@ -91,11 +91,9 @@ namespace NDjango.Admin
 
         internal string _lookupEntityId = null;
         private MetaEntity _lookupEntity = null;
-        public MetaEntity LookupEntity
-        {
+        public MetaEntity LookupEntity {
             get {
-                if (_lookupEntity == null)
-                {
+                if (_lookupEntity == null) {
                     CheckModel();
                     _lookupEntity = string.IsNullOrEmpty(_lookupEntityId)
                         ? null
@@ -118,11 +116,9 @@ namespace NDjango.Admin
         /// Gets or sets the data attribute in the lookup entity (where the actual values will be saved to).
         /// </summary>
         /// <value>The lookup data attribute.</value>
-        public MetaEntityAttr LookupDataAttribute
-        {
+        public MetaEntityAttr LookupDataAttribute {
             get {
-                if (_lookupDataAttr == null)
-                {
+                if (_lookupDataAttr == null) {
                     CheckModel();
                     _lookupDataAttr = string.IsNullOrEmpty(_lookupDataAttrId)
                         ? null
@@ -140,8 +136,7 @@ namespace NDjango.Admin
 
         internal string _dataAttrId = null;
         private MetaEntityAttr _dataAttr = null;
-        public MetaEntityAttr DataAttr
-        {
+        public MetaEntityAttr DataAttr {
             get {
                 if (_dataAttr == null) {
                     CheckModel();
@@ -210,8 +205,7 @@ namespace NDjango.Admin
         /// Gets or sets the default value editor.
         /// </summary>
         /// <value>The default value editor. null value represent AUTO value editor.</value>
-        public ValueEditor DefaultEditor
-        {
+        public ValueEditor DefaultEditor {
             get { return _defaultEditor; }
             set {
                 _defaultEditor = value;
@@ -235,8 +229,7 @@ namespace NDjango.Admin
         /// <summary>
         /// Gets the lookup attribute.
         /// </summary>
-        public MetaEntityAttr LookupAttr
-        {
+        public MetaEntityAttr LookupAttr {
             get {
                 if (_lookupAttr == null) {
                     CheckModel();
@@ -308,7 +301,7 @@ namespace NDjango.Admin
                 if (_displayFormat != value) {
                     DataFormatUtils.CheckFormat(value);
                     _displayFormat = value;
-                }            
+                }
             }
         }
 
@@ -431,8 +424,7 @@ namespace NDjango.Admin
         /// <value>Text that represents attribute expression. 
         /// Can be simply field name for EntAttrKind.Data attributes or 
         /// more complicated SQL expression composed of several fields, operators and functions.</value>
-        public string Expr
-        {
+        public string Expr {
             get { return expr; }
             set {
                 if (expr != value) {
@@ -458,8 +450,7 @@ namespace NDjango.Admin
         /// <value>
         /// The full expression.
         /// </value>
-        public string FullExpr
-        {
+        public string FullExpr {
             get {
                 return IsVirtual ? this.Expr : GetDataAttrFullExpr();
             }
@@ -675,8 +666,7 @@ namespace NDjango.Admin
         /// <returns>Task.</returns>
         protected virtual async Task ReadPropertyFromJsonAsync(JsonReader reader, string propName, CancellationToken ct)
         {
-            switch (propName)
-            {
+            switch (propName) {
                 case "id":
                     Id = await reader.ReadAsStringAsync(ct).ConfigureAwait(false);
                     break;
@@ -785,11 +775,11 @@ namespace NDjango.Admin
         }
     }
 
- 
+
     /// <summary>
     /// Represents entity attributes storage associated with a particular entity.
     /// </summary>
-    public class MetaEntityAttrStore: MetaEntityAttrList
+    public class MetaEntityAttrStore : MetaEntityAttrList
     {
         private MetaEntity _entity = null;
 
@@ -805,8 +795,7 @@ namespace NDjango.Admin
 
         /// <summary>Gets the DataModel object this entity attribute belongs to</summary>
         /// <value>The model.</value>
-        public MetaData Model
-        {
+        public MetaData Model {
             get { return _entity != null ? _entity.Model : null; }
         }
 

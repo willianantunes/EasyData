@@ -23,8 +23,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var resourceName = $"NDjango.Admin.AspNetCore.AdminDashboard.wwwroot.{_resourceFolder}.{fileName.Replace('/', '.')}";
 
             var stream = _assembly.GetManifestResourceStream(resourceName);
-            if (stream == null)
-            {
+            if (stream == null) {
                 context.HttpContext.Response.StatusCode = 404;
                 return;
             }

@@ -12,7 +12,7 @@ namespace Microsoft.AspNetCore.Builder
     public static class NDjangoAdminEndpointRouteBuilderExtensions
     {
         public static IEndpointConventionBuilder MapNDjangoAdmin(
-            this IEndpointRouteBuilder builder, 
+            this IEndpointRouteBuilder builder,
             Action<NDjangoAdminOptions> optionsTuner = null)
         {
             return MapNDjangoAdmin<NDjangoAdminApiHandler>(builder, optionsTuner);
@@ -20,7 +20,7 @@ namespace Microsoft.AspNetCore.Builder
 
 
         public static IEndpointConventionBuilder MapNDjangoAdmin<THandler>(
-            this IEndpointRouteBuilder builder, 
+            this IEndpointRouteBuilder builder,
             Action<NDjangoAdminOptions> optionsTuner = null) where THandler : NDjangoAdminApiHandler
         {
             var options = new NDjangoAdminOptions();
@@ -35,8 +35,7 @@ namespace Microsoft.AspNetCore.Builder
 
             // return 404 if the request was not processed by NDjangoAdminMiddleware 
             // to prevent the exception on reaching the end of pipeline
-            app.Run(context =>
-            {
+            app.Run(context => {
                 context.Response.StatusCode = 404;
                 return Task.CompletedTask;
             });

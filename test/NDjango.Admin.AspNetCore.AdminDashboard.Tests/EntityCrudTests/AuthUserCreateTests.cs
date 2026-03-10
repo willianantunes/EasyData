@@ -26,8 +26,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityCrudTests
         private readonly string _connectionString;
         private readonly IHost _host;
 
-        private const string ConnectionStringTemplate =
-            "Server=localhost,1433;Database={0};User Id=sa;Password=Password1;TrustServerCertificate=true;";
+        private static string ConnectionStringTemplate =
+            TestConnectionHelper.ConnectionStringTemplate;
 
         public AuthUserCreateTests()
         {

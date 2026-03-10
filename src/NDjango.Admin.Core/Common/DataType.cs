@@ -96,8 +96,7 @@ namespace NDjango.Admin
         /// <param name="types">The list of types to add.</param>
         public void InsertRange(int index, IEnumerable<DataType> types)
         {
-            foreach (DataType type in types)
-            {
+            foreach (DataType type in types) {
                 Insert(index, type);
                 index++;
             }
@@ -107,12 +106,10 @@ namespace NDjango.Admin
         /// Gets or sets the text representation of type list delimited with the comma.
         /// </summary>
         /// <value>The text representation of type list delimited with the comma.</value>
-        public string CommaText
-        {
+        public string CommaText {
             get {
                 string result = "";
-                foreach (DataType type in this)
-                {
+                foreach (DataType type in this) {
                     if (result != "") result += ", ";
                     result += type.ToString();
                 }
@@ -121,8 +118,7 @@ namespace NDjango.Admin
 
             set {
                 Clear();
-                if (value != null)
-                {
+                if (value != null) {
                     char[] delimiterChars = { ',' };
                     string[] list = value.Split(delimiterChars);
                     foreach (string s in list) {

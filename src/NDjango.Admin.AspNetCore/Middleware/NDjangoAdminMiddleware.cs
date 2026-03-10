@@ -11,7 +11,7 @@ using NDjango.Admin.Services;
 namespace NDjango.Admin.AspNetCore
 {
 
-    public static class DataAction 
+    public static class DataAction
     {
         public const string GetModel = "GetModel";
         public const string FetchRecord = "FetchRecord";
@@ -21,7 +21,7 @@ namespace NDjango.Admin.AspNetCore
         public const string DeleteRecord = "DeleteRecord";
     }
 
-    public class NDjangoAdminMiddleware<THandler> where THandler: NDjangoAdminApiHandler
+    public class NDjangoAdminMiddleware<THandler> where THandler : NDjangoAdminApiHandler
     {
         private readonly RequestDelegate _next;
         private readonly NDjangoAdminOptions _options;
@@ -60,8 +60,7 @@ namespace NDjango.Admin.AspNetCore
         {
             var path = context.Request.Path;
             if (path.StartsWithSegments(_options.Endpoint, out var command) && !string.IsNullOrEmpty(command)) {
-                if (_options.ManagerResolver == null)
-                {
+                if (_options.ManagerResolver == null) {
                     throw new NDjangoAdminManagerException("NDjangoAdminManagerResolver is not defined.\n" +
                                     "You possibly forgot to add UseManager at NDjango.Admin Middleware options");
                 }

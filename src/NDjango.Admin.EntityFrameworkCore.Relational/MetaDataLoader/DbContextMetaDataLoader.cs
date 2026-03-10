@@ -18,7 +18,7 @@ namespace NDjango.Admin.EntityFrameworkCore
     {
         private IDictionary<Type, int> _dbSetTypes = new Dictionary<Type, int>();
 
-        protected readonly Dictionary<IEntityType, MetaEntity> EntityTypeEntities 
+        protected readonly Dictionary<IEntityType, MetaEntity> EntityTypeEntities
                                             = new Dictionary<IEntityType, MetaEntity>();
 
         protected readonly DbContextMetaDataLoaderOptions Options;
@@ -55,7 +55,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// </summary>
         /// <returns>IEnumerable&lt;IEntityType&gt;.</returns>
         protected IEnumerable<IEntityType> GetEntityTypes()
-        {   
+        {
             return DbContext.Model.GetEntityTypes()
                .Where(ApplyEntityFilters);
         }
@@ -71,7 +71,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             int idx = 0;
             foreach (var prop in dbSetProps) {
                 var entType = prop.PropertyType.GetGenericArguments()[0];
-                if (!result.ContainsKey(entType)) { 
+                if (!result.ContainsKey(entType)) {
                     result.Add(entType, idx++);
                 }
             }
@@ -141,7 +141,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                 // To make it possible to keep the original order
                 // we reorder the list of entities according to the order of DbSets
 
-                entityTypes = entityTypes.OrderBy(t => 
+                entityTypes = entityTypes.OrderBy(t =>
                     _dbSetTypes.TryGetValue(t.ClrType, out var index) ? index : int.MaxValue);
             }
 
@@ -245,7 +245,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                     continue;
 
                 var entityAttr = CreateEntityAttribute(entity, entityType, property);
-                if (entityAttr != null) {                 
+                if (entityAttr != null) {
                     if (entityAttr.Index == int.MaxValue) {
                         entityAttr.Index = attrCounter;
                     }
@@ -267,7 +267,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <param name="entityType">An instance of <see cref="IEntityType"/> that represents the entity in DbContext.</param>
         /// <param name="navigation">The navigation property.</param>
         /// <param name="attrCounter">Represents the default index of the processed attribute</param>
-        protected virtual void ProcessNavigationProperty(MetaEntity entity, IEntityType entityType, 
+        protected virtual void ProcessNavigationProperty(MetaEntity entity, IEntityType entityType,
                                                             INavigation navigation, ref int attrCounter)
         {
             // do not process collections for now
@@ -294,9 +294,10 @@ namespace NDjango.Admin.EntityFrameworkCore
             //}
 
             if (dataAttr != null && EntityTypeEntities.TryGetValue(foreignKey.PrincipalEntityType, out var lookupEntity)) {
-                var lookUpAttr = Model.CreateEntityAttr(new MetaEntityAttrDescriptor() { 
-                    Parent = entity, 
-                    Kind = EntityAttrKind.Lookup 
+                var lookUpAttr = Model.CreateEntityAttr(new MetaEntityAttrDescriptor()
+                {
+                    Parent = entity,
+                    Kind = EntityAttrKind.Lookup
                 });
                 lookUpAttr.Id = DataUtils.ComposeKey(entity.Id, navigation.Name);
                 lookUpAttr.Caption = DataUtils.PrettifyName(navigation.Name);
@@ -343,7 +344,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                             && attr.Kind != EntityAttrKind.Lookup);
                     }
 
-                    foreach(var attr in attrs) {
+                    foreach (var attr in attrs) {
                         attr.ShowInLookup = true;
                     }
                 }
@@ -402,7 +403,8 @@ namespace NDjango.Admin.EntityFrameworkCore
             var columnName = property.GetDbColumnName();
             if (columnName == null) return null;
 
-            var entityAttr = Model.CreateEntityAttr(new MetaEntityAttrDescriptor() {
+            var entityAttr = Model.CreateEntityAttr(new MetaEntityAttrDescriptor()
+            {
                 Parent = entity
             });
 
@@ -415,7 +417,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             entityAttr.PropName = property.Name;
 
             if (TryResolveDefaultValue(property, out var defVal))
-             entityAttr.DefaultValue = defVal;
+                entityAttr.DefaultValue = defVal;
 
             entityAttr.IsPrimaryKey = property.IsPrimaryKey();
             entityAttr.IsForeignKey = property.IsForeignKey();
@@ -440,7 +442,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             }
 
             var propInfo = property.PropertyInfo;
-            if (propInfo != null) {         
+            if (propInfo != null) {
                 if (propInfo.GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr) {
                     entityAttr.Caption = displayAttr.Name;
                     entityAttr.Description = displayAttr.Description;
@@ -460,7 +462,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                 entityAttr.ShowOnEdit = false;
             if (property.ValueGenerated != ValueGenerated.Never)
                 entityAttr.IsEditable = false;
-         
+
             if (entityAttr.DataType == DataType.Blob) {
                 // DO NOT show blob fields in GRID
                 entityAttr.ShowOnView = false;

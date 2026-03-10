@@ -13,7 +13,7 @@ namespace NDjango.Admin.Services
 
         private string _filterText;
 
-        public SubstringFilter(MetaData model): base(model) {}
+        public SubstringFilter(MetaData model) : base(model) { }
 
         public override object Apply(MetaEntity entity, bool isLookup, object data)
         {
@@ -28,7 +28,7 @@ namespace NDjango.Admin.Services
         }
 
         // Is callable by public Apply
-        private IQueryable<T> Apply<T>(MetaEntity entity, bool isLookup, object data) where T: class
+        private IQueryable<T> Apply<T>(MetaEntity entity, bool isLookup, object data) where T : class
         {
             var query = (IQueryable<T>)data;
             return query.FullTextSearchQuery(_filterText, GetFilterOptions(entity, isLookup));
@@ -37,8 +37,7 @@ namespace NDjango.Admin.Services
         public override async Task ReadFromJsonAsync(JsonReader reader, CancellationToken ct = default)
         {
             if (!await reader.ReadAsync(ct).ConfigureAwait(false)
-               || reader.TokenType != JsonToken.StartObject)
-            {
+               || reader.TokenType != JsonToken.StartObject) {
                 throw new BadJsonFormatException(reader.Path);
             }
 

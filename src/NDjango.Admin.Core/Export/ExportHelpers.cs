@@ -12,8 +12,7 @@ namespace NDjango.Admin.Export
 
         public static string ApplyGroupFooterColumnTemplate(string template, string val, Dictionary<string, object> extraData)
         {
-            return _varEntry.Replace(template, match =>
-            {
+            return _varEntry.Replace(template, match => {
                 var varName = match.Groups[1].Value.Trim();
                 if (varName == "GroupValue") {
                     return val;

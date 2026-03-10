@@ -127,7 +127,7 @@ namespace NDjango.Admin.Services
                             else {
                                 var convertToString = typeof(Convert).GetMethod("ToString", new[] { prop.PropertyType });
                                 toStringExp = Exp.Call(convertToString, Exp.Convert(paramExp, prop.PropertyType));
-                            }                           
+                            }
                         }
 
                         Exp peLower = Exp.Call(toStringExp, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));

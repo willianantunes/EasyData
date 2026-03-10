@@ -15,7 +15,7 @@ namespace NDjango.Admin.Services
         }
 
         public abstract Task ReadFromJsonAsync(JsonReader reader, CancellationToken ct = default);
-        
+
         public abstract object Apply(MetaEntity entity, bool isLookup, object data);
     }
 }

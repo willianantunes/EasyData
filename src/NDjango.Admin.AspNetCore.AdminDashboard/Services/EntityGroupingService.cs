@@ -30,8 +30,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Services
             var authEntities = new List<MetaEntity>();
             var nonAuthEntities = new List<MetaEntity>();
 
-            foreach (var entity in entities)
-            {
+            foreach (var entity in entities) {
                 var name = AdminMetadataService.GetEntityName(entity);
                 if (_options.RequireAuthentication && AuthEntityNames.Contains(name))
                     authEntities.Add(entity);
@@ -39,18 +38,14 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Services
                     nonAuthEntities.Add(entity);
             }
 
-            if (_options.EntityGroups != null && _options.EntityGroups.Count > 0)
-            {
+            if (_options.EntityGroups != null && _options.EntityGroups.Count > 0) {
                 var assigned = new HashSet<string>();
-                foreach (var group in _options.EntityGroups)
-                {
+                foreach (var group in _options.EntityGroups) {
                     var groupEntities = new List<MetaEntity>();
-                    foreach (var entityName in group.Value)
-                    {
+                    foreach (var entityName in group.Value) {
                         var entity = nonAuthEntities.FirstOrDefault(e =>
                             AdminMetadataService.GetEntityName(e) == entityName);
-                        if (entity != null)
-                        {
+                        if (entity != null) {
                             groupEntities.Add(entity);
                             assigned.Add(AdminMetadataService.GetEntityName(entity));
                         }
@@ -66,14 +61,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Services
                 if (ungrouped.Count > 0)
                     groups["Other"] = ungrouped;
             }
-            else
-            {
+            else {
                 if (nonAuthEntities.Count > 0)
                     groups["Models"] = nonAuthEntities;
             }
 
-            if (authEntities.Count > 0)
-            {
+            if (authEntities.Count > 0) {
                 groups["Authentication and Authorization"] = authEntities;
             }
 

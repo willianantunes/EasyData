@@ -36,8 +36,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
             _basePath = basePath.TrimEnd('/');
             _routes = DashboardRoutes.Routes;
 
-            if (options.RequireAuthentication && dataProtectionProvider != null)
-            {
+            if (options.RequireAuthentication && dataProtectionProvider != null) {
                 _cookieAuthService = new AdminCookieAuthService(dataProtectionProvider, options);
             }
         }
@@ -46,8 +45,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
         {
             var path = httpContext.Request.Path.Value ?? "";
 
-            if (!path.StartsWith(_basePath))
-            {
+            if (!path.StartsWith(_basePath)) {
                 await _next(httpContext);
                 return;
             }
@@ -58,8 +56,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
 
             relativePath = HttpUtility.UrlDecode(relativePath);
 
-            if (_ndjangoAdminOptions.ManagerResolver == null)
-            {
+            if (_ndjangoAdminOptions.ManagerResolver == null) {
                 httpContext.Response.StatusCode = 500;
                 await httpContext.Response.WriteAsync("NDjangoAdminManager is not configured.");
                 return;
@@ -69,18 +66,15 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
             var dashboardContext = new AdminDashboardContext(httpContext, _options, manager, _basePath);
 
             // Store cookie auth service in HttpContext.Items so dispatchers can access it
-            if (_cookieAuthService != null)
-            {
+            if (_cookieAuthService != null) {
                 httpContext.Items["NDjango.Admin.CookieAuthService"] = _cookieAuthService;
             }
 
             // Authentication check
-            if (_options.RequireAuthentication && !IsAuthExempt(relativePath))
-            {
+            if (_options.RequireAuthentication && !IsAuthExempt(relativePath)) {
                 var authResult = _cookieAuthService?.ValidateCookie(httpContext);
 
-                if (authResult == null)
-                {
+                if (authResult == null) {
                     var nextUrl = System.Net.WebUtility.UrlEncode(path);
                     httpContext.Response.Redirect($"{_basePath}/login/?next={nextUrl}");
                     return;
@@ -90,23 +84,18 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
                 dashboardContext.AuthenticatedUsername = authResult.Value.Username;
 
                 var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-                if (authDbContext != null)
-                {
+                if (authDbContext != null) {
                     var queries = new AuthStorageQueries(authDbContext);
                     var user = await queries.GetUserByUsernameAsync(authResult.Value.Username, httpContext.RequestAborted);
-                    if (user != null)
-                    {
+                    if (user != null) {
                         dashboardContext.IsSuperuser = user.Value.IsSuperuser;
                     }
                 }
             }
 
-            if (_options.Authorization != null && _options.Authorization.Any())
-            {
-                foreach (var filter in _options.Authorization)
-                {
-                    if (!filter.Authorize(dashboardContext))
-                    {
+            if (_options.Authorization != null && _options.Authorization.Any()) {
+                foreach (var filter in _options.Authorization) {
+                    if (!filter.Authorize(dashboardContext)) {
                         httpContext.Response.StatusCode = 403;
                         return;
                     }
@@ -114,29 +103,24 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
             }
 
             var routeMatch = _routes.FindMatch(relativePath, httpContext.Request.Method);
-            if (routeMatch == null)
-            {
+            if (routeMatch == null) {
                 httpContext.Response.StatusCode = 404;
                 return;
             }
 
             // Permission enforcement
-            if (_options.RequireAuthentication && !IsAuthExempt(relativePath))
-            {
+            if (_options.RequireAuthentication && !IsAuthExempt(relativePath)) {
                 var requiredPermission = GetRequiredPermission(relativePath, routeMatch);
-                if (requiredPermission != null)
-                {
+                if (requiredPermission != null) {
                     var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-                    if (authDbContext != null)
-                    {
+                    if (authDbContext != null) {
                         var queries = new AuthStorageQueries(authDbContext);
                         var permissionChecker = new PermissionChecker(queries);
                         var hasPermission = await permissionChecker.HasPermissionAsync(
                             httpContext, dashboardContext.AuthenticatedUserId, dashboardContext.IsSuperuser,
                             requiredPermission, httpContext.RequestAborted);
 
-                        if (!hasPermission)
-                        {
+                        if (!hasPermission) {
                             httpContext.Response.StatusCode = 403;
                             await httpContext.Response.WriteAsync("Permission denied.");
                             return;
@@ -150,8 +134,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
 
         private static bool IsAuthExempt(string relativePath)
         {
-            foreach (var prefix in AuthExemptPrefixes)
-            {
+            foreach (var prefix in AuthExemptPrefixes) {
                 if (relativePath.StartsWith(prefix))
                     return true;
             }

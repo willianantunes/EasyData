@@ -74,7 +74,7 @@ namespace NDjango.Admin.Services
             var attrIdProps = entityType.GetProperties()
                 .Where(prop => !prop.IsShadowProperty())
                 .ToDictionary(
-                    prop => DataUtils.ComposeKey(sourceId, prop.Name), 
+                    prop => DataUtils.ComposeKey(sourceId, prop.Name),
                     prop => prop);
 
             var attrs = modelEntity.Attributes.Where(attr => attr.Kind != EntityAttrKind.Lookup);
@@ -88,7 +88,8 @@ namespace NDjango.Admin.Services
                 }
 
                 var prop = attrIdProps[attr.Id];
-                result.Cols.Add(new NDjangoAdminCol(new NDjangoAdminColDesc {
+                result.Cols.Add(new NDjangoAdminCol(new NDjangoAdminColDesc
+                {
                     Id = attr.Id,
                     Label = attr.Caption,
                     AttrId = attr?.Id,
@@ -125,7 +126,7 @@ namespace NDjango.Admin.Services
             return await GetRecordCountAsync(DbContext, entityType.ClrType, filters, isLookup, ct);
         }
 
-        public override Task<object> FetchRecordAsync(string modelId, string sourceId, 
+        public override Task<object> FetchRecordAsync(string modelId, string sourceId,
             Dictionary<string, string> recordKeys, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
@@ -141,7 +142,7 @@ namespace NDjango.Admin.Services
             return Task.FromResult(record);
         }
 
-        public override async Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props, 
+        public override async Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props,
             CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
@@ -226,10 +227,10 @@ namespace NDjango.Admin.Services
 
             if (keys.Count != keyProps.Count) {
                 throw new NDjangoAdminManagerException("Wrong number of key fields");
-            }  
+            }
 
             return keyProps.ToDictionary(
-                prop => prop, 
+                prop => prop,
                 prop => TypeDescriptor.GetConverter(prop.ClrType)
                                    .ConvertFromString(keys[prop.Name]));
         }
@@ -242,8 +243,8 @@ namespace NDjango.Admin.Services
 
             return keyProps.ToDictionary(
                 p => p,
-                p => props.TryGetValue(p.Name, out var token) 
-                    ? token.ToObject(p.ClrType) 
+                p => props.TryGetValue(p.Name, out var token)
+                    ? token.ToObject(p.ClrType)
                     : throw new NDjangoAdminManagerException($"Key value is not found: {p.Name}"));
         }
 
@@ -261,7 +262,7 @@ namespace NDjango.Admin.Services
             _countRecordsGeneric = methods.Single(m => m.Name == nameof(CountRecordsAsync));
         }
 
-        
+
         private object FindRecord(DbContext dbContext, Type entityType, IEnumerable<object> keys)
         {
             var targetMethod = _findRecordGeneric.MakeGenericMethod(entityType);
@@ -351,16 +352,13 @@ namespace NDjango.Admin.Services
 
             using var timeoutCts = new CancellationTokenSource(Options.PaginationCountTimeoutMs);
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(callerToken, timeoutCts.Token);
-            try
-            {
+            try {
                 return await query.LongCountAsync(linkedCts.Token);
             }
-            catch (OperationCanceledException) when (!callerToken.IsCancellationRequested)
-            {
+            catch (OperationCanceledException) when (!callerToken.IsCancellationRequested) {
                 return NDjangoAdminOptions.PaginationCountFallbackValue;
             }
-            catch (Exception) when (!callerToken.IsCancellationRequested && timeoutCts.IsCancellationRequested)
-            {
+            catch (Exception) when (!callerToken.IsCancellationRequested && timeoutCts.IsCancellationRequested) {
                 return NDjangoAdminOptions.PaginationCountFallbackValue;
             }
         }

@@ -15,7 +15,7 @@ namespace NDjango.Admin
 
         public FileValueEditor() : base() { }
 
-        public FileValueEditor(string editorId): base(editorId) { }
+        public FileValueEditor(string editorId) : base(editorId) { }
 
         public string Accept { get; set; } = "*.*";
 

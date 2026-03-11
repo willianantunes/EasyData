@@ -16,16 +16,16 @@ services:
       retries: 10
       start_period: 10s
 
-#  integration-tests:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    environment:
-#      - "TEST_DB_SERVER=db,1433"
-#    command: [ "./scripts/start-tests.sh" ]
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - "TEST_DB_SERVER=db,1433"
+    command: [ "./scripts/start-tests.sh" ]
 
   lint-formatter:
     build:

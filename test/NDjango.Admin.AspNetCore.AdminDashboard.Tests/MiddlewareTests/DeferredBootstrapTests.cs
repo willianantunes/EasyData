@@ -111,7 +111,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.MiddlewareTests
 
             // Act — wait for bootstrap to complete
             var readiness = host.Services.GetRequiredService<AuthBootstrapReadinessState>();
-            await readiness.WaitForReadyAsync();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await readiness.WaitForReadyAsync(cts.Token);
 
             // Assert — verify auth tables exist and admin user was created
             var authOptions = new DbContextOptionsBuilder<AuthDbContext>()

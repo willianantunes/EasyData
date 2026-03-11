@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <Nullable>disable</Nullable>
   </PropertyGroup>
@@ -13,6 +12,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NDjango.Admin.AspNetCore.AdminDashboard\NDjango.Admin.AspNetCore.AdminDashboard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

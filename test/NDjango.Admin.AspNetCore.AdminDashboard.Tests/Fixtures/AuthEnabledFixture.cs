@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
@@ -7,13 +9,15 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
+using Xunit;
+
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
 {
-    public class AuthEnabledFixture : IDisposable
+    public class AuthEnabledFixture : IAsyncLifetime, IDisposable
     {
-        private readonly IHost _host;
+        private IHost _host;
         private readonly string _dbName;
 
         private static string ConnectionStringTemplate =
@@ -22,6 +26,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         public AuthEnabledFixture()
         {
             _dbName = $"NDjangoAdminAuthTest_{Guid.NewGuid():N}";
+        }
+
+        public async Task InitializeAsync()
+        {
             var connectionString = string.Format(ConnectionStringTemplate, _dbName);
 
             // Create database before host starts so the auth hosted service can connect
@@ -56,12 +64,15 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
                 })
                 .Start();
 
-            // Wait for auth bootstrap to complete
+            // Wait for auth bootstrap to complete with timeout
             var readiness = _host.Services.GetRequiredService<Authentication.AuthBootstrapReadinessState>();
-            readiness.WaitForReadyAsync().GetAwaiter().GetResult();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await readiness.WaitForReadyAsync(cts.Token);
 
             SeedData(connectionString);
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         private static void EnsureDatabase(string connectionString)
         {

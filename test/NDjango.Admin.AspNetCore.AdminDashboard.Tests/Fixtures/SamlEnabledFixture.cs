@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
@@ -7,13 +9,15 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
+using Xunit;
+
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
 {
-    public class SamlEnabledFixture : IDisposable
+    public class SamlEnabledFixture : IAsyncLifetime, IDisposable
     {
-        private readonly IHost _host;
+        private IHost _host;
         private readonly string _dbName;
 
         public const string TestSamlGroupId = "24588478-d081-707b-76e6-f055985913b3";
@@ -28,6 +32,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         public SamlEnabledFixture()
         {
             _dbName = $"NDjangoAdminSamlTest_{Guid.NewGuid():N}";
+        }
+
+        public async Task InitializeAsync()
+        {
             var connectionString = string.Format(ConnectionStringTemplate, _dbName);
 
             // Create database before host starts so the auth hosted service can connect
@@ -68,14 +76,17 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
                 })
                 .Start();
 
-            // Wait for auth bootstrap to complete
+            // Wait for auth bootstrap to complete with timeout
             var readiness = _host.Services.GetRequiredService<Authentication.AuthBootstrapReadinessState>();
-            readiness.WaitForReadyAsync().GetAwaiter().GetResult();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await readiness.WaitForReadyAsync(cts.Token);
 
             // Seed test data after auth tables exist
             SeedData(connectionString);
             SeedSamlGroup();
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         private static void EnsureDatabase(string connectionString)
         {

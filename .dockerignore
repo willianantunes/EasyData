@@ -1,0 +1,9 @@
+*
+!src
+!tests
+!test
+**/bin
+**/obj
+!NDjango.Admin.sln
+!scripts/*.sh
+!runsettings.xml

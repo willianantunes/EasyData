@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.TestHost;
@@ -20,10 +21,10 @@ using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
 {
-    public class PermissionTests : IDisposable
+    public class PermissionTests : IAsyncLifetime, IDisposable
     {
         private readonly string _dbName;
-        private readonly IHost _host;
+        private IHost _host;
 
         private static string ConnectionStringTemplate =
             TestConnectionHelper.ConnectionStringTemplate;
@@ -31,6 +32,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
         public PermissionTests()
         {
             _dbName = $"NDjangoAdminPermTest_{Guid.NewGuid():N}";
+        }
+
+        public async Task InitializeAsync()
+        {
             var connectionString = string.Format(ConnectionStringTemplate, _dbName);
 
             // Create database before host starts so the auth hosted service can connect
@@ -64,11 +69,14 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
 
             // Wait for auth bootstrap to complete before seeding test users
             var readiness = _host.Services.GetRequiredService<Authentication.AuthBootstrapReadinessState>();
-            readiness.WaitForReadyAsync().GetAwaiter().GetResult();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await readiness.WaitForReadyAsync(cts.Token);
 
-            CreateLimitedUserAsync(connectionString).GetAwaiter().GetResult();
-            CreateCategoryManagerUserAsync(connectionString).GetAwaiter().GetResult();
+            await CreateLimitedUserAsync(connectionString);
+            await CreateCategoryManagerUserAsync(connectionString);
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         private static void EnsureAndSeedDatabase(string connectionString)
         {

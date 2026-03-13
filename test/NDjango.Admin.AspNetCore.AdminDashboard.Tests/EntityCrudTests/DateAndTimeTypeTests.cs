@@ -268,8 +268,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityCrudTests
             ExtractIdFromRedirect(location);
 
             var editHtml = await (await _client.GetAsync(location)).Content.ReadAsStringAsync();
-            Assert.Contains("2026", editHtml);
-            Assert.Contains("15:30", editHtml);
+            Assert.Contains("2026-05-20T15:30:00", editHtml);
+            Assert.Contains("+00:00", editHtml);
         }
 
         [Fact]

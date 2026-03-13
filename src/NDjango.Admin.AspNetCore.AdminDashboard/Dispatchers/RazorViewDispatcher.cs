@@ -253,6 +253,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                         IsRequired = !attr.IsNullable,
                         IsEditable = attr.IsEditable,
                         DisplayFormat = attr.DisplayFormat,
+                        ClrType = attr.PropInfo?.PropertyType,
                     };
 
                     if (record != null && attr.PropInfo != null) {

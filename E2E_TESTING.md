@@ -112,6 +112,7 @@ The admin home at `/admin/` shows models organized in sections:
 | RestaurantProfile | `/admin/RestaurantProfile/` | FK text input + lookup popup → Restaurant (1:1) | None |
 | Ingredient | `/admin/Ingredient/` | Standalone (has M2M with MenuItem, not yet supported in UI) | None |
 | MenuItem | `/admin/MenuItem/` | FK text input + lookup popup → Restaurant (N:1) | None |
+| Gift | `/admin/Gift/` | Standalone; has DateOnly, TimeOnly, TimeSpan, DateTimeOffset fields | None |
 
 ### Authentication and Authorization (when auth enabled)
 
@@ -488,6 +489,52 @@ cd sample-project-sso/src && dotnet run -- api
 32. **IdP-initiated login** — from the AWS access portal, click the application → lands on `/admin/` as the SSO user
 33. **Group sync** — create an `AuthGroup` with `name` matching an AWS group UUID, assign view permissions, logout, SSO login again → user can access model views
 34. **Password login still works** — can still login with `admin`/`admin` alongside SSO
+
+### Phase 8a: Gift — Date/Time ISO Formatting (uses Gift model)
+
+The Gift model (`sample-project/src/Models.cs`) exercises all date/time types: `DateOnly`, `TimeOnly`, `TimeSpan`, and `DateTimeOffset`. Form inputs must render values in ISO format and preserve them through create/update round-trips. `DateTimeOffset` must preserve the timezone offset (rendered as `type="text"`, not `datetime-local`).
+
+#### Input Types
+
+| Property | CLR Type | Expected HTML Input | Value Format |
+|---|---|---|---|
+| `ExpirationDate` | `DateOnly` | `type="date"` | `yyyy-MM-dd` |
+| `AvailableFrom` | `TimeOnly` | `type="text"` | `HH:mm:ss` |
+| `PreparationTime` | `TimeSpan` | `type="text"` | `hh:mm:ss` |
+| `ShippedAt` | `DateTimeOffset` | `type="text"` | `yyyy-MM-ddTHH:mm:sszzz` |
+
+#### Test Steps
+
+37. **Add form renders correct input types** — Navigate to `/admin/Gift/add/`. Inspect the HTML:
+    - `id_ExpirationDate` is `<input type="date">`
+    - `id_ShippedAt` is `<input type="text">` (not `datetime-local`)
+    - `id_AvailableFrom` is `<input type="text">`
+    - `id_PreparationTime` is `<input type="text">`
+
+38. **Create with all date/time types** — Fill the Gift form:
+    - `Name`: any unique name
+    - `ExpirationDate`: `2029-12-25`
+    - `ShippedAt`: `2028-06-15T10:30:00+05:30` (non-UTC offset)
+    - `AvailableFrom`: `14:30:00`
+    - `PreparationTime`: `02:15:00`
+    - Fill all other required fields (Barcode, Price, Weight, Rating, QuantityInStock, MinAge, TrackingCode, Description, Notes)
+    - Click "Save and continue editing" → redirects to `/admin/Gift/{id}/change/`
+
+39. **Edit form shows ISO values** — On the edit form, verify:
+    - `ExpirationDate` input value is `2029-12-25`
+    - `ShippedAt` input value is `2028-06-15T10:30:00+05:30` (offset preserved)
+    - `AvailableFrom` input value is `14:30:00`
+    - `PreparationTime` input value is `02:15:00`
+
+40. **Update date/time fields round-trip** — Change the values:
+    - `ExpirationDate`: `2031-01-15`
+    - `ShippedAt`: `2030-11-20T18:45:00-03:00` (different offset)
+    - `AvailableFrom`: `09:00:00`
+    - `PreparationTime`: `04:30:00`
+    - Click "Save and continue editing"
+    - Verify all updated values appear correctly in the edit form, including the `-03:00` offset on `ShippedAt`
+
+41. **Delete gift** — Click Delete → confirm → redirects to list, record gone
 
 ### Phase 9: Logout
 

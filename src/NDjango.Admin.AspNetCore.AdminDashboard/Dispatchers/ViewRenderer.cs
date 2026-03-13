@@ -325,9 +325,30 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Delete confirmation", content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
         }
 
+        private static string FormatValueForInput(FieldViewModel field)
+        {
+            return field.Value switch
+            {
+                DateOnly d => d.ToString("yyyy-MM-dd"),
+                DateTimeOffset dto => dto.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                DateTime dt => dt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                TimeOnly t => t.ToString("HH:mm:ss"),
+                { } v => v.ToString(),
+                null => ""
+            };
+        }
+
+        private static bool IsDateTimeOffset(FieldViewModel field)
+        {
+            var underlyingType = field.ClrType != null
+                ? Nullable.GetUnderlyingType(field.ClrType) ?? field.ClrType
+                : null;
+            return underlyingType == typeof(DateTimeOffset);
+        }
+
         private static void RenderInputField(StringBuilder content, FieldViewModel field)
         {
-            var value = field.Value?.ToString() ?? "";
+            var value = FormatValueForInput(field);
             var id = $"id_{field.PropName}";
             var required = field.IsRequired ? " required" : "";
             var readOnly = !field.IsEditable ? " readonly" : "";
@@ -341,7 +362,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                     content.Append($"<input type=\"date\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\"{required}{readOnly} />");
                     break;
                 case DataType.DateTime:
-                    content.Append($"<input type=\"datetime-local\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\"{required}{readOnly} />");
+                    if (IsDateTimeOffset(field)) {
+                        content.Append($"<input type=\"text\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\"{required}{readOnly} />");
+                    }
+                    else {
+                        content.Append($"<input type=\"datetime-local\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\"{required}{readOnly} />");
+                    }
                     break;
                 case DataType.Int32:
                 case DataType.Int64:

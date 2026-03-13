@@ -108,7 +108,7 @@ The admin home at `/admin/` shows models organized in sections:
 | Model | URL prefix | Relationships | `IAdminSettings` |
 |---|---|---|---|
 | Category | `/admin/Category/` | Standalone | `SearchFields`: Name, Description |
-| Restaurant | `/admin/Restaurant/` | Has 1:1 RestaurantProfile, has many MenuItems | `SearchFields`: Name |
+| Restaurant | `/admin/Restaurant/` | Has 1:1 RestaurantProfile, has many MenuItems | `SearchFields`: Name, `Actions`: "Mark selected restaurants as featured" |
 | RestaurantProfile | `/admin/RestaurantProfile/` | FK text input + lookup popup → Restaurant (1:1) | None |
 | Ingredient | `/admin/Ingredient/` | Standalone (has M2M with MenuItem, not yet supported in UI) | None |
 | MenuItem | `/admin/MenuItem/` | FK text input + lookup popup → Restaurant (N:1) | None |
@@ -137,6 +137,9 @@ These appear under the "Authentication and Authorization" heading in the sidebar
 | Update | `/admin/{Model}/{id}/change/` | POST |
 | Delete form | `/admin/{Model}/{id}/delete/` | GET |
 | Delete | `/admin/{Model}/{id}/delete/` | POST |
+| Execute bulk action | `/admin/{Model}/action/` | POST |
+| Bulk delete confirmation | `/admin/{Model}/action/delete/` | GET |
+| Bulk delete execute | `/admin/{Model}/action/delete/` | POST |
 
 ## Model Details and Form Fields
 
@@ -173,6 +176,10 @@ All models inherit from `StandardEntity` which has `Id`, `CreatedAt`, `UpdatedAt
 5. Test edit and delete same as Category
 
 **Note:** Restaurant must exist before creating RestaurantProfile or MenuItem (they have FK to Restaurant).
+
+**Bulk actions:** Restaurant defines a custom action via `AdminActionList<int>`:
+- "Mark selected restaurants as featured" — returns a success message with the count of selected IDs. This is a demo action (no database side effects).
+- The built-in "Delete selected restaurants" action is also available (auto-added for all editable entities).
 
 ### Ingredient (standalone, has boolean field)
 
@@ -339,6 +346,14 @@ Every create/edit form has three save buttons:
 - **Sorting:** Click column headers to sort. URL: `?sort=FieldName&dir=asc` or `dir=desc`. Active sort shows arrow (▲/▼)
 - **Pagination:** Shows page numbers at bottom when records exceed `DefaultRecordsPerPage` (25). URL: `?page=N`
 - **Record count:** Shows "N {model_name}" above the table
+- **Bulk actions (Django-style):** When not in popup mode and entity is editable, the list view shows:
+  - **Checkboxes:** Each row has a checkbox (`name="_selected_ids"`, `value="{pk}"`). The header has a select-all checkbox.
+  - **Action bar:** Below the toolbar — a `<select name="action">` dropdown with "---" placeholder + available actions, a "Go" button, and a counter ("0 of N selected").
+  - **Built-in action:** "Delete selected {entityNamePlural}" is auto-added for all editable entities.
+  - **Custom actions:** Entities implementing `IAdminSettings<T>` with an `Actions` property (returning `AdminActionList<TPk>`) register additional actions. Restaurant has "Mark selected restaurants as featured".
+  - **Flash messages:** After action execution, a success (green) or error (red) banner is displayed via `_msg` / `_msg_level` query parameters on redirect.
+  - **Form:** The action bar + table are wrapped in `<form id="changelist-form" method="post" action="/{basePath}/{entityId}/action/">`.
+  - **Selected row highlighting:** Checked rows get a yellow background (`tr.selected` CSS class).
 
 ## Sidebar
 
@@ -445,7 +460,116 @@ FK fields render as a plain text input (showing the raw FK ID) plus a lookup ico
 22. **Sorting** — click column header, verify sort direction toggle
 23. **Pagination** — AuthPermission list has 40 items (25/page), verify page 2
 
-### Phase 7: Time-Limited Pagination COUNT
+### Phase 7: Bulk Actions (Django-Style)
+
+The list view supports Django-style bulk actions: select rows via checkboxes, pick an action from a dropdown, execute. Includes a built-in "Delete selected" action with confirmation page, custom user-defined actions, and flash messages for feedback.
+
+#### Action Bar and Checkboxes
+
+42. **Action bar renders on editable entity** — Navigate to `/admin/Restaurant/`. Verify:
+    - An action dropdown (`<select name="action">`) is visible with options: "---" (placeholder), "Delete selected restaurants", "Mark selected restaurants as featured"
+    - A "Go" button next to the dropdown
+    - A counter text showing "0 of N selected" (where N is the number of rows)
+    - Each table row has a checkbox (`name="_selected_ids"`)
+    - The table header has a select-all checkbox
+
+43. **Action bar renders on entity without custom actions** — Navigate to `/admin/Category/`. Verify the action dropdown contains only "---" and "Delete selected categories" (no custom actions).
+
+44. **Action bar hidden in popup mode** — Navigate to `/admin/Restaurant/?_popup=1`. Verify:
+    - There is **no** action dropdown
+    - There are **no** row checkboxes
+    - There is **no** select-all checkbox
+
+45. **Action bar hidden when read-only** — If the dashboard or entity is configured as read-only (`IsReadOnly = true`), the action bar and checkboxes should not render.
+
+#### Checkbox Interactions (JavaScript)
+
+46. **Select-all toggle** — On `/admin/Restaurant/`, click the header select-all checkbox:
+    - All row checkboxes become checked
+    - The counter updates to "N of N selected" (all rows)
+    - All rows get yellow highlight (`tr.selected` CSS class)
+    - Uncheck the header checkbox → all rows unchecked, counter resets to "0 of N selected"
+
+47. **Individual checkbox updates counter** — Check 2 of N rows individually:
+    - Counter shows "2 of N selected"
+    - Only checked rows are highlighted yellow
+    - Header checkbox remains unchecked (not all rows selected)
+
+48. **Uncheck one row unchecks header** — Check the header (select all), then uncheck a single row:
+    - Header checkbox becomes unchecked
+    - Counter shows "N-1 of N selected"
+
+49. **Check all individually checks header** — Check every row checkbox one by one. When all are checked, the header checkbox should also become checked.
+
+#### Custom Action Execution
+
+50. **Execute custom action** — On `/admin/Restaurant/`:
+    1. Check one or more restaurant rows
+    2. Select "Mark selected restaurants as featured" from the dropdown
+    3. Click "Go"
+    4. Verify redirect back to `/admin/Restaurant/` with a **green success banner** showing "Successfully marked N restaurant(s) as featured."
+    5. Verify the flash message disappears on subsequent navigation (it's a one-time query param)
+
+51. **Custom action with multiple selections** — Select 3 restaurants, execute "Mark selected restaurants as featured". Verify message says "3 restaurant(s)".
+
+#### Built-In Delete Action (Bulk Delete)
+
+52. **Delete selected redirects to confirmation** — On `/admin/Restaurant/`:
+    1. Create 2 test restaurants (e.g., "TestDel1", "TestDel2") if needed
+    2. Check both rows
+    3. Select "Delete selected restaurants" from dropdown
+    4. Click "Go"
+    5. Verify redirect to `/admin/Restaurant/action/delete/?ids={id1}&ids={id2}` (bulk delete confirmation page)
+
+53. **Bulk delete confirmation page content** — On the confirmation page, verify:
+    - Heading: "Are you sure?"
+    - Summary text: "2 restaurants" (count + plural entity name)
+    - An "Objects" section listing each selected record with its field values
+    - A "Yes, I'm sure" button (submits POST form)
+    - A "No, take me back" link pointing to `/admin/Restaurant/`
+    - Hidden inputs with `name="_selected_ids"` for each selected ID
+    - The sidebar is visible (not a popup page)
+
+54. **Confirm bulk delete** — Click "Yes, I'm sure":
+    1. Verify redirect to `/admin/Restaurant/` with a **green success banner**: "Successfully deleted 2 restaurants."
+    2. Verify the deleted records no longer appear in the list
+    3. Verify the record count dropped by 2
+
+55. **Cancel bulk delete** — Repeat the delete flow but click "No, take me back":
+    1. Verify redirect to `/admin/Restaurant/` list
+    2. Verify no records were deleted (count unchanged)
+
+#### Empty Selection Guards
+
+56. **Empty selection with non-allowEmpty action** — On `/admin/Restaurant/`:
+    1. Do NOT check any rows
+    2. Select "Delete selected restaurants" (which has `AllowEmptySelection = false`)
+    3. Click "Go"
+    4. Verify either: JavaScript prevents form submission (client-side guard), or the server redirects back to the list with no action taken
+
+57. **No action selected** — Check some rows but leave the dropdown on "---". Click "Go". Verify nothing happens (JavaScript guard prevents submission).
+
+#### Flash Messages
+
+58. **Success message styling** — After a successful action, verify the message banner:
+    - Has green background color
+    - Contains the success text
+    - Is positioned between the page heading and the changelist content
+
+59. **Error message styling** — If an action handler returns an error (e.g., via `AdminActionResult.Error()`), verify:
+    - The message banner has red/pink background
+    - Contains the error text
+    - Uses `_msg_level=error` in the redirect URL
+
+60. **Message is transient** — After seeing a flash message, navigate away and come back. Verify the message is gone (it's a one-time query param, not stored in session).
+
+#### Bulk Delete with Different Entities
+
+61. **Bulk delete on Category** — Select categories, delete via bulk action, confirm, verify deleted.
+
+62. **Bulk delete single record** — Select just one record, go through bulk delete flow. Verify confirmation says "1 {entityName}" (singular) and success message says "Successfully deleted 1 {entityName}."
+
+### Phase 8: Time-Limited Pagination COUNT
 
 The dashboard runs `SELECT COUNT(*)` on every list view. On tables with millions of rows, this query can take seconds. The `PaginationCountTimeoutMs` option (default 200ms) cancels the COUNT query if it exceeds the timeout and displays a fallback value of 9,999,999,999 instead. Data rows load independently.
 
@@ -477,7 +601,7 @@ docker exec -i ndjangoadmin-db-1 /opt/mssql-tools18/bin/sqlcmd \
   -i /dev/stdin < sample-project/scripts/cleanup-seeded-categories.sql
 ```
 
-### Phase 8: SAML SSO (requires sample-project-sso and AWS IAM Identity Center)
+### Phase 9: SAML SSO (requires sample-project-sso and AWS IAM Identity Center)
 
 To run the SSO sample instead of the default sample project:
 
@@ -490,7 +614,7 @@ cd sample-project-sso/src && dotnet run -- api
 33. **Group sync** — create an `AuthGroup` with `name` matching an AWS group UUID, assign view permissions, logout, SSO login again → user can access model views
 34. **Password login still works** — can still login with `admin`/`admin` alongside SSO
 
-### Phase 8a: Gift — Date/Time ISO Formatting (uses Gift model)
+### Phase 9a: Gift — Date/Time ISO Formatting (uses Gift model)
 
 The Gift model (`sample-project/src/Models.cs`) exercises all date/time types: `DateOnly`, `TimeOnly`, `TimeSpan`, and `DateTimeOffset`. Form inputs must render values in ISO format and preserve them through create/update round-trips. `DateTimeOffset` must preserve the timezone offset (rendered as `type="text"`, not `datetime-local`).
 
@@ -536,7 +660,7 @@ The Gift model (`sample-project/src/Models.cs`) exercises all date/time types: `
 
 41. **Delete gift** — Click Delete → confirm → redirects to list, record gone
 
-### Phase 9: Logout
+### Phase 10: Logout
 
 35. **Logout** — click "Log out", verify redirect to login page
 36. **Session cleared** — accessing `/admin/` after logout redirects to login
@@ -545,7 +669,10 @@ The Gift model (`sample-project/src/Models.cs`) exercises all date/time types: `
 
 - **SP-initiated SAML login:** Does not work with AWS IAM Identity Center (403 "No access"). Only IdP-initiated is testable.
 - **M2M relationships:** MenuItem ↔ Ingredient many-to-many is defined in EF Core but the dashboard has no multi-select UI for it yet (Phase 5)
-- **Read-only mode:** `AdminDashboardOptions.IsReadOnly = true` hides all write controls
+- **Read-only mode:** `AdminDashboardOptions.IsReadOnly = true` hides all write controls and bulk action bar
 - **Custom authorization filters:** `LocalRequestsOnlyAuthorizationFilter`, custom `IAdminDashboardAuthorizationFilter`
 - **Cookie expiration:** Default 24h, configurable via `AdminDashboardOptions.CookieExpiration`
 - **Permission caching:** Permissions are cached in `HttpContext.Items` per request — no cross-request caching test
+- **Custom action error result (E2E):** The sample project's "Mark selected restaurants as featured" always returns success. The error flash message (red banner) can only be E2E-tested if a custom action returning `AdminActionResult.Error()` is added to the sample project. The error path is covered by integration tests (`ActionTests.cs`)
+- **Custom action handler exception (E2E):** When a custom action handler throws an exception, the server catches it and redirects with a generic error message. This is covered by integration tests but not E2E-tested in the sample project
+- **`AllowEmptySelection = true` (E2E):** No sample entity has a custom action with `allowEmptySelection: true`, so the "allow empty selection" path is only tested via integration tests

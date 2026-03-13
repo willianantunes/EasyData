@@ -106,6 +106,18 @@ namespace NDjango.Admin.Services
             await GetManagerFor(sourceId).DeleteRecordAsync(modelId, sourceId, props, ct);
         }
 
+        public override async Task DeleteRecordsByKeysAsync(string modelId, string sourceId,
+            IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            await GetManagerFor(sourceId).DeleteRecordsByKeysAsync(modelId, sourceId, recordKeysList, ct);
+        }
+
+        public override async Task<IReadOnlyList<object>> FetchRecordsByKeysAsync(string modelId, string sourceId,
+            IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            return await GetManagerFor(sourceId).FetchRecordsByKeysAsync(modelId, sourceId, recordKeysList, ct);
+        }
+
         public override async Task<IEnumerable<EasySorter>> GetDefaultSortersAsync(string modelId, string sourceId,
             CancellationToken ct = default)
         {

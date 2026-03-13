@@ -89,6 +89,17 @@ namespace NDjango.Admin
         /// </summary>
         public IReadOnlyList<string> SearchFields { get; internal set; }
 
+        /// <summary>
+        /// Gets or sets the descriptors for bulk actions registered on this entity.
+        /// </summary>
+        public IReadOnlyList<AdminActionDescriptor> ActionDescriptors { get; internal set; }
+
+        /// <summary>
+        /// Gets or sets the handlers for bulk actions, keyed by action name.
+        /// Handlers accept string-typed primary keys for cross-type compatibility.
+        /// </summary>
+        public IReadOnlyDictionary<string, Func<IServiceProvider, IReadOnlyList<string>, Task<AdminActionResult>>> ActionHandlers { get; internal set; }
+
 
         /// <summary>
         /// Gets or sets the name of the DbSet associated with entity

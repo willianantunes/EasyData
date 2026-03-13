@@ -42,6 +42,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 case "lookup":
                     await HandleLookupAsync(context, match, metadataService, ct);
                     break;
+                case "action":
+                    await HandleActionAsync(context, match, metadataService, ct);
+                    break;
+                case "bulk_delete":
+                    await HandleBulkDeleteAsync(context, match, metadataService, ct);
+                    break;
                 default:
                     context.HttpContext.Response.StatusCode = 404;
                     break;
@@ -181,7 +187,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             return props;
         }
 
-        private static object ConvertValue(string value, DataType dataType, Type clrType = null)
+        internal static object ConvertValue(string value, DataType dataType, Type clrType = null)
         {
             if (string.IsNullOrEmpty(value))
                 return value;
@@ -211,6 +217,101 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 DataType.Guid => Guid.TryParse(value, out var g) ? g : (object)value,
                 _ => value,
             };
+        }
+
+        private async Task HandleActionAsync(AdminDashboardContext context, DashboardRouteMatch match,
+            AdminMetadataService metadataService, CancellationToken ct)
+        {
+            var entityId = match.Values["entityId"];
+            var entity = await metadataService.GetEntityAsync(entityId, ct);
+            if (entity == null) {
+                context.HttpContext.Response.StatusCode = 404;
+                return;
+            }
+
+            var form = await context.HttpContext.Request.ReadFormAsync(ct);
+            var actionName = form["action"].FirstOrDefault();
+            var selectedIds = form["_selected_ids"].ToList();
+
+            if (string.IsNullOrEmpty(actionName)) {
+                context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
+                return;
+            }
+
+            // Built-in delete action redirects to confirmation page
+            if (actionName == "delete_selected") {
+                if (selectedIds.Count == 0) {
+                    context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
+                    return;
+                }
+                var qs = string.Join("&", selectedIds.Select(id => $"ids={System.Net.WebUtility.UrlEncode(id)}"));
+                context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/action/delete/?{qs}");
+                return;
+            }
+
+            // Custom action
+            if (entity.ActionHandlers != null && entity.ActionHandlers.TryGetValue(actionName, out var handler)) {
+                // Server-side empty selection guard
+                if (selectedIds.Count == 0) {
+                    var descriptor = entity.ActionDescriptors?.FirstOrDefault(a => a.Name == actionName);
+                    if (descriptor != null && !descriptor.AllowEmptySelection) {
+                        context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
+                        return;
+                    }
+                }
+
+                var sp = context.HttpContext.RequestServices;
+                try {
+                    var result = await handler(sp, selectedIds);
+                    var msg = System.Net.WebUtility.UrlEncode(result.Message);
+                    var level = result.Level.ToString().ToLower();
+                    context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/?_msg={msg}&_msg_level={level}");
+                }
+                catch (Exception) {
+                    var errorMsg = System.Net.WebUtility.UrlEncode("An error occurred while executing the action.");
+                    context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/?_msg={errorMsg}&_msg_level=error");
+                }
+                return;
+            }
+
+            context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
+        }
+
+        private async Task HandleBulkDeleteAsync(AdminDashboardContext context, DashboardRouteMatch match,
+            AdminMetadataService metadataService, CancellationToken ct)
+        {
+            var entityId = match.Values["entityId"];
+            var entity = await metadataService.GetEntityAsync(entityId, ct);
+            if (entity == null) {
+                context.HttpContext.Response.StatusCode = 404;
+                return;
+            }
+
+            var form = await context.HttpContext.Request.ReadFormAsync(ct);
+            var selectedIds = form["_selected_ids"].ToList();
+
+            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
+            if (pkAttr == null) {
+                context.HttpContext.Response.StatusCode = 400;
+                return;
+            }
+
+            var recordKeysList = selectedIds
+                .Select(id => new Dictionary<string, string> { { pkAttr.PropName, id } })
+                .ToList();
+
+            try {
+                await metadataService.DeleteRecordsByKeysAsync(entityId, recordKeysList, ct);
+            }
+            catch (Exception) {
+                var errorMsg = System.Net.WebUtility.UrlEncode("Failed to delete the selected records. Some records may have dependencies that prevent deletion.");
+                context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/?_msg={errorMsg}&_msg_level=error");
+                return;
+            }
+
+            var count = selectedIds.Count;
+            var msg = System.Net.WebUtility.UrlEncode($"Successfully deleted {count} {(count == 1 ? entity.Name.ToLower() : entity.NamePlural.ToLower())}.");
+            context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/?_msg={msg}&_msg_level=success");
         }
     }
 }

@@ -59,6 +59,10 @@ namespace NDjango.Admin.Services
 
         public abstract Task DeleteRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default);
 
+        public abstract Task DeleteRecordsByKeysAsync(string modelId, string sourceId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default);
+
+        public abstract Task<IReadOnlyList<object>> FetchRecordsByKeysAsync(string modelId, string sourceId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default);
+
         public abstract Task<IEnumerable<EasySorter>> GetDefaultSortersAsync(string modelId, string sourceId, CancellationToken ct = default);
 
         /// <summary>

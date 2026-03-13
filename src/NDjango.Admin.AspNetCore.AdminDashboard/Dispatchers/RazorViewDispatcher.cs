@@ -47,6 +47,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 case "Entity/Delete":
                     await RenderEntityDeleteAsync(context, match, metadataService, groupingService, ct);
                     break;
+                case "Entity/BulkDelete":
+                    await RenderBulkDeleteConfirmAsync(context, match, metadataService, groupingService, ct);
+                    break;
                 default:
                     context.HttpContext.Response.StatusCode = 404;
                     break;
@@ -185,6 +188,36 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 IsPopup = isPopup,
                 ToField = toField
             };
+
+            // Read flash message from query params
+            var msg = query["_msg"].FirstOrDefault();
+            var msgLevel = query["_msg_level"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(msg)) {
+                viewModel.Message = msg;
+                viewModel.MessageLevel = msgLevel ?? "success";
+            }
+
+            // Add built-in delete action if entity is editable
+            if (!viewModel.IsReadOnly) {
+                viewModel.Actions.Add(new ActionViewModel
+                {
+                    Name = "delete_selected",
+                    Description = $"Delete selected {entity.NamePlural.ToLower()}",
+                    AllowEmptySelection = false
+                });
+            }
+
+            // Add custom actions from entity metadata
+            if (entity.ActionDescriptors != null) {
+                foreach (var action in entity.ActionDescriptors) {
+                    viewModel.Actions.Add(new ActionViewModel
+                    {
+                        Name = action.Name,
+                        Description = action.Description,
+                        AllowEmptySelection = action.AllowEmptySelection
+                    });
+                }
+            }
 
             await ViewRenderer.RenderEntityListViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
@@ -325,6 +358,61 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             };
 
             await ViewRenderer.RenderEntityDeleteViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
+        }
+
+        private async Task RenderBulkDeleteConfirmAsync(AdminDashboardContext context, DashboardRouteMatch match,
+            AdminMetadataService metadataService, EntityGroupingService groupingService, CancellationToken ct)
+        {
+            var entityId = match.Values["entityId"];
+            var entity = await metadataService.GetEntityAsync(entityId, ct);
+            if (entity == null) {
+                context.HttpContext.Response.StatusCode = 404;
+                return;
+            }
+
+            var selectedIds = context.HttpContext.Request.Query["ids"].ToList();
+            if (selectedIds.Count == 0) {
+                context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
+                return;
+            }
+
+            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
+            if (pkAttr == null) {
+                context.HttpContext.Response.StatusCode = 400;
+                return;
+            }
+
+            var recordKeysList = selectedIds
+                .Select(id => new Dictionary<string, string> { { pkAttr.PropName, id } })
+                .ToList();
+
+            var fetchedRecords = await metadataService.FetchRecordsByKeysAsync(entityId, recordKeysList, ct);
+
+            var records = new List<Dictionary<string, object>>();
+            foreach (var record in fetchedRecords) {
+                var dict = new Dictionary<string, object>();
+                foreach (var attr in entity.Attributes.Where(a => a.Kind != EntityAttrKind.Lookup && a.ShowOnView)) {
+                    if (attr.PropInfo != null)
+                        dict[attr.Caption] = attr.PropInfo.GetValue(record);
+                }
+                records.Add(dict);
+            }
+
+            var sidebarGroups = await BuildSidebarGroupsAsync(groupingService, ct);
+
+            var viewModel = new BulkDeleteViewModel
+            {
+                Title = context.Options.DashboardTitle,
+                BasePath = context.BasePath,
+                EntityId = entityId,
+                EntityName = entity.Name,
+                EntityNamePlural = entity.NamePlural,
+                SelectedIds = selectedIds,
+                SelectedRecords = records,
+                SidebarGroups = sidebarGroups
+            };
+
+            await ViewRenderer.RenderBulkDeleteViewAsync(context.HttpContext, viewModel, context.AuthenticatedUsername);
         }
 
         private async Task<Dictionary<string, List<EntityGroupItem>>> BuildSidebarGroupsAsync(

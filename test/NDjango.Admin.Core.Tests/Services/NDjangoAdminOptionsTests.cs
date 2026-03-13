@@ -133,12 +133,22 @@ namespace NDjango.Admin.Core.Services.Tests
                 throw new NotImplementedException();
             }
 
+            public override Task DeleteRecordsByKeysAsync(string modelId, string sourceId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+            {
+                throw new NotImplementedException();
+            }
+
             public override Task<NDjangoAdminResultSet> FetchDatasetAsync(string modelId, string sourceId, IEnumerable<EasyFilter> filters = null, IEnumerable<EasySorter> sorters = null, bool isLookup = false, int? offset = null, int? fetch = null, CancellationToken ct = default)
             {
                 throw new NotImplementedException();
             }
 
             public override Task<object> FetchRecordAsync(string modelId, string sourceId, Dictionary<string, string> keys, CancellationToken ct = default)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override Task<IReadOnlyList<object>> FetchRecordsByKeysAsync(string modelId, string sourceId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
             {
                 throw new NotImplementedException();
             }

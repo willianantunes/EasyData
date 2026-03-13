@@ -197,6 +197,46 @@ namespace NDjango.Admin.Services
             await DbContext.SaveChangesAsync(ct);
         }
 
+        public override async Task DeleteRecordsByKeysAsync(string modelId, string sourceId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var entityType = GetCurrentEntityType(DbContext, sourceId);
+            var recordsToDelete = new List<object>();
+
+            foreach (var recordKeys in recordKeysList) {
+                var keys = GetKeys(entityType, recordKeys);
+                var record = await FindRecordAsync(DbContext, entityType.ClrType, keys.Values, ct);
+                if (record != null) {
+                    recordsToDelete.Add(record);
+                }
+            }
+
+            if (recordsToDelete.Count > 0) {
+                DbContext.RemoveRange(recordsToDelete);
+                await DbContext.SaveChangesAsync(ct);
+            }
+        }
+
+        public override async Task<IReadOnlyList<object>> FetchRecordsByKeysAsync(string modelId, string sourceId,
+            IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var entityType = GetCurrentEntityType(DbContext, sourceId);
+            var records = new List<object>();
+
+            foreach (var recordKeys in recordKeysList) {
+                var keys = GetKeys(entityType, recordKeys);
+                var record = await FindRecordAsync(DbContext, entityType.ClrType, keys.Values, ct);
+                if (record != null) {
+                    records.Add(record);
+                }
+            }
+
+            return records;
+        }
+
         private static IEntityType GetCurrentEntityType(DbContext dbContext, string sourceId)
         {
             var entityType = dbContext.Model.GetEntityTypes()
@@ -249,6 +289,7 @@ namespace NDjango.Admin.Services
         }
 
         private static readonly MethodInfo _findRecordGeneric;
+        private static readonly MethodInfo _findRecordAsyncGeneric;
         private static readonly MethodInfo _queryRecordsGeneric;
         private static readonly MethodInfo _countRecordsGeneric;
 
@@ -258,6 +299,7 @@ namespace NDjango.Admin.Services
                 .Where(m => m.IsGenericMethodDefinition).ToList();
 
             _findRecordGeneric = methods.Single(m => m.Name == nameof(FetchRecord));
+            _findRecordAsyncGeneric = methods.Single(m => m.Name == nameof(FetchRecordAsyncInternal));
             _queryRecordsGeneric = methods.Single(m => m.Name == nameof(QueryRecords));
             _countRecordsGeneric = methods.Single(m => m.Name == nameof(CountRecordsAsync));
         }
@@ -267,6 +309,12 @@ namespace NDjango.Admin.Services
         {
             var targetMethod = _findRecordGeneric.MakeGenericMethod(entityType);
             return targetMethod.Invoke(this, new object[] { dbContext, keys });
+        }
+
+        private async Task<object> FindRecordAsync(DbContext dbContext, Type entityType, IEnumerable<object> keys, CancellationToken ct)
+        {
+            var targetMethod = _findRecordAsyncGeneric.MakeGenericMethod(entityType);
+            return await (Task<object>)targetMethod.Invoke(this, new object[] { dbContext, keys, ct });
         }
 
 
@@ -294,6 +342,11 @@ namespace NDjango.Admin.Services
         private T FetchRecord<T>(DbContext dbContext, IEnumerable<object> keys) where T : class
         {
             return dbContext.Set<T>().Find(keys.ToArray());
+        }
+
+        private async Task<object> FetchRecordAsyncInternal<T>(DbContext dbContext, IEnumerable<object> keys, CancellationToken ct) where T : class
+        {
+            return await dbContext.Set<T>().FindAsync(keys.ToArray(), ct);
         }
 
         private IQueryable QueryRecords<T>(DbContext dbContext,

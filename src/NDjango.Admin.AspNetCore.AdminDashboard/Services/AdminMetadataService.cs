@@ -73,6 +73,16 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Services
             await _manager.DeleteRecordAsync("__admin", entityId, props, ct);
         }
 
+        public async Task DeleteRecordsByKeysAsync(string entityId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            await _manager.DeleteRecordsByKeysAsync("__admin", entityId, recordKeysList, ct);
+        }
+
+        public async Task<IReadOnlyList<object>> FetchRecordsByKeysAsync(string entityId, IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
+        {
+            return await _manager.FetchRecordsByKeysAsync("__admin", entityId, recordKeysList, ct);
+        }
+
         public async Task<IEnumerable<EasySorter>> GetDefaultSortersAsync(string entityId, CancellationToken ct = default)
         {
             return await _manager.GetDefaultSortersAsync("__admin", entityId, ct);

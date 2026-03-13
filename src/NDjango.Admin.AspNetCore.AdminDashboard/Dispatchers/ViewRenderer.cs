@@ -100,6 +100,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var content = new StringBuilder();
             content.Append($"<h1>Select {Encode(model.EntityNamePlural.ToLower())} to change</h1>");
 
+            // Flash message
+            if (!string.IsNullOrEmpty(model.Message)) {
+                var msgClass = model.MessageLevel == "error" ? "error" : "success";
+                content.Append($"<ul class=\"messagelist\"><li class=\"{msgClass}\">{Encode(model.Message)}</li></ul>");
+            }
+
             // Search + Add bar
             content.Append("<div id=\"changelist\">");
             content.Append("<div id=\"toolbar\">");
@@ -118,8 +124,30 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             // Results count
             content.Append($"<p class=\"paginator\">{model.TotalRecords} {Encode(model.TotalRecords == 1 ? model.EntityName.ToLower() : model.EntityNamePlural.ToLower())}</p>");
 
+            // Action form wrapper
+            bool hasActions = model.Actions.Count > 0 && !model.IsReadOnly;
+            if (hasActions) {
+                content.Append($"<form id=\"changelist-form\" method=\"post\" action=\"{model.BasePath}/{model.EntityId}/action/\">");
+
+                // Action bar
+                content.Append("<div class=\"actions\">");
+                content.Append("<label>Action: </label>");
+                content.Append("<select name=\"action\">");
+                content.Append("<option value=\"\">---------</option>");
+                foreach (var action in model.Actions) {
+                    content.Append($"<option value=\"{Encode(action.Name)}\" data-allow-empty=\"{action.AllowEmptySelection.ToString().ToLower()}\">{Encode(action.Description)}</option>");
+                }
+                content.Append("</select>");
+                content.Append("<button type=\"submit\" class=\"action-btn\" title=\"Run the selected action\">Go</button>");
+                content.Append($"<span class=\"action-counter\">0 of {model.TotalRecords} selected</span>");
+                content.Append("</div>");
+            }
+
             // Table
             content.Append("<table id=\"result_list\"><thead><tr>");
+            if (hasActions) {
+                content.Append("<th class=\"action-checkbox-column\"><input type=\"checkbox\" id=\"action-toggle\" /></th>");
+            }
             foreach (var col in model.Columns) {
                 var sortLink = $"{model.BasePath}/{model.EntityId}/?sort={col.PropName}";
                 var currentDir = "asc";
@@ -136,6 +164,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             foreach (var row in model.Rows) {
                 content.Append("<tr>");
+                if (hasActions && model.PrimaryKeyField != null) {
+                    row.TryGetValue(model.PrimaryKeyField, out var pkForCheckbox);
+                    content.Append($"<td class=\"action-checkbox\"><input type=\"checkbox\" name=\"_selected_ids\" value=\"{Encode(pkForCheckbox?.ToString() ?? "")}\" class=\"action-select\" /></td>");
+                }
                 bool first = true;
                 foreach (var col in model.Columns) {
                     row.TryGetValue(col.PropName, out var cellVal);
@@ -155,6 +187,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append("</tbody></table>");
 
             RenderPagination(content, model);
+
+            if (hasActions) {
+                content.Append("</form>");
+            }
 
             content.Append("</div>");
 
@@ -321,6 +357,44 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 ("Home", model.BasePath + "/"),
                 (model.EntityName, $"{model.BasePath}/{model.EntityId}/"),
                 ("Delete", (string)null)
+            };
+            await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Delete confirmation", content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
+        }
+
+        public static async Task RenderBulkDeleteViewAsync(HttpContext httpContext, BulkDeleteViewModel model, string authenticatedUsername = null)
+        {
+            var content = new StringBuilder();
+            content.Append("<h1>Are you sure?</h1>");
+            content.Append($"<p>Are you sure you want to delete the selected {Encode(model.EntityNamePlural.ToLower())}? All of the following objects and their related items will be deleted:</p>");
+
+            content.Append("<div class=\"delete-summary\">");
+            content.Append("<h2>Summary</h2>");
+            content.Append($"<ul><li>{model.SelectedIds.Count} {Encode(model.SelectedIds.Count == 1 ? model.EntityName.ToLower() : model.EntityNamePlural.ToLower())}</li></ul>");
+            content.Append("</div>");
+
+            content.Append("<div class=\"delete-summary\">");
+            content.Append("<h2>Objects</h2>");
+            content.Append("<ul>");
+            foreach (var record in model.SelectedRecords) {
+                var display = string.Join(", ", record.Select(kv => $"{Encode(kv.Key)}: {Encode(kv.Value?.ToString() ?? "")}"));
+                content.Append($"<li>{Encode(model.EntityName)}: {display}</li>");
+            }
+            content.Append("</ul></div>");
+
+            content.Append($"<form method=\"post\" action=\"{model.BasePath}/{model.EntityId}/action/delete/\">");
+            foreach (var id in model.SelectedIds) {
+                content.Append($"<input type=\"hidden\" name=\"_selected_ids\" value=\"{Encode(id)}\" />");
+            }
+            content.Append("<div class=\"submit-row\">");
+            content.Append("<button type=\"submit\" class=\"delete-btn\">Yes, I&#39;m sure</button>");
+            content.Append($"<a href=\"{model.BasePath}/{model.EntityId}/\" class=\"cancel-btn\">No, take me back</a>");
+            content.Append("</div></form>");
+
+            var breadcrumbs = new[]
+            {
+                ("Home", model.BasePath + "/"),
+                (model.EntityNamePlural, $"{model.BasePath}/{model.EntityId}/"),
+                ("Delete multiple objects", (string)null)
             };
             await WriteLayoutAsync(httpContext, model.Title, model.BasePath, "Delete confirmation", content.ToString(), model.SidebarGroups, breadcrumbs, authenticatedUsername);
         }

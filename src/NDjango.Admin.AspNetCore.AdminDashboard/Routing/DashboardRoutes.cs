@@ -25,6 +25,13 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Routing
             // Dashboard home
             routes.Add("GET", @"^/?$", System.Array.Empty<string>(), new RazorViewDispatcher("Dashboard/Index"));
 
+            // Bulk action
+            routes.Add("POST", @"^/([^/]+?)/action/$", new[] { "entityId" }, new ApiDispatcher("action"));
+
+            // Bulk delete confirmation page
+            routes.Add("GET", @"^/([^/]+?)/action/delete/$", new[] { "entityId" }, new RazorViewDispatcher("Entity/BulkDelete"));
+            routes.Add("POST", @"^/([^/]+?)/action/delete/$", new[] { "entityId" }, new ApiDispatcher("bulk_delete"));
+
             // Entity CRUD
             routes.Add("GET", @"^/([^/]+?)/$", new[] { "entityId" }, new RazorViewDispatcher("Entity/List"));
             routes.Add("GET", @"^/([^/]+?)/add/$", new[] { "entityId" }, new RazorViewDispatcher("Entity/Create"));

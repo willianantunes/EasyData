@@ -40,5 +40,6 @@ namespace NDjango.Admin
     public interface IAdminSettings<T> where T : IAdminSettings<T>
     {
         PropertyList<T> SearchFields => new();
+        object Actions => null;
     }
 }

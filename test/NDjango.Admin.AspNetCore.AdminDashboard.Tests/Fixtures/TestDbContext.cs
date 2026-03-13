@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -46,6 +47,12 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         public string Description { get; set; }
 
         public PropertyList<Category> SearchFields => new(x => x.Name, x => x.Description);
+
+        public AdminActionList<int> Actions => new AdminActionList<int>()
+            .Add("test_action", "Test action for categories",
+                handler: async (sp, ids) => { await Task.CompletedTask; return AdminActionResult.Success($"Processed {ids.Count} categories."); })
+            .Add("test_error_action", "Test error action",
+                handler: async (sp, ids) => { await Task.CompletedTask; return AdminActionResult.Error("Test error message."); });
     }
 
     public class Restaurant

@@ -720,6 +720,17 @@
             Null means no IAdminSettings configured; empty list means configured but no search fields.
             </summary>
         </member>
+        <member name="P:NDjango.Admin.MetaEntity.ActionDescriptors">
+            <summary>
+            Gets or sets the descriptors for bulk actions registered on this entity.
+            </summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntity.ActionHandlers">
+            <summary>
+            Gets or sets the handlers for bulk actions, keyed by action name.
+            Handlers accept string-typed primary keys for cross-type compatibility.
+            </summary>
+        </member>
         <member name="P:NDjango.Admin.MetaEntity.DbSetName">
             <summary>
             Gets or sets the name of the DbSet associated with entity

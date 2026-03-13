@@ -24,6 +24,16 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.ViewModels
         public bool IsSearchEnabled { get; set; }
         public bool IsPopup { get; set; }
         public string ToField { get; set; }
+        public List<ActionViewModel> Actions { get; set; } = new List<ActionViewModel>();
+        public string Message { get; set; }
+        public string MessageLevel { get; set; }
+    }
+
+    public class ActionViewModel
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public bool AllowEmptySelection { get; set; }
     }
 
     public class ColumnViewModel

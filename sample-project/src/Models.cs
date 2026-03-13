@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using NDjango.Admin;
 
 public abstract class StandardEntity
@@ -25,6 +27,15 @@ public class Restaurant : StandardEntity, IAdminSettings<Restaurant>
     public IList<MenuItem> MenuItems { get; set; }
 
     public PropertyList<Restaurant> SearchFields => new(x => x.Name);
+
+    public AdminActionList<int> Actions => new AdminActionList<int>()
+        .Add("mark_featured", "Mark selected restaurants as featured",
+            handler: async (sp, selectedIds) =>
+            {
+                await Task.CompletedTask;
+                return AdminActionResult.Success(
+                    $"Successfully marked {selectedIds.Count} restaurant(s) as featured.");
+            });
 }
 
 public class RestaurantProfile : StandardEntity

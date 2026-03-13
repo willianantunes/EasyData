@@ -5,9 +5,10 @@ A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core.
 ## What you get
 
 - **Dashboard home** at `/admin/` listing all entities with Add/Change links
-- **List view** with column sorting, pagination, and opt-in search via `IAdminSettings<T>`
+- **List view** with column sorting, pagination, opt-in search via `IAdminSettings<T>`, and bulk actions (checkboxes + action dropdown)
+- **Bulk actions** — built-in "Delete selected" with confirmation page, plus custom user-defined actions via `AdminActionList<TPk>`
 - **Create/Edit forms** that auto-detect fields, hide auto-generated properties (`Id`, `CreatedAt`, `UpdatedAt`), and render FK relationships as text input + lookup popup (like Django's `raw_id_fields`)
-- **Delete confirmation** page
+- **Delete confirmation** page (single record and bulk)
 - **Sidebar** with model navigation and filtering
 - **Zero client-side framework dependency** — all HTML is server-rendered
 
@@ -196,6 +197,66 @@ This replaces preloaded `<select>` dropdowns, which don't scale when the related
 
 The popup opens a simplified version of the related entity's list view (no header, no sidebar) and respects conditional search — if the related entity has `SearchFields`, the popup includes a search box.
 
+### Bulk actions
+
+List views include Django-style bulk actions: select rows via checkboxes, pick an action from a dropdown, and click "Go". A built-in "Delete selected" action is available on every editable entity. You can register custom actions per entity via `IAdminSettings<T>`.
+
+#### Built-in delete action
+
+Every editable entity automatically gets a "Delete selected {entity name}" action. Selecting records and running it redirects to a confirmation page showing the records to be deleted, with "Yes, I'm sure" and "No, take me back" options — identical to Django Admin's bulk delete flow.
+
+#### Custom actions
+
+Define custom actions by adding an `Actions` property to your entity's `IAdminSettings<T>` implementation. Actions use `AdminActionList<TPk>` where `TPk` is your entity's primary key type — selected IDs are automatically parsed to the correct type.
+
+```csharp
+using NDjango.Admin;
+
+public class Restaurant : IAdminSettings<Restaurant>
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    public PropertyList<Restaurant> SearchFields => new(x => x.Name);
+
+    public AdminActionList<int> Actions => new AdminActionList<int>()
+        .Add("mark_featured", "Mark selected restaurants as featured",
+            handler: async (sp, selectedIds) =>
+            {
+                // sp is IServiceProvider — resolve any service you need
+                var db = sp.GetRequiredService<AppDbContext>();
+                await db.Restaurants
+                    .Where(r => selectedIds.Contains(r.Id))
+                    .ExecuteUpdateAsync(s => s.SetProperty(r => r.IsFeatured, true));
+
+                return AdminActionResult.Success(
+                    $"Successfully marked {selectedIds.Count} restaurant(s) as featured.");
+            })
+        .Add("export_csv", "Export selected to CSV",
+            handler: async (sp, selectedIds) =>
+            {
+                // ... your export logic ...
+                return AdminActionResult.Success($"Exported {selectedIds.Count} records.");
+            },
+            allowEmptySelection: true);  // allow running with no rows selected
+}
+```
+
+The handler receives:
+- `IServiceProvider` — resolve services from the DI container (DbContext, custom services, etc.)
+- `IReadOnlyList<TPk>` — the selected record IDs, already parsed to the PK type
+
+Return `AdminActionResult.Success(message)` or `AdminActionResult.Error(message)`. The message is displayed as a flash banner (green for success, red for error) on the list page after redirect.
+
+#### Behavior details
+
+- Actions only appear on list views when the entity is **editable** and **not in popup mode**
+- The "Delete selected" action is always first in the dropdown
+- Custom actions appear after the built-in delete action, in registration order
+- By default, actions require at least one row selected. Set `allowEmptySelection: true` to allow running with no selection
+- If the handler throws an exception, a generic error message is shown
+- Flash messages are one-time — they disappear on the next navigation (passed via query params, not stored in session)
+
 ### Time-limited pagination COUNT
 
 On tables with millions of rows, `SELECT COUNT(*)` can take seconds and block the list view. The dashboard cancels the COUNT query if it exceeds `PaginationCountTimeoutMs` and shows a fallback value instead. Data rows load independently and are not affected.
@@ -258,7 +319,7 @@ cd sample-project/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup.
+Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup. Restaurant also demonstrates a custom bulk action ("Mark selected restaurants as featured") alongside the built-in bulk delete.
 
 ### sample-project-sso
 

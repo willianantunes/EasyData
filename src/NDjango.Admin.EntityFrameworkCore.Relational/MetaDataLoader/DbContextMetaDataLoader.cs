@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -226,6 +227,43 @@ namespace NDjango.Admin.EntityFrameworkCore
                     if (searchFieldsProp != null)
                     {
                         entity.SearchFields = searchFieldsProp.GetValue(instance) as IReadOnlyList<string>;
+                    }
+
+                    var actionsProp = entityType.ClrType.GetProperty("Actions");
+                    if (actionsProp != null)
+                    {
+                        var actionsObj = actionsProp.GetValue(instance);
+                        if (actionsObj != null)
+                        {
+                            var actionsListProp = actionsObj.GetType().GetProperty("Actions");
+                            if (actionsListProp != null)
+                            {
+                                var rawActions = actionsListProp.GetValue(actionsObj) as System.Collections.IList;
+                                if (rawActions != null && rawActions.Count > 0)
+                                {
+                                    var descriptors = new List<AdminActionDescriptor>();
+                                    var handlers = new Dictionary<string, Func<IServiceProvider, IReadOnlyList<string>, Task<AdminActionResult>>>();
+
+                                    var genericArgs = actionsObj.GetType().GetGenericArguments();
+                                    var pkType = genericArgs.Length > 0 ? genericArgs[0] : typeof(string);
+
+                                    foreach (var registration in rawActions)
+                                    {
+                                        var regType = registration.GetType();
+                                        var name = (string)regType.GetProperty("Name").GetValue(registration);
+                                        var desc = (string)regType.GetProperty("Description").GetValue(registration);
+                                        var allowEmpty = (bool)regType.GetProperty("AllowEmptySelection").GetValue(registration);
+                                        var typedHandler = regType.GetProperty("Handler").GetValue(registration);
+
+                                        descriptors.Add(new AdminActionDescriptor { Name = name, Description = desc, AllowEmptySelection = allowEmpty });
+                                        handlers[name] = CreateNormalizedHandler(typedHandler, pkType);
+                                    }
+
+                                    entity.ActionDescriptors = descriptors;
+                                    entity.ActionHandlers = new System.Collections.ObjectModel.ReadOnlyDictionary<string, Func<IServiceProvider, IReadOnlyList<string>, Task<AdminActionResult>>>(handlers);
+                                }
+                            }
+                        }
                     }
                 }
                 catch (Exception ex) when (ex is MissingMethodException or TargetInvocationException or MemberAccessException)
@@ -539,6 +577,41 @@ namespace NDjango.Admin.EntityFrameworkCore
             }
 
             return null;
+        }
+
+        private static Func<IServiceProvider, IReadOnlyList<string>, Task<AdminActionResult>> CreateNormalizedHandler(object typedHandler, Type pkType)
+        {
+            var invokeMethod = typedHandler.GetType().GetMethod("Invoke");
+            var listType = typeof(List<>).MakeGenericType(pkType);
+
+            return async (sp, stringIds) =>
+            {
+                var parsedIds = (System.Collections.IList)Activator.CreateInstance(listType);
+                foreach (var sid in stringIds)
+                {
+                    try {
+                        object parsed;
+                        if (pkType == typeof(Guid))
+                            parsed = Guid.Parse(sid);
+                        else if (pkType == typeof(long))
+                            parsed = long.Parse(sid);
+                        else if (pkType == typeof(int))
+                            parsed = int.Parse(sid);
+                        else if (pkType == typeof(string))
+                            parsed = sid;
+                        else
+                            parsed = Convert.ChangeType(sid, pkType);
+                        parsedIds.Add(parsed);
+                    }
+                    catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException) {
+                        return AdminActionResult.Error($"Invalid ID value: {sid}");
+                    }
+                }
+
+                // Invoke the typed handler via reflection
+                var task = (Task<AdminActionResult>)invokeMethod.Invoke(typedHandler, new object[] { sp, parsedIds });
+                return await task;
+            };
         }
 
     }

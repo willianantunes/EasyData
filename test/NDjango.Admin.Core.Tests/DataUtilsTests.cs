@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 using Xunit;
 using FluentAssertions;
@@ -162,6 +163,319 @@ namespace NDjango.Admin.Core.Tests
             yield return new object[] { dateTime, DataType.Date, "d" };
             yield return new object[] { dateTime, DataType.Time, "T" };
             yield return new object[] { dateTime, DataType.DateTime, "G" };
+        }
+
+        // ===================================================================
+        // PrettifyName - additional edge cases
+        // ===================================================================
+
+        [Theory]
+        [InlineData("OrderDetails", "Order Details")]
+        [InlineData("XMLParser", "XMLParser")]
+        [InlineData("a", "A")]
+        public void PrettifyName_CamelCaseAndEdgeCases_SplitsCorrectly(string name, string expectedResult)
+        {
+            // Arrange
+            // (input provided via InlineData)
+
+            // Act
+            var result = DataUtils.PrettifyName(name);
+
+            // Assert
+            Assert.Equal(expectedResult, result);
+        }
+
+        // ===================================================================
+        // MakePlural - uncovered branches
+        // ===================================================================
+
+        [Theory]
+        [InlineData("bus", "buses")]
+        [InlineData("box", "boxes")]
+        [InlineData("brush", "brushes")]
+        [InlineData("match", "matches")]
+        [InlineData("knife", "knives")]
+        public void MakePlural_UncoveredSuffixes_ReturnsCorrectPlural(string singular, string expectedPlural)
+        {
+            // Arrange
+            // (input provided via InlineData)
+
+            // Act
+            var result = DataUtils.MakePlural(singular);
+
+            // Assert
+            Assert.Equal(expectedPlural, result);
+        }
+
+        // ===================================================================
+        // InternalFormatToDateTime
+        // ===================================================================
+
+        [Fact]
+        public void InternalFormatToDateTime_EmptyString_ReturnsApproximatelyNow()
+        {
+            // Arrange
+            var before = DateTime.Now;
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime("", DataType.DateTime);
+
+            // Assert
+            var after = DateTime.Now;
+            Assert.True(result >= before.AddSeconds(-1) && result <= after.AddSeconds(1),
+                "Expected result to be approximately DateTime.Now");
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_NullString_ReturnsApproximatelyNow()
+        {
+            // Arrange
+            var before = DateTime.Now;
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(null, DataType.DateTime);
+
+            // Assert
+            var after = DateTime.Now;
+            Assert.True(result >= before.AddSeconds(-1) && result <= after.AddSeconds(1),
+                "Expected result to be approximately DateTime.Now");
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_ValidDateString_ReturnsCorrectDate()
+        {
+            // Arrange
+            var input = "2023-01-15";
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(input, DataType.Date);
+
+            // Assert
+            Assert.Equal(new DateTime(2023, 1, 15), result);
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_ValidDateTimeString_ReturnsCorrectDateTime()
+        {
+            // Arrange
+            var input = "2023-01-15 10:30:00";
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(input, DataType.DateTime);
+
+            // Assert
+            Assert.Equal(new DateTime(2023, 1, 15, 10, 30, 0), result);
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_ValidTimeString_ReturnsCorrectTime()
+        {
+            // Arrange
+            var input = "10:30:00";
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(input, DataType.Time);
+
+            // Assert
+            Assert.Equal(10, result.Hour);
+            Assert.Equal(30, result.Minute);
+            Assert.Equal(0, result.Second);
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_DateStringWithTimeFallback_ParsesAsDate()
+        {
+            // Arrange
+            // Pass a date-only string but request Time format - first parse fails,
+            // then falls back to Date format which succeeds
+            var input = "2023-06-20";
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(input, DataType.Time);
+
+            // Assert
+            Assert.Equal(new DateTime(2023, 6, 20), result);
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_ShortTimeFallback_ParsesSuccessfully()
+        {
+            // Arrange
+            // "2023-01-15 10:30" matches the short time format (yyyy-MM-dd HH:mm)
+            // but not the full time format (yyyy-MM-dd HH:mm:ss) or the date-only format
+            var input = "2023-01-15 10:30";
+
+            // Act
+            var result = DataUtils.InternalFormatToDateTime(input, DataType.Time);
+
+            // Assert
+            Assert.Equal(new DateTime(2023, 1, 15, 10, 30, 0), result);
+        }
+
+        [Fact]
+        public void InternalFormatToDateTime_InvalidFormat_ThrowsArgumentException()
+        {
+            // Arrange
+            var input = "not-a-date";
+
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(() =>
+                DataUtils.InternalFormatToDateTime(input, DataType.DateTime));
+            Assert.Contains("Wrong date/time format", ex.Message);
+            Assert.Contains(input, ex.Message);
+        }
+
+        // ===================================================================
+        // GetInternalFormatProvider
+        // ===================================================================
+
+        [Fact]
+        public void GetInternalFormatProvider_Called_ReturnsNonNull()
+        {
+            // Arrange
+            // (no setup needed)
+
+            // Act
+            var provider = DataUtils.GetInternalFormatProvider();
+
+            // Assert
+            Assert.NotNull(provider);
+        }
+
+        [Fact]
+        public void GetInternalFormatProvider_CalledTwice_ReturnsSameInstance()
+        {
+            // Arrange
+            // (no setup needed)
+
+            // Act
+            var provider1 = DataUtils.GetInternalFormatProvider();
+            var provider2 = DataUtils.GetInternalFormatProvider();
+
+            // Assert
+            Assert.Same(provider1, provider2);
+        }
+
+        // ===================================================================
+        // IsNumber
+        // ===================================================================
+
+        [Theory]
+        [MemberData(nameof(IsNumberTrueData))]
+        public void IsNumber_NumericTypes_ReturnsTrue(object value)
+        {
+            // Arrange
+            // (input provided via MemberData)
+
+            // Act
+            var result = DataUtils.IsNumber(value);
+
+            // Assert
+            Assert.True(result, $"Expected IsNumber to return true for {value.GetType().Name}");
+        }
+
+        public static IEnumerable<object[]> IsNumberTrueData()
+        {
+            yield return new object[] { (byte)1 };
+            yield return new object[] { (sbyte)-1 };
+            yield return new object[] { (short)100 };
+            yield return new object[] { (ushort)100 };
+            yield return new object[] { (int)42 };
+            yield return new object[] { (uint)42u };
+            yield return new object[] { (long)999L };
+            yield return new object[] { (ulong)999UL };
+            yield return new object[] { 3.14f };
+            yield return new object[] { 3.14d };
+            yield return new object[] { 3.14m };
+        }
+
+        [Theory]
+        [MemberData(nameof(IsNumberFalseData))]
+        public void IsNumber_NonNumericTypes_ReturnsFalse(object value)
+        {
+            // Arrange
+            // (input provided via MemberData)
+
+            // Act
+            var result = DataUtils.IsNumber(value);
+
+            // Assert
+            Assert.False(result, $"Expected IsNumber to return false for {value?.GetType().Name ?? "null"}");
+        }
+
+        public static IEnumerable<object[]> IsNumberFalseData()
+        {
+            yield return new object[] { "hello" };
+            yield return new object[] { true };
+            yield return new object[] { DateTime.Now };
+            yield return new object[] { 'c' };
+        }
+
+        [Fact]
+        public void IsNumber_Null_ReturnsFalse()
+        {
+            // Arrange
+            object value = null;
+
+            // Act
+            var result = DataUtils.IsNumber(value);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        // ===================================================================
+        // GetDataTypeBySystemType - enum branch
+        // ===================================================================
+
+        [Fact]
+        public void GetDataTypeBySystemType_EnumType_ReturnsUnderlyingDataType()
+        {
+            // Arrange
+            var enumType = typeof(TestEnum1);
+
+            // Act
+            var result = DataUtils.GetDataTypeBySystemType(enumType);
+
+            // Assert
+            // TestEnum1 underlying type is int, which maps to DataType.Int32
+            Assert.Equal(DataType.Int32, result);
+        }
+
+        private enum TestEnumByte : byte
+        {
+            A,
+            B
+        }
+
+        [Fact]
+        public void GetDataTypeBySystemType_EnumWithByteUnderlying_ReturnsByte()
+        {
+            // Arrange
+            var enumType = typeof(TestEnumByte);
+
+            // Act
+            var result = DataUtils.GetDataTypeBySystemType(enumType);
+
+            // Assert
+            Assert.Equal(DataType.Byte, result);
+        }
+
+        // ===================================================================
+        // ComposeDisplayFormatForEnum - non-enum branch
+        // ===================================================================
+
+        [Fact]
+        public void ComposeDisplayFormatForEnum_NonEnumType_ReturnsEmptyString()
+        {
+            // Arrange
+            var nonEnumType = typeof(string);
+
+            // Act
+            var result = DataUtils.ComposeDisplayFormatForEnum(nonEnumType);
+
+            // Assert
+            Assert.Equal("", result);
         }
     }
 }

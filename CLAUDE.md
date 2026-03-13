@@ -22,6 +22,12 @@ dotnet test NDjango.Admin.sln --filter "FullyQualifiedName~ForeignKeyTests.Resta
 # Run the sample project (requires SQL Server running)
 cd sample-project/src && dotnet run -- api
 # Dashboard at http://localhost:8000/admin/
+
+# Coverage report (pipe any dotnet test or docker compose run through it)
+dotnet test NDjango.Admin.sln --settings "./runsettings.xml" | bash ./scripts/generate-coverage-report.sh
+# Filter report to specific file(s) (case-insensitive substring match)
+dotnet test NDjango.Admin.sln --settings "./runsettings.xml" --filter "ForeignKeyTests" | bash ./scripts/generate-coverage-report.sh "ApiDispatcher"
+dotnet test NDjango.Admin.sln --settings "./runsettings.xml" --filter "FkLookupPopupTests" | bash ./scripts/generate-coverage-report.sh
 ```
 
 ### JavaScript (admin-dashboard.js)

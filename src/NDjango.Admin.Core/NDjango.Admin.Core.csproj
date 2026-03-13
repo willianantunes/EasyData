@@ -9,9 +9,10 @@
     <PackageTags>database crud filtering</PackageTags>
   </PropertyGroup>
 
-	<ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Korzh.EasyQuery" />
     <InternalsVisibleTo Include="NDjango.Admin.EntityFrameworkCore.Relational" />
+    <InternalsVisibleTo Include="NDjango.Admin.Core.Tests" />
   </ItemGroup>
 
   <ItemGroup>

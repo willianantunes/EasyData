@@ -261,7 +261,7 @@ namespace NDjango.Admin.Core.Tests
             Assert.Equal(3, row.Count);
             Assert.Equal("hello", row[0]);
             Assert.Equal(42, row[1]);
-            Assert.Equal(true, row[2]);
+            Assert.True((bool)row[2]);
         }
 
         #endregion

@@ -113,8 +113,11 @@ namespace NDjango.Admin.Core.Tests
         [Fact]
         public void SetDefault_NonExistingType_DoesNotThrow()
         {
-            // Arrange & Act & Assert
-            _target.SetDefault(DataType.Guid, "Missing");
+            // Arrange & Act
+            var exception = Record.Exception(() => _target.SetDefault(DataType.Guid, "Missing"));
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -171,8 +174,11 @@ namespace NDjango.Admin.Core.Tests
         [Fact]
         public void Delete_NonExistingType_DoesNotThrow()
         {
-            // Arrange & Act & Assert
-            _target.Delete(DataType.Guid, "Missing");
+            // Arrange & Act
+            var exception = Record.Exception(() => _target.Delete(DataType.Guid, "Missing"));
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]

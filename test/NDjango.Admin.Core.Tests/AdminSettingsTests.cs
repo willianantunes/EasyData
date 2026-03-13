@@ -36,7 +36,7 @@ namespace NDjango.Admin.Core.Tests
             var list = new PropertyList<SampleDto>();
 
             // Assert
-            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
         }
 
         [Fact]
@@ -47,8 +47,8 @@ namespace NDjango.Admin.Core.Tests
             var list = new PropertyList<SampleDto>(x => x.Age);
 
             // Assert
-            Assert.Equal(1, list.Count);
-            Assert.Equal("Age", list[0]);
+            var single = Assert.Single(list);
+            Assert.Equal("Age", single);
         }
 
         [Fact]
@@ -114,7 +114,7 @@ namespace NDjango.Admin.Core.Tests
 
             // Assert
             Assert.NotNull(searchFields);
-            Assert.Equal(0, searchFields.Count);
+            Assert.Empty(searchFields);
         }
 
         [Fact]

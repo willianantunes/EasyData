@@ -30,9 +30,7 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
         [Fact]
         public void MetaEntityAttributeTest()
         {
-            Assert.Equal(1, _metaData.EntityRoot.SubEntities.Count);
-
-            var entity = _metaData.EntityRoot.SubEntities.First();
+            var entity = Assert.Single(_metaData.EntityRoot.SubEntities);
 
             Assert.Equal("Test", entity.Name);
             Assert.Equal("Test Description", entity.Description);

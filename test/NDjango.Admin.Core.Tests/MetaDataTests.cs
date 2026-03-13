@@ -939,8 +939,11 @@ namespace NDjango.Admin.Core.Tests
             var model = new MetaData();
             model.MainSyncContext = null;
 
-            // Act & Assert (should not throw)
-            model.OnModelChanged();
+            // Act
+            var exception = Record.Exception(() => model.OnModelChanged());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -985,8 +988,11 @@ namespace NDjango.Admin.Core.Tests
             var model = new MetaData();
             model.MainSyncContext = new SynchronizationContext();
 
-            // Act & Assert (Post is asynchronous on default SynchronizationContext, so we verify no exception)
-            model.TryRunWithMainSyncContext(() => { });
+            // Act
+            var exception = Record.Exception(() => model.TryRunWithMainSyncContext(() => { }));
+
+            // Assert
+            Assert.Null(exception);
         }
 
         #endregion
@@ -1012,8 +1018,8 @@ namespace NDjango.Admin.Core.Tests
 
             // Assert
             Assert.True(model.IsEmpty);
-            Assert.Equal(0, model.EntityRoot.SubEntities.Count);
-            Assert.Equal(0, model.EntityRoot.Attributes.Count);
+            Assert.Empty(model.EntityRoot.SubEntities);
+            Assert.Empty(model.EntityRoot.Attributes);
         }
 
         #endregion
@@ -2239,8 +2245,11 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var model = new MetaData();
 
-            // Act & Assert (should not throw)
-            model.OnModelLoaded();
+            // Act
+            var exception = Record.Exception(() => model.OnModelLoaded());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         #endregion
@@ -2531,8 +2540,11 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var model = new MetaData();
 
-            // Act & Assert
-            model.InitModelLoading();
+            // Act
+            var exception = Record.Exception(() => model.InitModelLoading());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         #endregion
@@ -3235,7 +3247,7 @@ namespace NDjango.Admin.Core.Tests
 
         #region Helper Methods
 
-        private MetaData CreatePopulatedModel()
+        private static MetaData CreatePopulatedModel()
         {
             var model = new MetaData();
             model.Name = "PopulatedModel";

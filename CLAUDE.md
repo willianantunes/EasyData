@@ -10,6 +10,7 @@ docker compose up -d db
 
 # Build everything
 dotnet build NDjango.Admin.sln
+dotnet tool restore
 
 # Run selective unit testing focusing on the classes you have changed
 dotnet test NDjango.Admin.sln --filter "ForeignKeyTests" | bash ./scripts/filter-failed-tests.sh
@@ -46,6 +47,8 @@ npx jest --coverage --coverageReporters=text -t "filters items matching"
 ```
 
 The spec uses `jest` + `jest-environment-jsdom`. The source file exposes global functions via a conditional CommonJS export (`if (typeof module !== 'undefined')`) so they are testable through `require()` while remaining transparent in the browser.
+
+
 
 ## Architecture
 

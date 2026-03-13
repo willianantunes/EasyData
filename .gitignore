@@ -399,5 +399,6 @@ ndjango-admin.js/.npmrc
 prompts
 .claude/rules/shared
 .claude/settings.local.json
+.claude/worktrees
 .playwright-mcp
 *.png

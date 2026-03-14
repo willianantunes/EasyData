@@ -1,5 +1,8 @@
 # NDjango.Admin Admin Dashboard
 
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=juntossomosmais_NDjango.Admin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=juntossomosmais_NDjango.Admin)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=juntossomosmais_NDjango.Admin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=juntossomosmais_NDjango.Admin)
+
 A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Automatically generates a full admin interface from your `DbContext` — list views with pagination/sorting and opt-in search, create/edit forms with FK lookup popups, and delete confirmations.
 
 ## What you get

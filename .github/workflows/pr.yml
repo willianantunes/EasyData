@@ -24,10 +24,9 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
-      - name: Install dotnet tools
+      - name: Install all tools
         run: |
-          dotnet tool install --global dotnet-ef
-          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool restore
       - name: Check if the project is well formatted
         run: |
           ./scripts/start-check-formatting.sh

@@ -22,12 +22,6 @@ jobs:
         with:
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '8.0.x'
-      - name: Install dotnet-sonarscanner
-        run: |
-          dotnet tool install --global dotnet-sonarscanner
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -36,6 +30,12 @@ jobs:
         run: |
           npm ci
           npm test
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install all tools
+        run: |
+          dotnet tool restore
       - name: Build the project, run all tests and publish to SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

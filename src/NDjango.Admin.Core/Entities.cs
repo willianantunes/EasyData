@@ -534,7 +534,7 @@ namespace NDjango.Admin
         /// </summary>
         public void SortByName()
         {
-            List<MetaEntity> items = (List<MetaEntity>)Items;
+            var items = (List<MetaEntity>)Items;
 
             items.Sort();
         }

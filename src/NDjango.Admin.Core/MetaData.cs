@@ -191,7 +191,7 @@ namespace NDjango.Admin
         public MetaData Clone()
         {
             var model = Activator.CreateInstance(GetType()) as MetaData;
-            using (MemoryStream buffer = new MemoryStream(2000000)) {
+            using (var buffer = new MemoryStream(2000000)) {
                 SaveToJsonStream(buffer);
                 buffer.Position = 0;
                 model.LoadFromJsonStream(buffer);

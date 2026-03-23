@@ -583,9 +583,9 @@ namespace NDjango.Admin.EntityFrameworkCore
                         object parsed;
                         if (pkType == typeof(Guid))
                             parsed = Guid.Parse(sid);
-                        else if (pkType == typeof(long))
-                            parsed = long.Parse(sid);
-                        else parsed = pkType == typeof(int) ? int.Parse(sid) : pkType == typeof(string) ? sid : Convert.ChangeType(sid, pkType);
+                        else parsed = pkType == typeof(long)
+                            ? long.Parse(sid)
+                            : pkType == typeof(int) ? int.Parse(sid) : pkType == typeof(string) ? sid : Convert.ChangeType(sid, pkType);
                         parsedIds.Add(parsed);
                     }
                     catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException) {

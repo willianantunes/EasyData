@@ -246,7 +246,7 @@ namespace NDjango.Admin
         /// <returns>The index of new item in list.</returns>
         public int Add(string id, string text)
         {
-            ConstValueItem item = new ConstValueItem
+            var item = new ConstValueItem
             {
                 Id = id,
                 Text = text
@@ -286,7 +286,7 @@ namespace NDjango.Admin
             get {
                 string defID = "", defText = "";
 
-                XmlWriterSettings settings = new XmlWriterSettings
+                var settings = new XmlWriterSettings
                 {
                     Encoding = System.Text.Encoding.UTF8,
                     OmitXmlDeclaration = true,
@@ -294,8 +294,8 @@ namespace NDjango.Admin
                     CloseOutput = true
                 };
 
-                StringWriter sw = new StringWriter();
-                using (XmlWriter writer = XmlWriter.Create(sw, settings)) {
+                var sw = new StringWriter();
+                using (var writer = XmlWriter.Create(sw, settings)) {
 
                     writer.WriteStartElement("List");
                     writer.WriteAttributeString("value", defID);

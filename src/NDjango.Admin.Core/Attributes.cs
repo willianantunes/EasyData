@@ -760,7 +760,7 @@ namespace NDjango.Admin
         /// </summary>
         public void SortByCaption()
         {
-            List<MetaEntityAttr> items = (List<MetaEntityAttr>)Items;
+            var items = (List<MetaEntityAttr>)Items;
             items.Sort();
         }
 
@@ -769,7 +769,7 @@ namespace NDjango.Admin
         /// </summary>
         public void Reorder()
         {
-            List<MetaEntityAttr> items = (List<MetaEntityAttr>)Items;
+            var items = (List<MetaEntityAttr>)Items;
 
             items.Sort((item1, item2) => item1.Index - item2.Index);
         }

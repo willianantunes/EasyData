@@ -97,7 +97,31 @@ Navigate to `/admin/` and you have a working admin dashboard for your MongoDB co
 - Use `[BsonIgnore]` to hide properties from the dashboard
 - Use `[BsonElement("name")]` to specify the stored field name
 - Implement `IAdminSettings<T>` to enable search on specific fields
-- Collection/complex type properties (e.g., `List<ObjectId>`) are displayed as expandable JSON
+- Collection/complex type properties (e.g., `List<ObjectId>`) are displayed as read-only JSON on detail views
+
+#### Auto-timestamp convention (MongoDB)
+
+Properties named `CreatedAt`, `UpdatedAt`, `CreatedDate`, `UpdatedDate`, `CreationDate`, or `ModificationDate` (of type `DateTime` or `DateTimeOffset`, including nullable variants) are automatically treated as system-managed timestamps:
+- Hidden from create forms
+- Shown as read-only on edit forms
+- Automatically set by the manager on create/update (`DateTime.UtcNow`)
+
+This matches the EF Core behavior where `HasDefaultValueSql()` hides auto-generated fields. No attribute or configuration is needed — just follow the naming convention.
+
+#### Per-collection read-only mode (MongoDB)
+
+By default, all MongoDB collections are editable (full CRUD). To make specific collections read-only (list + detail views only, no create/edit/delete):
+
+```csharp
+services.AddNDjangoAdminDashboardMongo(
+    new AdminDashboardOptions { DashboardTitle = "My Admin" },
+    mongo =>
+    {
+        mongo.AddCollection<Product>("products");                     // editable (default)
+        mongo.AddCollection<AuditLog>("audit_logs", readOnly: true); // read-only
+    }
+);
+```
 
 #### MongoDB authentication (optional)
 
@@ -431,7 +455,7 @@ cd sample-project-mongodb/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8001/admin/` to see the dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, and all supported data types.
+Open `http://localhost:8001/admin/` to see the dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates full CRUD, `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, cookie-based authentication, and all supported data types. Default login: `admin` / `admin`.
 
 ### sample-project-sso
 

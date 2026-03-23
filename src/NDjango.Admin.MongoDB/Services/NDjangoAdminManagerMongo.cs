@@ -381,6 +381,8 @@ namespace NDjango.Admin.MongoDB
                 }
             }
 
+            SetTimestamps(record, isCreate: true);
+
             var collection = _database.GetCollection<T>(collectionName);
             await collection.InsertOneAsync(record, cancellationToken: ct);
             return record;
@@ -421,6 +423,8 @@ namespace NDjango.Admin.MongoDB
                     }
                 }
             }
+
+            SetTimestamps(existing, isCreate: false);
 
             await collection.ReplaceOneAsync(filter, existing, cancellationToken: ct);
             return existing;
@@ -538,6 +542,40 @@ namespace NDjango.Admin.MongoDB
                 return Guid.Parse(token.ToString());
 
             return token.ToObject(targetType);
+        }
+
+        private static void SetTimestamps(object document, bool isCreate)
+        {
+            var type = document.GetType();
+            var now = DateTime.UtcNow;
+
+            if (isCreate)
+            {
+                SetDateTimePropertyIfExists(type, document, "CreatedAt", now);
+                SetDateTimePropertyIfExists(type, document, "CreatedDate", now);
+                SetDateTimePropertyIfExists(type, document, "CreationDate", now);
+            }
+
+            SetDateTimePropertyIfExists(type, document, "UpdatedAt", now);
+            SetDateTimePropertyIfExists(type, document, "UpdatedDate", now);
+            SetDateTimePropertyIfExists(type, document, "ModificationDate", now);
+        }
+
+        private static void SetDateTimePropertyIfExists(Type type, object obj, string propName, DateTime value)
+        {
+            var prop = type.GetProperty(propName);
+            if (prop == null || !prop.CanWrite)
+                return;
+
+            var propType = prop.PropertyType;
+            if (propType == typeof(DateTime) || propType == typeof(DateTime?))
+            {
+                prop.SetValue(obj, value);
+            }
+            else if (propType == typeof(DateTimeOffset) || propType == typeof(DateTimeOffset?))
+            {
+                prop.SetValue(obj, new DateTimeOffset(value, TimeSpan.Zero));
+            }
         }
 
         private static object NormalizeValue(object value)

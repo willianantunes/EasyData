@@ -9,11 +9,13 @@ namespace NDjango.Admin.MongoDB
     {
         public Type DocumentType { get; }
         public string CollectionName { get; }
+        public bool IsReadOnly { get; }
 
-        public MongoCollectionDescriptor(Type documentType, string collectionName)
+        public MongoCollectionDescriptor(Type documentType, string collectionName, bool isReadOnly = false)
         {
             DocumentType = documentType ?? throw new ArgumentNullException(nameof(documentType));
             CollectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));
+            IsReadOnly = isReadOnly;
         }
     }
 }

@@ -83,7 +83,7 @@ namespace NDjango.Admin.MongoDB
 
             entity.NamePlural = DataUtils.MakePlural(entity.Name);
             entity.ClrType = documentType;
-            entity.IsEditable = false;
+            entity.IsEditable = !descriptor.IsReadOnly;
             entity.DbSetName = descriptor.CollectionName;
 
             // Check for IAdminSettings<T> interface for SearchFields
@@ -114,7 +114,7 @@ namespace NDjango.Admin.MongoDB
                 if (property.GetCustomAttribute<BsonIgnoreAttribute>() != null)
                     continue;
 
-                var entityAttr = CreateEntityAttribute(entity, property);
+                var entityAttr = CreateEntityAttribute(entity, property, descriptor);
                 if (entityAttr != null) {
                     if (entityAttr.Index == int.MaxValue) {
                         entityAttr.Index = attrCounter;
@@ -127,7 +127,7 @@ namespace NDjango.Admin.MongoDB
             return entity;
         }
 
-        private MetaEntityAttr CreateEntityAttribute(MetaEntity entity, PropertyInfo property)
+        private MetaEntityAttr CreateEntityAttribute(MetaEntity entity, PropertyInfo property, MongoCollectionDescriptor descriptor)
         {
             var propertyType = property.PropertyType;
             var isPrimaryKey = IsPrimaryKeyProperty(property);
@@ -190,11 +190,38 @@ namespace NDjango.Admin.MongoDB
             entityAttr.IsPrimaryKey = isPrimaryKey;
             entityAttr.IsNullable = IsNullableProperty(propertyType);
 
-            // Read-only V1: all fields are non-editable
-            entityAttr.IsEditable = false;
             entityAttr.ShowOnView = true;
-            entityAttr.ShowOnCreate = false;
-            entityAttr.ShowOnEdit = true;
+
+            if (descriptor.IsReadOnly)
+            {
+                entityAttr.IsEditable = false;
+                entityAttr.ShowOnCreate = false;
+                entityAttr.ShowOnEdit = true;
+            }
+            else if (isPrimaryKey)
+            {
+                entityAttr.IsEditable = false;
+                entityAttr.ShowOnCreate = false;
+                entityAttr.ShowOnEdit = true;
+            }
+            else if (IsAutoTimestamp(property))
+            {
+                entityAttr.IsEditable = false;
+                entityAttr.ShowOnCreate = false;
+                entityAttr.ShowOnEdit = true;
+            }
+            else if (IsCollectionType(propertyType) || IsComplexType(propertyType))
+            {
+                entityAttr.IsEditable = false;
+                entityAttr.ShowOnCreate = false;
+                entityAttr.ShowOnEdit = true;
+            }
+            else
+            {
+                entityAttr.IsEditable = true;
+                entityAttr.ShowOnCreate = true;
+                entityAttr.ShowOnEdit = true;
+            }
 
             // Hide primary keys from view if option is set
             if (_options.HidePrimaryKeys && isPrimaryKey) {
@@ -259,6 +286,18 @@ namespace NDjango.Admin.MongoDB
                 return false;
 
             return underlying.IsClass || underlying.IsValueType;
+        }
+
+        private static bool IsAutoTimestamp(PropertyInfo property)
+        {
+            var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            if (type != typeof(DateTime) && type != typeof(DateTimeOffset))
+                return false;
+
+            var name = property.Name;
+            return name == "CreatedAt" || name == "UpdatedAt"
+                || name == "CreatedDate" || name == "UpdatedDate"
+                || name == "CreationDate" || name == "ModificationDate";
         }
     }
 }

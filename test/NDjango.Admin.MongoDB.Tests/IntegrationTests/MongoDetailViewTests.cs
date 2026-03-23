@@ -55,7 +55,7 @@ namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task CategoryDetail_HasNoSaveButtonAsync()
+        public async Task CategoryDetail_HasSaveButtonAsync()
         {
             // Arrange
             var categoryId = _fixture.ItalianCategoryId;
@@ -66,8 +66,7 @@ namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.DoesNotContain("_save_action", html);
-            Assert.DoesNotContain(">Save<", html);
+            Assert.Contains("_save_action", html);
         }
 
         [Fact]

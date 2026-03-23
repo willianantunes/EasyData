@@ -157,6 +157,10 @@ Routes are Django-style: `/{entityId}/` (list), `/{entityId}/add/` (create), `/{
 
 EF Core properties with `HasDefaultValueSql()` or `ValueGeneratedOnAdd()` are automatically hidden from create forms and rendered as readonly text on edit forms. This is the intended pattern for timestamps (`CreatedAt`/`UpdatedAt`) and identity columns.
 
+MongoDB uses a convention-based approach: properties named `CreatedAt`, `UpdatedAt`, `CreatedDate`, `UpdatedDate`, `CreationDate`, or `ModificationDate` (of type `DateTime`/`DateTimeOffset`, including nullable) are treated as auto-timestamps — hidden from create forms, shown as readonly on edit, and set automatically by `NDjangoAdminManagerMongo.SetTimestamps()`. The `IsAutoTimestamp()` method in `MongoMetaDataLoader` checks both the property name and type.
+
+MongoDB collections can be marked as read-only via `MongoCollectionDescriptor.IsReadOnly` (set via `AddCollection<T>("name", readOnly: true)`). The `MongoMetaDataLoader` checks `descriptor.IsReadOnly` and sets `entity.IsEditable = !descriptor.IsReadOnly`, making all attributes non-editable for read-only collections.
+
 ## SAML SSO
 
 When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password login. The ACS callback (`/api/security/saml/callback`) is registered as a separate middleware branch via `app.Map()` outside the admin base path. IdP metadata can be auto-fetched at startup from `SamlMetadataUrl`, or certificate/SSO URL can be set manually. Group UUIDs from the SAML response are matched against `auth_group.name` to assign permissions. Uses the `AspNetSaml` NuGet package].

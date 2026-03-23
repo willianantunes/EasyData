@@ -134,6 +134,47 @@ namespace NDjango.Admin.MongoDB.Tests
             new(x => x.Name, x => x.Description);
     }
 
+    public class DocumentWithTimestamps
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
+
+    public class DocumentWithNullableUpdatedAt
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class DocumentWithDateTimeOffsetCreatedAt
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+    }
+
+    public class DocumentWithStringCreatedAt
+    {
+        public ObjectId Id { get; set; }
+        public string CreatedAt { get; set; }
+    }
+
+    public class DocumentWithNonTimestampDateTime
+    {
+        public ObjectId Id { get; set; }
+        public DateTime SomeOtherDate { get; set; }
+    }
+
+    public class DocumentWithCreatedDate
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
     #endregion
 
     public class MongoMetaDataLoaderTests
@@ -155,7 +196,7 @@ namespace NDjango.Admin.MongoDB.Tests
             Assert.Equal("SimpleDocument", entity.Id);
             Assert.Equal("Simple Document", entity.Name);
             Assert.Equal(typeof(SimpleDocument), entity.ClrType);
-            Assert.False(entity.IsEditable);
+            Assert.True(entity.IsEditable);
             Assert.Equal("simple_docs", entity.DbSetName);
         }
 
@@ -260,7 +301,7 @@ namespace NDjango.Admin.MongoDB.Tests
         }
 
         [Fact]
-        public void AllEntities_HaveIsEditableFalse()
+        public void DefaultCollection_HasIsEditableTrue()
         {
             var model = new MetaData();
             var collections = new List<MongoCollectionDescriptor>
@@ -273,16 +314,33 @@ namespace NDjango.Admin.MongoDB.Tests
             loader.LoadFromCollections();
 
             var entity = model.EntityRoot.SubEntities.Single();
-            Assert.False(entity.IsEditable);
+            Assert.True(entity.IsEditable);
         }
 
         [Fact]
-        public void AllAttributes_HaveIsEditableFalse()
+        public void ReadOnlyCollection_HasIsEditableFalse()
         {
             var model = new MetaData();
             var collections = new List<MongoCollectionDescriptor>
             {
-                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs", isReadOnly: true)
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.False(entity.IsEditable);
+        }
+
+        [Fact]
+        public void ReadOnlyCollection_AllAttributes_HaveIsEditableFalse()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs", isReadOnly: true)
             };
             var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
 
@@ -296,7 +354,7 @@ namespace NDjango.Admin.MongoDB.Tests
         }
 
         [Fact]
-        public void AllAttributes_HaveShowOnCreateFalse_AndShowOnEditTrue()
+        public void RegularFields_AreEditable_PkIsNotEditable()
         {
             var model = new MetaData();
             var collections = new List<MongoCollectionDescriptor>
@@ -309,9 +367,39 @@ namespace NDjango.Admin.MongoDB.Tests
             loader.LoadFromCollections();
 
             var entity = model.EntityRoot.SubEntities.Single();
-            foreach (var attr in entity.Attributes) {
-                Assert.False(attr.ShowOnCreate);
+            var pkAttr = entity.Attributes.First(a => a.IsPrimaryKey);
+            Assert.False(pkAttr.IsEditable);
+
+            var regularAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey).ToList();
+            foreach (var attr in regularAttrs) {
+                Assert.True(attr.IsEditable);
+            }
+        }
+
+        [Fact]
+        public void PrimaryKey_HasShowOnCreateFalse_RegularFields_HaveShowOnCreateTrue()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var pkAttr = entity.Attributes.First(a => a.IsPrimaryKey);
+            Assert.False(pkAttr.ShowOnCreate);
+            Assert.True(pkAttr.ShowOnEdit);
+            Assert.False(pkAttr.IsEditable);
+
+            var regularAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey).ToList();
+            foreach (var attr in regularAttrs) {
+                Assert.True(attr.ShowOnCreate);
                 Assert.True(attr.ShowOnEdit);
+                Assert.True(attr.IsEditable);
             }
         }
 
@@ -665,6 +753,236 @@ namespace NDjango.Admin.MongoDB.Tests
 
             Assert.Single(model.EntityRoot.SubEntities);
             Assert.Equal(typeof(DocumentWithGuid), model.EntityRoot.SubEntities[0].ClrType);
+        }
+
+        [Fact]
+        public void AutoTimestamp_CreatedAt_IsNotEditable()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithTimestamps), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var createdAtAttr = entity.Attributes.First(a => a.PropName == "CreatedAt");
+            Assert.False(createdAtAttr.IsEditable);
+            Assert.False(createdAtAttr.ShowOnCreate);
+            Assert.True(createdAtAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_UpdatedAt_IsNotEditable()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithTimestamps), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var updatedAtAttr = entity.Attributes.First(a => a.PropName == "UpdatedAt");
+            Assert.False(updatedAtAttr.IsEditable);
+            Assert.False(updatedAtAttr.ShowOnCreate);
+            Assert.True(updatedAtAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_RegularFieldsRemainEditable()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithTimestamps), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var nameAttr = entity.Attributes.First(a => a.PropName == "Name");
+            Assert.True(nameAttr.IsEditable);
+            Assert.True(nameAttr.ShowOnCreate);
+            Assert.True(nameAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void CollectionType_IsNotEditable()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithCollections), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var tagsAttr = entity.Attributes.First(a => a.PropName == "Tags");
+            Assert.False(tagsAttr.IsEditable);
+            Assert.False(tagsAttr.ShowOnCreate);
+            Assert.True(tagsAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void ComplexType_IsNotEditable()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithComplexType), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var addressAttr = entity.Attributes.First(a => a.PropName == "Address");
+            Assert.False(addressAttr.IsEditable);
+            Assert.False(addressAttr.ShowOnCreate);
+            Assert.True(addressAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_NullableDateTime_IsDetectedAsAutoTimestamp()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithNullableUpdatedAt), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var updatedAtAttr = entity.Attributes.First(a => a.PropName == "UpdatedAt");
+            Assert.False(updatedAtAttr.IsEditable);
+            Assert.False(updatedAtAttr.ShowOnCreate);
+            Assert.True(updatedAtAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_DateTimeOffset_IsDetectedAsAutoTimestamp()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithDateTimeOffsetCreatedAt), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var createdAtAttr = entity.Attributes.First(a => a.PropName == "CreatedAt");
+            Assert.False(createdAtAttr.IsEditable);
+            Assert.False(createdAtAttr.ShowOnCreate);
+            Assert.True(createdAtAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_StringCreatedAt_IsNotDetectedAsAutoTimestamp()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithStringCreatedAt), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var createdAtAttr = entity.Attributes.First(a => a.PropName == "CreatedAt");
+            Assert.True(createdAtAttr.IsEditable);
+            Assert.True(createdAtAttr.ShowOnCreate);
+            Assert.True(createdAtAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_DateTimeWithNonTimestampName_IsNotDetectedAsAutoTimestamp()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithNonTimestampDateTime), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var dateAttr = entity.Attributes.First(a => a.PropName == "SomeOtherDate");
+            Assert.True(dateAttr.IsEditable);
+            Assert.True(dateAttr.ShowOnCreate);
+            Assert.True(dateAttr.ShowOnEdit);
+        }
+
+        [Fact]
+        public void AutoTimestamp_CreatedDate_IsDetectedAsAutoTimestamp()
+        {
+            // Arrange
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithCreatedDate), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            // Act
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            // Assert
+            var entity = model.EntityRoot.SubEntities.Single();
+            var createdDateAttr = entity.Attributes.First(a => a.PropName == "CreatedDate");
+            Assert.False(createdDateAttr.IsEditable);
+            Assert.False(createdDateAttr.ShowOnCreate);
+            Assert.True(createdDateAttr.ShowOnEdit);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task CategoryList_IsReadOnly_DoesNotContainAddLinkAsync()
+        public async Task CategoryList_IsEditable_ContainsAddLinkAsync()
         {
             // Arrange
             // Act
@@ -80,8 +80,7 @@ namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
             var html = await response.Content.ReadAsStringAsync();
 
             // Assert
-            Assert.DoesNotContain("/admin/TestCategory/add/", html);
-            Assert.DoesNotContain("Add test category", html);
+            Assert.Contains("/admin/TestCategory/add/", html);
         }
 
         [Fact]

@@ -23,6 +23,9 @@ namespace NDjango.Admin.MongoDB
         private readonly MongoDbOptions _authMongoOptions;
         private readonly HashSet<string> _authEntityIds;
 
+        private static readonly HashSet<string> _systemManagedUserFields =
+            new HashSet<string>(StringComparer.Ordinal) { nameof(MongoAuthUser.DateJoined), nameof(MongoAuthUser.LastLogin) };
+
         public CompositeMongoAdminManager(
             IServiceProvider services,
             NDjangoAdminOptions options,
@@ -81,6 +84,12 @@ namespace NDjango.Admin.MongoDB
                         attr.ShowOnCreate = false;
                         attr.ShowOnEdit = true;
                         attr.IsEditable = false;
+                    }
+                    else if (entity.Id == nameof(MongoAuthUser) && _systemManagedUserFields.Contains(attr.PropName))
+                    {
+                        attr.IsEditable = false;
+                        attr.ShowOnCreate = false;
+                        attr.ShowOnEdit = true;
                     }
                     else
                     {

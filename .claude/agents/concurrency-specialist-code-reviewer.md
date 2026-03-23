@@ -1,6 +1,6 @@
 ---
 name: concurrency-specialist-code-reviewer
-description: "Expert in .NET concurrency, threading, and race condition analysis. Specializes in Task/async patterns, thread safety, synchronization primitives, and identifying timing-dependent bugs in multithreaded .NET applications."
+description: "Expert in .NET concurrency, threading, and race condition analysis. Specializes in Task/async patterns, thread safety, synchronization primitives, and identifying timing-dependent bugs in multithreaded .NET applications. Use proactively to any code review."
 tools: Glob, Grep, Read, WebFetch, WebSearch
 model: opus
 color: yellow

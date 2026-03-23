@@ -48,8 +48,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mongoClusterSetup:
+        condition: service_completed_successfully
     environment:
       - "TEST_DB_SERVER=db,1433"
+      - "TEST_MONGO_CONNECTION=mongodb://mongo:27017/?directConnection=true"
     command: [ "./scripts/start-tests.sh" ]
 
   lint-formatter:

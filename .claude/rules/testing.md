@@ -1,5 +1,5 @@
 ---
-paths: "JSM.*.Test/**/*.cs,JSM.*.Tests/**/*.cs,**/*Tests.cs,**/Tests*.cs,**/Unit/**/*.cs,tests/**/*.cs"
+paths: "tests/**/*.cs,test/**/*.cs"
 ---
 
 # Testing

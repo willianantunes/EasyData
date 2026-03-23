@@ -6,7 +6,7 @@ End-to-end testing of the NDjango.Admin Admin Dashboard using the sample project
 
 ```bash
 # SQL Server must be running
-docker compose up -d db
+docker compose up --detach --wait --wait-timeout 120 db
 
 # Wait for it to be healthy (~15s), then start the sample project
 cd sample-project/src && dotnet run -- api

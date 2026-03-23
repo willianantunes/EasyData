@@ -5,7 +5,7 @@ Demonstrates SAML SSO integration with the NDjango.Admin Admin Dashboard using A
 ## Running
 
 ```bash
-docker compose up -d db
+docker compose up --detach --wait --wait-timeout 120 db
 cd sample-project-sso/src && dotnet run -- api
 # Dashboard at http://localhost:8000/admin/
 ```

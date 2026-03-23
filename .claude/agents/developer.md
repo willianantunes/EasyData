@@ -1,6 +1,6 @@
 ---
 name: developer
-description: "Expert in .NET backend development"
+description: "Use this agent proactively to develop backend code"
 model: opus
 color: red
 ---

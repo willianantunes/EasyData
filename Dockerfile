@@ -14,8 +14,11 @@ COPY test/Directory.Build.props test/
 COPY src/NDjango.Admin.AspNetCore/*.csproj src/NDjango.Admin.AspNetCore/packages.lock.json src/NDjango.Admin.AspNetCore/
 COPY src/NDjango.Admin.AspNetCore.AdminDashboard/*.csproj src/NDjango.Admin.AspNetCore.AdminDashboard/packages.lock.json src/NDjango.Admin.AspNetCore.AdminDashboard/
 COPY src/NDjango.Admin.Core/*.csproj src/NDjango.Admin.Core/packages.lock.json src/NDjango.Admin.Core/
+COPY src/NDjango.Admin.AspNetCore.AdminDashboard.Core/*.csproj src/NDjango.Admin.AspNetCore.AdminDashboard.Core/packages.lock.json src/NDjango.Admin.AspNetCore.AdminDashboard.Core/
 COPY src/NDjango.Admin.EntityFrameworkCore.Relational/*.csproj src/NDjango.Admin.EntityFrameworkCore.Relational/packages.lock.json src/NDjango.Admin.EntityFrameworkCore.Relational/
+COPY src/NDjango.Admin.MongoDB/*.csproj src/NDjango.Admin.MongoDB/packages.lock.json src/NDjango.Admin.MongoDB/
 COPY test/NDjango.Admin.AspNetCore.AdminDashboard.Tests/*.csproj test/NDjango.Admin.AspNetCore.AdminDashboard.Tests/packages.lock.json test/NDjango.Admin.AspNetCore.AdminDashboard.Tests/
+COPY test/NDjango.Admin.MongoDB.Tests/*.csproj test/NDjango.Admin.MongoDB.Tests/packages.lock.json test/NDjango.Admin.MongoDB.Tests/
 COPY test/NDjango.Admin.AspNetCore.Tests/*.csproj test/NDjango.Admin.AspNetCore.Tests/packages.lock.json test/NDjango.Admin.AspNetCore.Tests/
 COPY test/NDjango.Admin.Core.Tests/*.csproj test/NDjango.Admin.Core.Tests/packages.lock.json test/NDjango.Admin.Core.Tests/
 COPY test/NDjango.Admin.EntityFrameworkCore.Relational.Tests/*.csproj test/NDjango.Admin.EntityFrameworkCore.Relational.Tests/packages.lock.json test/NDjango.Admin.EntityFrameworkCore.Relational.Tests/

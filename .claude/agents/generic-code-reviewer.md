@@ -1,6 +1,6 @@
 ---
 name: generic-code-reviewer
-description: "Expert code review agent focused on .NET. Identifies issues, recommends improvements, and best practices"
+description: "Expert code review agent focused on .NET. Identifies issues, recommends improvements, and best practices. Use proactively to any code review."
 tools: Glob, Grep, Read, WebFetch, WebSearch
 model: opus
 color: pink

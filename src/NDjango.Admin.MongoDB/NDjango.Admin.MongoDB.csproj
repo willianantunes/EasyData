@@ -2,8 +2,11 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>NDjango.Admin.MongoDB</RootNamespace>
-    <Description>MongoDB provider for NDjango.Admin library. Read-only admin dashboard for MongoDB collections.</Description>
+    <Description>MongoDB provider for NDjango.Admin library. Full CRUD admin dashboard for MongoDB collections with authentication support.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="NDjango.Admin.MongoDB.Tests" />
+  </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

@@ -106,6 +106,9 @@ src/
     Configuration/                                # AddNDjangoAdminDashboard<TDbContext>()
     Services/                                     # CompositeNDjangoAdminManager
   NDjango.Admin.MongoDB/                               # MongoDB provider
+    Authentication/
+      Entities/                                   # MongoAuthUser, MongoAuthGroup, MongoAuthPermission, etc.
+      Storage/                                    # MongoAuthStorageQueries, MongoAuthStorageInitializer, AuthCollectionNames
     Extensions/                                   # UseMongoDB(), AddNDjangoAdminDashboardMongo()
     Filters/                                      # MongoSubstringFilter
     Services/                                     # NDjangoAdminManagerMongo
@@ -132,7 +135,7 @@ sample-project-sso/                               # SSO example (AWS IAM Identit
 The dashboard is provider-agnostic. The abstract `NDjangoAdminManager` defines the contract; providers implement it:
 
 - **EF Core**: `DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData`. CRUD goes through `NDjangoAdminManagerEF`.
-- **MongoDB**: `MongoMetaDataLoader` scans registered document types via reflection + BSON attributes. Read operations go through `NDjangoAdminManagerMongo` using `collection.AsQueryable()` (LINQ3). V1 is read-only (no create/update/delete).
+- **MongoDB**: `MongoMetaDataLoader` scans registered document types via reflection + BSON attributes. CRUD operations go through `NDjangoAdminManagerMongo` using `collection.AsQueryable()` (LINQ3) for reads and direct MongoDB driver calls for create/update/delete. Authentication is supported via MongoDB-backed auth collections (users, groups, permissions).
 
 ### Important Metadata Properties
 

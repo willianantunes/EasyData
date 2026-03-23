@@ -6,7 +6,7 @@ End-to-end testing of the NDjango.Admin Admin Dashboard using the MongoDB sample
 
 ```bash
 # MongoDB must be running with replica set
-docker compose up -d mongo mongoClusterSetup
+docker compose up --detach --wait --wait-timeout 120 --remove-orphans mongoClusterSetup
 
 # Wait for mongoClusterSetup to complete, then start the sample project
 cd sample-project-mongodb/src && dotnet run -- api
@@ -15,8 +15,9 @@ cd sample-project-mongodb/src && dotnet run -- api
 - **App URL:** `http://localhost:8001/admin/`
 - **DB:** MongoDB on `localhost:27017`, database `SampleProjectMongo`
 - **Auto-setup:** The app seeds sample data on startup via `DataSeeder` (only if collections are empty)
-- **Authentication:** None. The MongoDB sample project has `RequireAuthentication = false` and uses `AllowAllAdminDashboardAuthorizationFilter`
-- **Read-only:** The MongoDB provider V1 is **read-only** — no create, edit, or delete operations
+- **Authentication:** Cookie-based login. Default credentials: **admin / admin**
+- **User collections:** Read-only — list views, detail views, search, sort, and pagination work; create/edit/delete are not available for user-defined collections
+- **Auth collections:** Fully editable through the dashboard (Users, Groups, Permissions)
 
 If port 8001 is already in use, kill the existing process first:
 ```bash
@@ -32,11 +33,35 @@ Use the `mcp__playwright__browser_*` tools. Key tools:
 | `browser_navigate` | Go to a URL |
 | `browser_snapshot` | Get accessibility tree (preferred over screenshots) |
 | `browser_click` | Click an element by `ref` |
+| `browser_fill_form` | Fill form fields by `ref` |
 
 **Known issue:** If Chrome fails to launch with "Opening in existing browser session", clear the stale profile:
 ```bash
 rm -rf ~/Library/Caches/ms-playwright/mcp-chrome-*
 ```
+
+## Authentication Flow
+
+When `RequireAuthentication = true`, all dashboard pages require login. The auth system uses cookie-based sessions with DataProtection encryption. Auth data is stored in MongoDB collections (`auth_users`, `auth_groups`, `auth_permissions`, `auth_group_permissions`, `auth_user_groups`).
+
+### Login
+
+1. Any unauthenticated request to `/admin/*` redirects to `/admin/login/?next={originalPath}`
+2. The login page shows a form with Username and Password fields and a "Log in" button
+3. POST `/admin/login/` validates credentials against the `auth_users` collection (SHA256 hash)
+4. On success: sets `.NDjango.Admin.Auth` cookie, redirects to `?next` param or `/admin/`
+5. On failure: re-renders login page with "Invalid credentials" error
+6. Inactive users (`IsActive = false`) are treated as invalid credentials
+
+### Logout
+
+1. Navigate to `/admin/logout/` or click "Log out" in the header
+2. Clears the auth cookie
+3. Redirects to `/admin/login/`
+
+### Auth-Exempt Paths
+
+These paths are served without authentication: `/css/*`, `/js/*`, `/login/`, `/logout/`, `/saml/*`
 
 ## Key Differences from EF Core Sample
 
@@ -45,15 +70,16 @@ rm -rf ~/Library/Caches/ms-playwright/mcp-chrome-*
 | Port | 8000 | 8001 |
 | Database | SQL Server | MongoDB |
 | Primary keys | `int` auto-increment | `ObjectId` (24-char hex string) |
-| Authentication | Cookie-based login (admin/admin) | None (AllowAll) |
-| Read-only | No (full CRUD) | **Yes** (list + detail only) |
+| Authentication | Cookie-based (admin/admin) | Cookie-based (admin/admin) |
+| Auth storage | SQL Server tables | MongoDB collections |
+| User collections | Full CRUD | Read-only (list + detail) |
+| Auth collections | Full CRUD | Full CRUD |
 | FK relationships | Lookup popups | Plain ObjectId text (no lookups) |
 | Nested collections | Not applicable | Shown as JSON string (e.g., `IngredientIds`) |
-| Auth entities | 5 auth models in sidebar | None |
 
 ## Dashboard Structure
 
-The admin home at `/admin/` shows models organized by `EntityGroups`:
+The admin home at `/admin/` shows models organized by `EntityGroups`, plus an auto-generated "Authentication and Authorization" section for auth entities.
 
 ### Restaurant Group
 
@@ -71,9 +97,19 @@ The admin home at `/admin/` shows models organized by `EntityGroups`:
 |---|---|---|---|
 | Gift | `/admin/Gift/` | Name, IsWrapped, TrackingCode (Guid), Price, Barcode, Weight, Rating, QuantityInStock, MinAge, ShippedAt (DateTimeOffset), Description, Notes | None |
 
+### Authentication and Authorization (auto-generated)
+
+| Model | URL prefix | Notes |
+|---|---|---|
+| MongoAuthUser | `/admin/MongoAuthUser/` | Username, Password (hashed), IsSuperuser, IsActive, LastLogin, DateJoined |
+| MongoAuthGroup | `/admin/MongoAuthGroup/` | Named groups for permission assignment |
+| MongoAuthPermission | `/admin/MongoAuthPermission/` | Auto-generated per entity (add/change/delete/view) |
+| MongoAuthGroupPermission | `/admin/MongoAuthGroupPermission/` | Links groups to permissions |
+| MongoAuthUserGroup | `/admin/MongoAuthUserGroup/` | Links users to groups |
+
 ### Seeded Data
 
-The `DataSeeder` populates these collections on first startup:
+The `DataSeeder` populates user collections on first startup:
 
 | Collection | Count | Examples |
 |---|---|---|
@@ -84,15 +120,22 @@ The `DataSeeder` populates these collections on first startup:
 | menuItems | 4 | Margherita Pizza, Spaghetti Carbonara, Salmon Sashimi, Miso Ramen |
 | gifts | 2 | Gourmet Chocolate Box, Ceramic Tea Set |
 
-## URL Patterns (Read-Only)
+Auth collections are auto-populated by the bootstrap service:
+- 1 admin superuser (`admin`/`admin`)
+- Permissions: 4 per entity (add/change/delete/view) × 11 entities = 44 permissions
 
-| Action | URL | Method |
-|---|---|---|
-| Dashboard home | `/admin/` | GET |
-| List | `/admin/{Model}/` | GET |
-| Detail (view) | `/admin/{Model}/{objectId}/change/` | GET |
+## URL Patterns
 
-**Not available in V1:** Add (`/add/`), POST create/update, Delete (`/delete/`), Bulk actions.
+| Action | URL | Method | User Collections | Auth Collections |
+|---|---|---|---|---|
+| Dashboard home | `/admin/` | GET | Yes | Yes |
+| List | `/admin/{Model}/` | GET | Yes | Yes |
+| Detail (view/change) | `/admin/{Model}/{id}/change/` | GET | Read-only | Editable |
+| Add form | `/admin/{Model}/add/` | GET | No | Yes |
+| Create | `/admin/{Model}/add/` | POST | No | Yes |
+| Update | `/admin/{Model}/{id}/change/` | POST | No | Yes |
+| Delete form | `/admin/{Model}/{id}/delete/` | GET | No | Yes |
+| Delete | `/admin/{Model}/{id}/delete/` | POST | No | Yes |
 
 ## ObjectId Primary Keys
 
@@ -100,163 +143,153 @@ MongoDB documents use `ObjectId` as the primary key (the `_id` field). In the da
 
 - List views show `Id` as a 24-character hex string (e.g., `683f1a2b4c5d6e7f8a9b0c1d`)
 - The `Id` column links to the detail view: `/admin/{Model}/{objectId}/change/`
-- `ObjectId` values are hidden by default (`HidePrimaryKeys = true`) — they appear as the row link but not as a separate visible column
 - `RestaurantId` on RestaurantProfile and MenuItem shows as a plain ObjectId string (no FK lookup popup)
 
 ## Verification Checklist
 
-### Phase 1: Dashboard Home
+### Phase 1: Authentication
 
-1. **Dashboard loads** — Navigate to `http://localhost:8001/admin/`. Verify:
-   - No login redirect (no authentication)
+1. **Login redirect** — Navigate to `http://localhost:8001/admin/`. Verify redirect to `/admin/login/?next=%2Fadmin%2F`
+2. **Login page** — Verify login form has Username, Password fields and "Log in" button
+3. **Invalid login** — Submit with `admin` / `wrong`. Verify stays on login page with "Please enter the correct username and password" error
+4. **Valid login** — Submit with `admin` / `admin`. Verify redirect to `/admin/` dashboard
+5. **Header** — Verify header shows "Welcome, admin" and "Log out" link
+
+### Phase 2: Dashboard Home & Sidebar
+
+6. **Dashboard home** — `/admin/` loads after login. Verify:
    - Page title contains "Sample Admin (MongoDB)"
-   - Two entity group sections visible: "Restaurant" and "Shop"
-2. **Restaurant group** — Verify 5 entities listed: Categories, Restaurants, Restaurant Profiles, Menu Items, Ingredients
-3. **Shop group** — Verify 1 entity listed: Gifts
-4. **No auth entities** — Verify there is NO "Authentication and Authorization" section
-5. **No Add/Change links** — Since V1 is read-only, verify entity links go to list views only. There should be no "Add" links on the dashboard home (the `IsReadOnly` option disables them)
+   - Three entity group sections visible: "Restaurant", "Shop", and "Authentication and Authorization"
+7. **Restaurant group** — Verify 5 entities listed: Categories, Restaurants, Restaurant Profiles, Menu Items, Ingredients
+8. **Shop group** — Verify 1 entity listed: Gifts
+9. **Auth group** — Verify 5 auth entities listed: Mongo Auth Users, Mongo Auth Groups, Mongo Auth Permissions, Mongo Auth Group Permissions, Mongo Auth User Groups
+10. **Sidebar** — Navigate to any entity list. Verify the left sidebar has:
+    - A "Filter models..." text input
+    - "Restaurant" heading with 5 entity links
+    - "Shop" heading with 1 entity link
+    - "Authentication and Authorization" heading with 5 auth entity links
+11. **Sidebar filter** — Type "cat" in the filter input. Verify only "Categories" remains visible
 
-### Phase 2: Sidebar
-
-6. **Sidebar present** — Navigate to any entity list. Verify the left sidebar exists with:
-   - A "Filter models..." text input
-   - "Restaurant" heading with 5 entity links
-   - "Shop" heading with 1 entity link (Gift)
-   - No "Authentication and Authorization" heading
-7. **Sidebar filter** — Type "cat" in the filter input. Verify only "Categories" remains visible
-
-### Phase 3: List Views with Seeded Data
+### Phase 3: User Collection List Views
 
 #### Category List
 
-8. **Category list loads** — Navigate to `/admin/Category/`. Verify:
-   - Page title: "Categories | Sample Admin (MongoDB)"
-   - Record count: "3 categories"
-   - Table shows 3 rows: Italian, Japanese, Mexican
-9. **Category columns** — Verify visible columns include: CreatedAt, Description, Name, UpdatedAt (Id is hidden by default)
-10. **Row links** — Each row should have a clickable link (on the first visible column or Id) pointing to `/admin/Category/{objectId}/change/`
+12. **Category list loads** — Navigate to `/admin/Category/`. Verify:
+    - Record count: "3 categories"
+    - Table shows 3 rows: Italian, Japanese, Mexican
+13. **Category columns** — Verify visible columns include: CreatedAt, Description, Name, UpdatedAt
+14. **Row links** — Each row has a clickable link pointing to `/admin/Category/{objectId}/change/`
 
 #### Restaurant List
 
-11. **Restaurant list loads** — Navigate to `/admin/Restaurant/`. Verify:
+15. **Restaurant list loads** — Navigate to `/admin/Restaurant/`. Verify:
     - Record count: "2 restaurants"
     - Table shows: Bella Napoli, Tokyo Garden
-12. **Restaurant columns** — Verify columns: Address, Name, Phone (plus timestamps)
 
 #### Ingredient List
 
-13. **Ingredient list** — Navigate to `/admin/Ingredient/`. Verify:
+16. **Ingredient list** — Navigate to `/admin/Ingredient/`. Verify:
     - Record count: "5 ingredients"
-    - Table shows: Mozzarella, Tomato Sauce, Fresh Salmon, Soy Sauce, Basil
-14. **Boolean column** — Verify `IsAllergen` column shows `True` for Mozzarella, Fresh Salmon, Soy Sauce and `False` for Tomato Sauce, Basil
+17. **Boolean column** — Verify `IsAllergen` shows `True`/`False` correctly
 
 #### RestaurantProfile List
 
-15. **RestaurantProfile list** — Navigate to `/admin/RestaurantProfile/`. Verify:
+18. **RestaurantProfile list** — Navigate to `/admin/RestaurantProfile/`. Verify:
     - Record count: "2 restaurant profiles"
-    - Table shows 2 profiles with Capacity, OpeningHours, Website columns
-16. **ObjectId reference** — Verify `RestaurantId` column shows ObjectId hex strings (not integer IDs, not restaurant names)
+19. **ObjectId reference** — Verify `RestaurantId` column shows ObjectId hex strings
 
 #### MenuItem List
 
-17. **MenuItem list** — Navigate to `/admin/MenuItem/`. Verify:
+20. **MenuItem list** — Navigate to `/admin/MenuItem/`. Verify:
     - Record count: "4 menu items"
-    - Table shows: Margherita Pizza, Spaghetti Carbonara, Salmon Sashimi, Miso Ramen
-18. **Price column** — Verify Price values display correctly (e.g., 14.99, 16.50, 18.00, 15.00)
-19. **Boolean column** — Verify `IsAvailable` shows `True` for all items
-20. **Nested collection** — Verify `IngredientIds` column displays as a JSON array string (e.g., `["683f...", "683f...", "683f..."]`). This is the embedded ObjectId list rendered as JSON.
+21. **Nested collection** — Verify `IngredientIds` column displays as a JSON array string
 
 #### Gift List
 
-21. **Gift list** — Navigate to `/admin/Gift/`. Verify:
+22. **Gift list** — Navigate to `/admin/Gift/`. Verify:
     - Record count: "2 gifts"
-    - Table shows: Gourmet Chocolate Box, Ceramic Tea Set
-22. **Diverse types** — Verify these columns render:
-    - `IsWrapped`: `True` / `False`
-    - `TrackingCode`: Guid string (e.g., `a1b2c3d4-...`)
-    - `Price`: decimal (29.99, 45.00)
-    - `Barcode`: long integer
-    - `Weight`: double (0.5, 1.2)
-    - `Rating`: float (4.8, 4.5)
-    - `QuantityInStock`: short (150, 40)
-    - `MinAge`: byte (3, 12)
-    - `ShippedAt`: DateTimeOffset with timezone info
+23. **Diverse types** — Verify columns render: IsWrapped (bool), TrackingCode (Guid), Price (decimal), Barcode (long), Weight (double), Rating (float), QuantityInStock (short), MinAge (byte), ShippedAt (DateTimeOffset)
 
-### Phase 4: Detail Views
+### Phase 4: User Collection Detail Views
 
-23. **Category detail** — Click a category row link. Verify:
+24. **Category detail** — Click a category row link. Verify:
     - URL matches `/admin/Category/{objectId}/change/`
-    - Page shows all fields as **read-only** (no editable text inputs)
+    - Page shows "Change category" heading
+    - Fields displayed as **read-only** values (class `readonly-value`) with actual data (not empty)
     - Fields include: Name, Description, CreatedAt, UpdatedAt
-    - There are NO "Save" buttons (read-only mode)
-    - There is NO "Delete" link
-24. **Restaurant detail** — Click a restaurant row. Verify read-only fields: Name, Address, Phone
-25. **MenuItem detail** — Click a menu item row. Verify:
-    - `RestaurantId` shows as an ObjectId hex string (no lookup popup)
-    - `IngredientIds` shows as a JSON array string
-    - `Price` shows the decimal value
+    - No "Save" buttons, no "Delete" link
+25. **Restaurant detail** — Click a restaurant row. Verify read-only fields with actual values: Name, Address, Phone
+26. **MenuItem detail** — Click a menu item row. Verify:
+    - `RestaurantId` shows as ObjectId hex string
+    - `Price` shows decimal value
     - `IsAvailable` shows True/False
-26. **Gift detail** — Click a gift row. Verify all diverse types display correctly:
-    - `TrackingCode` as Guid
-    - `ShippedAt` as DateTimeOffset with timezone
-    - Numeric types (Barcode, Weight, Rating, QuantityInStock, MinAge) display correctly
+27. **Gift detail** — Click a gift row. Verify diverse types display: TrackingCode (Guid), ShippedAt (DateTimeOffset), numeric types
 
 ### Phase 5: Conditional Search
 
-27. **Search box visible (Category)** — Navigate to `/admin/Category/`. Verify a search box ("Search..." textbox + "Search" button) is present. Category has `SearchFields => new(x => x.Name, x => x.Description)`.
-28. **Search box visible (Restaurant)** — Navigate to `/admin/Restaurant/`. Verify search box is present. Restaurant has `SearchFields => new(x => x.Name)`.
-29. **Search box hidden (Ingredient)** — Navigate to `/admin/Ingredient/`. Verify there is **no** search box. Ingredient does not implement `IAdminSettings`.
-30. **Search box hidden (MenuItem)** — Navigate to `/admin/MenuItem/`. Verify no search box.
-31. **Search box hidden (RestaurantProfile)** — Navigate to `/admin/RestaurantProfile/`. Verify no search box.
-32. **Search box hidden (Gift)** — Navigate to `/admin/Gift/`. Verify no search box.
-33. **Search filters correctly** — Navigate to `/admin/Category/?q=Italian`. Verify:
-    - Only "Italian" row appears
-    - Count shows "1 category"
-    - "Japanese" and "Mexican" are not in the results
-34. **Search on Restaurant** — Navigate to `/admin/Restaurant/?q=Bella`. Verify only "Bella Napoli" appears, count "1 restaurant".
-35. **Search no match** — Navigate to `/admin/Category/?q=nonexistent`. Verify 0 results, count shows "0 categories".
-36. **Search ignored on non-searchable** — Navigate to `/admin/Ingredient/?q=something`. Verify all 5 ingredients still display (the `?q=` param is ignored).
+28. **Search box visible (Category)** — Navigate to `/admin/Category/`. Verify search box present
+29. **Search box visible (Restaurant)** — Navigate to `/admin/Restaurant/`. Verify search box present
+30. **Search box hidden (Ingredient)** — Navigate to `/admin/Ingredient/`. Verify **no** search box
+31. **Search box hidden (MenuItem)** — Navigate to `/admin/MenuItem/`. Verify no search box
+32. **Search box hidden (Gift)** — Navigate to `/admin/Gift/`. Verify no search box
+33. **Search filters correctly** — Navigate to `/admin/Category/?q=Italian`. Verify only "Italian" row appears, count "1 category"
+34. **Search on Restaurant** — Navigate to `/admin/Restaurant/?q=Bella`. Verify only "Bella Napoli", count "1 restaurant"
+35. **Search no match** — Navigate to `/admin/Category/?q=nonexistent`. Verify "0 categories"
+36. **Search ignored on non-searchable** — Navigate to `/admin/Ingredient/?q=something`. Verify all 5 ingredients still display
 
 ### Phase 6: Sorting
 
-37. **Sort ascending** — Navigate to `/admin/Category/?sort=Name&dir=asc`. Verify rows ordered: Italian, Japanese, Mexican.
-38. **Sort descending** — Navigate to `/admin/Category/?sort=Name&dir=desc`. Verify rows ordered: Mexican, Japanese, Italian.
-39. **Sort column headers** — On any list view, verify column headers are clickable links with `?sort={FieldName}&dir=asc` URLs.
-40. **Active sort indicator** — When sorting is active, verify the sorted column header shows an arrow indicator.
+37. **Sort ascending** — Navigate to `/admin/Category/?sort=Name&dir=asc`. Verify order: Italian, Japanese, Mexican
+38. **Sort descending** — Navigate to `/admin/Category/?sort=Name&dir=desc`. Verify order: Mexican, Japanese, Italian
+39. **Sort column headers** — Verify column headers are clickable sort links
 
-### Phase 7: Read-Only Enforcement
+### Phase 7: Read-Only Enforcement (User Collections)
 
-41. **No Add button on list** — On any entity list view, verify there is **no** "Add {entity}" link in the toolbar.
-42. **No action bar** — On list views, verify there is **no** action dropdown, no checkboxes, no "Go" button (bulk actions disabled in read-only mode).
-43. **No Save buttons on detail** — On detail/change views, verify there are **no** "Save", "Save and add another", or "Save and continue editing" buttons.
-44. **No Delete link on detail** — On detail views, verify there is **no** "Delete" link.
-45. **Add URL returns error** — Navigate directly to `/admin/Category/add/`. Verify it does NOT render a writable form (either 404, 403, or the form is read-only with no submit).
+40. **No Add button on list** — On `/admin/Category/`, verify no "Add category" link in toolbar
+41. **No action bar** — On user entity lists, verify no action dropdown, no checkboxes
+42. **No Save buttons on detail** — On user entity detail views, verify no Save buttons
+43. **No Delete link on detail** — On user entity detail views, verify no Delete link
 
-### Phase 8: Pagination
+### Phase 8: Auth Entity CRUD
 
-46. **Small collections** — Navigate to `/admin/Ingredient/` (5 items). Verify no pagination controls appear (all items fit on one page with default 25 per page).
-47. **Record count accurate** — Verify each list view shows the correct count:
-    - Categories: 3
-    - Restaurants: 2
-    - RestaurantProfiles: 2
-    - Ingredients: 5
-    - MenuItems: 4
-    - Gifts: 2
+44. **MongoAuthPermission list** — Navigate to `/admin/MongoAuthPermission/`. Verify auto-generated permissions exist (e.g., `add_category`, `view_category`). Should have 44 permissions (4 per entity × 11 entities), paginated at 25 per page.
+45. **MongoAuthGroup create** — Navigate to `/admin/MongoAuthGroup/add/`. Fill Name = "viewers". Click Save. Verify redirect to list, "viewers" appears.
+46. **MongoAuthGroupPermission create** — Navigate to `/admin/MongoAuthGroupPermission/add/`. Assign `view_category` permission to the "viewers" group by entering the GroupId and PermissionId. Click Save.
+47. **MongoAuthUser create** — Navigate to `/admin/MongoAuthUser/add/`. Fill Username = "testuser", Password = "test123". Click Save. Verify redirect to list, "testuser" appears with IsActive = True.
+48. **MongoAuthUserGroup create** — Navigate to `/admin/MongoAuthUserGroup/add/`. Assign "testuser" to "viewers" group by entering UserId and GroupId. Click Save.
+49. **MongoAuthGroup edit** — Navigate to the "viewers" group edit form. Change Name to "category_viewers". Click Save. Verify updated name in list.
+50. **MongoAuthGroup delete** — Create a temporary group "temp_group". Navigate to its edit form. Click Delete. Confirm deletion. Verify "temp_group" is gone from list.
 
-### Phase 9: Breadcrumbs and Navigation
+### Phase 9: Permission Enforcement
 
-48. **List breadcrumb** — On `/admin/Category/`, verify breadcrumb shows: Home > Categories
-49. **Detail breadcrumb** — On `/admin/Category/{id}/change/`, verify breadcrumb shows: Home > Category > {objectId}
-50. **Home link** — Click "Home" in the breadcrumb. Verify redirect to `/admin/`
-51. **Entity link** — Click "Category" in the detail breadcrumb. Verify redirect to `/admin/Category/` list
+51. **Logout admin** — Click "Log out". Verify redirect to login page.
+52. **Login as testuser** — Login with `testuser` / `test123`. Verify redirect to dashboard.
+53. **Allowed: view Category list** — Navigate to `/admin/Category/`. Verify 200 OK with category data (testuser has `view_category` permission).
+54. **Denied: view Restaurant list** — Navigate to `/admin/Restaurant/`. Verify 403 "Permission denied" (testuser has no `view_restaurant` permission).
+55. **Denied: add Category** — Navigate to `/admin/Category/add/`. Verify 403 (testuser has no `add_category` permission).
+56. **Login back as admin** — Logout testuser, login as `admin` / `admin`. Verify full access restored.
 
-## What's NOT Tested (V1 Limitations)
+### Phase 10: Pagination
 
-- **Create operations** — `POST /admin/{Model}/add/` not supported
-- **Update operations** — `POST /admin/{Model}/{id}/change/` not supported
-- **Delete operations** — `POST /admin/{Model}/{id}/delete/` not supported
-- **Bulk actions** — No checkboxes, no action dropdown, no bulk delete
+57. **Small collections** — Navigate to `/admin/Ingredient/` (5 items). Verify no pagination controls.
+58. **Pagination on permissions** — Navigate to `/admin/MongoAuthPermission/`. With 44 permissions and 25 per page, verify pagination shows page 1 of 2. Navigate to page 2 and verify remaining permissions.
+59. **Record counts accurate** — Verify counts: Categories: 3, Restaurants: 2, Ingredients: 5, MenuItems: 4, Gifts: 2
+
+### Phase 11: Breadcrumbs and Navigation
+
+60. **List breadcrumb** — On `/admin/Category/`, verify breadcrumb: Home > Categories
+61. **Detail breadcrumb** — On `/admin/Category/{id}/change/`, verify breadcrumb: Home > Category > {objectId}
+62. **Home link** — Click "Home" in breadcrumb. Verify redirect to `/admin/`
+
+### Phase 12: Logout
+
+63. **Logout** — Click "Log out". Verify redirect to login page.
+64. **Session cleared** — Navigate to `/admin/`. Verify redirect to login (cookie cleared).
+
+## What's NOT Tested (Current Limitations)
+
+- **User collection CRUD** — create/edit/delete for user-defined collections (Category, Restaurant, etc.) is not yet implemented
 - **FK lookup popups** — ObjectId references show as plain text, no popup navigation
-- **Authentication** — No login/logout, no users, no permissions
-- **SAML SSO** — Not applicable
-- **Nested document expand/collapse UI** — V1 renders nested objects as flat JSON strings; the expandable UI is planned for a future version
+- **Nested document expand/collapse UI** — nested objects rendered as flat JSON strings
+- **Dashboard home "Add" links for user collections** — "Add" links appear even though user collections are read-only (Bug 3 in ISSUES-TO-BE-FIXED.md)
+- **SAML SSO** — not configured in the MongoDB sample project

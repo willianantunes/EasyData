@@ -56,10 +56,14 @@ public class ApiCommand : ICommand
                 {
                     Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
                     DashboardTitle = "Sample Admin (MongoDB)",
+                    RequireAuthentication = true,
+                    CreateDefaultAdminUser = true,
+                    DefaultAdminPassword = "admin",
                     EntityGroups = new Dictionary<string, string[]>
                     {
                         ["Restaurant"] = new[] { "Category", "Restaurant", "RestaurantProfile", "MenuItem", "Ingredient" },
                         ["Shop"] = new[] { "Gift" },
+                        ["Authentication and Authorization"] = new[] { "MongoAuthUser", "MongoAuthGroup", "MongoAuthPermission", "MongoAuthGroupPermission", "MongoAuthUserGroup" },
                     }
                 },
                 mongo =>

@@ -22,7 +22,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             _expiration = options.CookieExpiration;
         }
 
-        public void SetAuthCookie(HttpContext httpContext, int userId, string username)
+        public void SetAuthCookie(HttpContext httpContext, string userId, string username)
         {
             var payload = new JObject
             {
@@ -42,7 +42,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             });
         }
 
-        public (int UserId, string Username)? ValidateCookie(HttpContext httpContext)
+        public (string UserId, string Username)? ValidateCookie(HttpContext httpContext)
         {
             if (!httpContext.Request.Cookies.TryGetValue(_cookieName, out var cookieValue))
                 return null;
@@ -52,10 +52,10 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
                 var payload = JObject.Parse(decrypted);
 
                 var username = payload["u"]?.Value<string>();
-                var userId = payload["id"]?.Value<int>() ?? 0;
+                var userId = payload["id"]?.Value<string>();
                 var timestamp = payload["t"]?.Value<DateTime>() ?? DateTime.MinValue;
 
-                if (string.IsNullOrEmpty(username) || userId == 0)
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(userId))
                     return null;
 
                 if (DateTime.UtcNow - timestamp > _expiration)

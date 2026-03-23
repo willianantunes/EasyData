@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +16,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
             _dbContext = dbContext;
         }
 
-        public async Task<(int Id, string Username, string PasswordHash, bool IsSuperuser, bool IsActive)?> GetUserByUsernameAsync(
+        public async Task<(string Id, string Username, string PasswordHash, bool IsSuperuser, bool IsActive)?> GetUserByUsernameAsync(
             string username, CancellationToken ct = default)
         {
             var conn = _dbContext.Database.GetDbConnection();
@@ -33,7 +32,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
                 using var reader = await cmd.ExecuteReaderAsync(ct);
                 if (await reader.ReadAsync(ct)) {
                     return (
-                        reader.GetInt32(0),
+                        reader.GetInt32(0).ToString(),
                         reader.GetString(1),
                         reader.GetString(2),
                         reader.GetBoolean(3),
@@ -47,16 +46,18 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
             }
         }
 
-        public async Task UpdateLastLoginAsync(int userId, CancellationToken ct = default)
+        public async Task UpdateLastLoginAsync(string userId, CancellationToken ct = default)
         {
+            var intUserId = int.Parse(userId);
             await _dbContext.Database.ExecuteSqlRawAsync(
                 "UPDATE dbo.auth_user SET last_login = GETUTCDATE() WHERE id = {0}",
-                new object[] { userId },
+                new object[] { intUserId },
                 ct);
         }
 
-        public async Task<HashSet<string>> GetUserPermissionsAsync(int userId, CancellationToken ct = default)
+        public async Task<HashSet<string>> GetUserPermissionsAsync(string userId, CancellationToken ct = default)
         {
+            var intUserId = int.Parse(userId);
             var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var conn = _dbContext.Database.GetDbConnection();
             await conn.OpenAsync(ct);
@@ -69,7 +70,7 @@ JOIN auth_user_groups ug ON ug.group_id = gp.group_id
 WHERE ug.user_id = @userId";
                 var param = cmd.CreateParameter();
                 param.ParameterName = "@userId";
-                param.Value = userId;
+                param.Value = intUserId;
                 cmd.Parameters.Add(param);
 
                 using var reader = await cmd.ExecuteReaderAsync(ct);
@@ -105,7 +106,7 @@ WHERE ug.user_id = @userId";
                 ct);
         }
 
-        public async Task<int> CreateOrUpdateSamlUserAsync(string username, CancellationToken ct = default)
+        public async Task<string> CreateOrUpdateSamlUserAsync(string username, CancellationToken ct = default)
         {
             var randomHash = PasswordHasher.HashPassword(Guid.NewGuid().ToString("N"));
 
@@ -129,19 +130,21 @@ WHERE ug.user_id = @userId";
                 cmd.Parameters.Add(param);
 
                 var result = await cmd.ExecuteScalarAsync(ct);
-                return Convert.ToInt32(result);
+                return Convert.ToInt32(result).ToString();
             }
             finally {
                 await conn.CloseAsync();
             }
         }
 
-        public async Task SyncUserGroupsAsync(int userId, List<string> samlGroupIds, CancellationToken ct = default)
+        public async Task SyncUserGroupsAsync(string userId, List<string> samlGroupIds, CancellationToken ct = default)
         {
+            var intUserId = int.Parse(userId);
+
             // Remove all existing group memberships
             await _dbContext.Database.ExecuteSqlRawAsync(
                 "DELETE FROM auth_user_groups WHERE user_id = {0}",
-                new object[] { userId },
+                new object[] { intUserId },
                 ct);
 
             if (samlGroupIds == null || samlGroupIds.Count == 0)
@@ -165,7 +168,7 @@ WHERE ug.user_id = @userId";
 
                 var userIdParam = cmd.CreateParameter();
                 userIdParam.ParameterName = "@userId";
-                userIdParam.Value = userId;
+                userIdParam.Value = intUserId;
                 cmd.Parameters.Add(userIdParam);
 
                 cmd.CommandText = $@"INSERT INTO auth_user_groups (user_id, group_id)

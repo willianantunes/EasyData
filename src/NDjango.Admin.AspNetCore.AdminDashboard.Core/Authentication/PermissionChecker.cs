@@ -18,7 +18,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             _queries = queries;
         }
 
-        public async Task<bool> HasPermissionAsync(HttpContext httpContext, int userId, bool isSuperuser, string permissionCodename, CancellationToken ct = default)
+        public async Task<bool> HasPermissionAsync(HttpContext httpContext, string userId, bool isSuperuser, string permissionCodename, CancellationToken ct = default)
         {
             if (isSuperuser)
                 return true;
@@ -27,7 +27,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             return permissions.Contains(permissionCodename);
         }
 
-        private async Task<HashSet<string>> GetCachedPermissionsAsync(HttpContext httpContext, int userId, CancellationToken ct)
+        private async Task<HashSet<string>> GetCachedPermissionsAsync(HttpContext httpContext, string userId, CancellationToken ct)
         {
             if (httpContext.Items.TryGetValue(PermissionsCacheKey, out var cached) && cached is HashSet<string> cachedPerms)
                 return cachedPerms;

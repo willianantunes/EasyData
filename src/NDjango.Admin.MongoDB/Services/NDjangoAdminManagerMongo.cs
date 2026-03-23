@@ -26,6 +26,10 @@ namespace NDjango.Admin.MongoDB
         private static readonly MethodInfo _countRecordsGeneric;
         private static readonly MethodInfo _fetchRecordGeneric;
         private static readonly MethodInfo _fetchRecordsByKeysGeneric;
+        private static readonly MethodInfo _createRecordGeneric;
+        private static readonly MethodInfo _updateRecordGeneric;
+        private static readonly MethodInfo _deleteRecordGeneric;
+        private static readonly MethodInfo _deleteRecordsByKeysGeneric;
 
         static NDjangoAdminManagerMongo()
         {
@@ -38,6 +42,10 @@ namespace NDjango.Admin.MongoDB
             _countRecordsGeneric = methods.Single(m => m.Name == nameof(CountRecordsAsync));
             _fetchRecordGeneric = methods.Single(m => m.Name == nameof(FetchRecordInternal));
             _fetchRecordsByKeysGeneric = methods.Single(m => m.Name == nameof(FetchRecordsByKeysInternal));
+            _createRecordGeneric = methods.Single(m => m.Name == nameof(CreateRecordInternal));
+            _updateRecordGeneric = methods.Single(m => m.Name == nameof(UpdateRecordInternal));
+            _deleteRecordGeneric = methods.Single(m => m.Name == nameof(DeleteRecordInternal));
+            _deleteRecordsByKeysGeneric = methods.Single(m => m.Name == nameof(DeleteRecordsByKeysInternal));
         }
 
         public NDjangoAdminManagerMongo(IServiceProvider services, NDjangoAdminOptions options, MongoDbOptions mongoOptions)
@@ -207,25 +215,57 @@ namespace NDjango.Admin.MongoDB
                 new object[] { collectionName, pkAttr.PropInfo, keyValues });
         }
 
-        public override Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
+        public override async Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
         {
-            throw new NotSupportedException("MongoDB provider V1 is read-only.");
+            ct.ThrowIfCancellationRequested();
+
+            await GetModelAsync(modelId);
+            var modelEntity = FindEntityBySourceId(sourceId);
+            var collectionName = modelEntity.DbSetName;
+            var entityType = modelEntity.ClrType;
+
+            var targetMethod = _createRecordGeneric.MakeGenericMethod(entityType);
+            return await (Task<object>)targetMethod.Invoke(this, new object[] { collectionName, modelEntity, props, ct });
         }
 
-        public override Task<object> UpdateRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
+        public override async Task<object> UpdateRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
         {
-            throw new NotSupportedException("MongoDB provider V1 is read-only.");
+            ct.ThrowIfCancellationRequested();
+
+            await GetModelAsync(modelId);
+            var modelEntity = FindEntityBySourceId(sourceId);
+            var collectionName = modelEntity.DbSetName;
+            var entityType = modelEntity.ClrType;
+
+            var targetMethod = _updateRecordGeneric.MakeGenericMethod(entityType);
+            return await (Task<object>)targetMethod.Invoke(this, new object[] { collectionName, modelEntity, props, ct });
         }
 
-        public override Task DeleteRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
+        public override async Task DeleteRecordAsync(string modelId, string sourceId, JObject props, CancellationToken ct = default)
         {
-            throw new NotSupportedException("MongoDB provider V1 is read-only.");
+            ct.ThrowIfCancellationRequested();
+
+            await GetModelAsync(modelId);
+            var modelEntity = FindEntityBySourceId(sourceId);
+            var collectionName = modelEntity.DbSetName;
+            var entityType = modelEntity.ClrType;
+
+            var targetMethod = _deleteRecordGeneric.MakeGenericMethod(entityType);
+            await (Task)targetMethod.Invoke(this, new object[] { collectionName, modelEntity, props, ct });
         }
 
-        public override Task DeleteRecordsByKeysAsync(string modelId, string sourceId,
+        public override async Task DeleteRecordsByKeysAsync(string modelId, string sourceId,
             IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct = default)
         {
-            throw new NotSupportedException("MongoDB provider V1 is read-only.");
+            ct.ThrowIfCancellationRequested();
+
+            await GetModelAsync(modelId);
+            var modelEntity = FindEntityBySourceId(sourceId);
+            var collectionName = modelEntity.DbSetName;
+            var entityType = modelEntity.ClrType;
+
+            var targetMethod = _deleteRecordsByKeysGeneric.MakeGenericMethod(entityType);
+            await (Task)targetMethod.Invoke(this, new object[] { collectionName, modelEntity, recordKeysList, ct });
         }
 
         // --- Private generic methods invoked via reflection ---
@@ -312,6 +352,113 @@ namespace NDjango.Admin.MongoDB
             return collection.Find(filter).ToList().Cast<object>().ToList();
         }
 
+        // --- CRUD generic methods invoked via reflection ---
+
+        private async Task<object> CreateRecordInternal<T>(string collectionName, MetaEntity entity, JObject props, CancellationToken ct) where T : class, new()
+        {
+            var record = new T();
+
+            foreach (var attr in entity.Attributes)
+            {
+                if (attr.Kind == EntityAttrKind.Lookup || attr.PropInfo == null)
+                    continue;
+
+                // Skip PK — let MongoDB/ObjectId generate it
+                if (attr.IsPrimaryKey && attr.PropInfo.PropertyType == typeof(ObjectId))
+                    continue;
+
+                if (props.TryGetValue(attr.PropName, out var token))
+                {
+                    var value = ConvertJTokenToPropertyType(token, attr.PropInfo.PropertyType);
+                    if (value != null)
+                    {
+                        attr.PropInfo.SetValue(record, value);
+                    }
+                    else if (attr.IsNullable)
+                    {
+                        attr.PropInfo.SetValue(record, null);
+                    }
+                }
+            }
+
+            var collection = _database.GetCollection<T>(collectionName);
+            await collection.InsertOneAsync(record, cancellationToken: ct);
+            return record;
+        }
+
+        private async Task<object> UpdateRecordInternal<T>(string collectionName, MetaEntity entity, JObject props, CancellationToken ct) where T : class
+        {
+            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey);
+            if (pkAttr == null || pkAttr.PropInfo == null)
+                throw new NDjangoAdminManagerException($"No primary key found for entity");
+
+            if (!props.TryGetValue(pkAttr.PropName, out var pkToken))
+                throw new NDjangoAdminManagerException($"Primary key value missing from update props");
+
+            var parsedKey = ParseKey(pkAttr.PropInfo.PropertyType, pkToken.ToString());
+            var collection = _database.GetCollection<T>(collectionName);
+            var filter = Builders<T>.Filter.Eq("_id", parsedKey);
+
+            var existing = await collection.Find(filter).FirstOrDefaultAsync(ct);
+            if (existing == null)
+                throw new NDjangoAdminManagerException($"Record not found");
+
+            foreach (var attr in entity.Attributes)
+            {
+                if (attr.Kind == EntityAttrKind.Lookup || attr.PropInfo == null || attr.IsPrimaryKey)
+                    continue;
+
+                if (props.TryGetValue(attr.PropName, out var token))
+                {
+                    var value = ConvertJTokenToPropertyType(token, attr.PropInfo.PropertyType);
+                    if (value != null)
+                    {
+                        attr.PropInfo.SetValue(existing, value);
+                    }
+                    else if (attr.IsNullable)
+                    {
+                        attr.PropInfo.SetValue(existing, null);
+                    }
+                }
+            }
+
+            await collection.ReplaceOneAsync(filter, existing, cancellationToken: ct);
+            return existing;
+        }
+
+        private async Task DeleteRecordInternal<T>(string collectionName, MetaEntity entity, JObject props, CancellationToken ct) where T : class
+        {
+            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey);
+            if (pkAttr == null || pkAttr.PropInfo == null)
+                throw new NDjangoAdminManagerException($"No primary key found for entity");
+
+            if (!props.TryGetValue(pkAttr.PropName, out var pkToken))
+                throw new NDjangoAdminManagerException($"Primary key value missing from delete props");
+
+            var parsedKey = ParseKey(pkAttr.PropInfo.PropertyType, pkToken.ToString());
+            var collection = _database.GetCollection<T>(collectionName);
+            var filter = Builders<T>.Filter.Eq("_id", parsedKey);
+            await collection.DeleteOneAsync(filter, ct);
+        }
+
+        private async Task DeleteRecordsByKeysInternal<T>(string collectionName, MetaEntity entity,
+            IReadOnlyList<Dictionary<string, string>> recordKeysList, CancellationToken ct) where T : class
+        {
+            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey);
+            if (pkAttr == null || pkAttr.PropInfo == null)
+                throw new NDjangoAdminManagerException($"No primary key found for entity");
+
+            var parsedKeys = recordKeysList.Select(rk =>
+            {
+                var keyValue = rk.Values.First();
+                return ParseKey(pkAttr.PropInfo.PropertyType, keyValue);
+            }).ToList();
+
+            var collection = _database.GetCollection<T>(collectionName);
+            var filter = Builders<T>.Filter.In("_id", parsedKeys);
+            await collection.DeleteManyAsync(filter, ct);
+        }
+
         // --- Helpers ---
 
         private MetaEntity FindEntityBySourceId(string sourceId)
@@ -337,6 +484,60 @@ namespace NDjango.Admin.MongoDB
                 return keyString;
 
             return Convert.ChangeType(keyString, keyType);
+        }
+
+        private static object ConvertJTokenToPropertyType(JToken token, Type targetType)
+        {
+            if (token == null || token.Type == JTokenType.Null)
+                return null;
+
+            var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            if (underlying == typeof(ObjectId))
+            {
+                var str = token.ToString();
+                return string.IsNullOrEmpty(str) ? ObjectId.Empty : ObjectId.Parse(str);
+            }
+
+            if (underlying == typeof(DateTime))
+            {
+                if (token.Type == JTokenType.Date)
+                    return token.Value<DateTime>();
+                if (DateTime.TryParse(token.ToString(), out var dt))
+                    return dt;
+                return null;
+            }
+
+            if (underlying == typeof(bool))
+            {
+                if (token.Type == JTokenType.Boolean)
+                    return token.Value<bool>();
+                var str = token.ToString();
+                if (bool.TryParse(str, out var b))
+                    return b;
+                // HTML form "on" checkbox
+                return string.Equals(str, "on", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (underlying == typeof(int))
+                return token.Value<int>();
+
+            if (underlying == typeof(long))
+                return token.Value<long>();
+
+            if (underlying == typeof(double))
+                return token.Value<double>();
+
+            if (underlying == typeof(decimal))
+                return token.Value<decimal>();
+
+            if (underlying == typeof(string))
+                return token.ToString();
+
+            if (underlying == typeof(Guid))
+                return Guid.Parse(token.ToString());
+
+            return token.ToObject(targetType);
         }
 
         private static object NormalizeValue(object value)

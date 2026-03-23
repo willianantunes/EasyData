@@ -7,7 +7,7 @@ A Django-admin-inspired admin dashboard for ASP.NET Core. Automatically generate
 
 **Supported providers:**
 - **Entity Framework Core** — full CRUD from your `DbContext`
-- **MongoDB** — read-only dashboard from your MongoDB collections (V1)
+- **MongoDB** — full CRUD dashboard from your MongoDB collections, with optional authentication
 
 ## What you get
 
@@ -88,7 +88,7 @@ services.AddNDjangoAdminDashboardMongo(
 app.UseNDjangoAdminDashboard("/admin");
 ```
 
-Navigate to `/admin/` and you have a read-only admin dashboard for your MongoDB collections.
+Navigate to `/admin/` and you have a working admin dashboard for your MongoDB collections with list views, detail views, create/edit/delete forms, search, sort, and pagination.
 
 #### MongoDB document requirements
 
@@ -99,10 +99,44 @@ Navigate to `/admin/` and you have a read-only admin dashboard for your MongoDB 
 - Implement `IAdminSettings<T>` to enable search on specific fields
 - Collection/complex type properties (e.g., `List<ObjectId>`) are displayed as expandable JSON
 
-#### MongoDB V1 limitations
+#### MongoDB authentication (optional)
 
-- **Read-only** — list views, detail views, search, sort, and pagination work; create/edit/delete are not available
-- **No authentication** — the MongoDB provider does not include built-in auth (set `RequireAuthentication = false` or use custom `IAdminDashboardAuthorizationFilter`)
+The MongoDB provider supports the same cookie-based authentication as EF Core. Auth data (users, groups, permissions) is stored in dedicated collections in the same MongoDB database as your application data.
+
+```csharp
+services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://localhost:27017"));
+services.AddSingleton<IMongoDatabase>(sp =>
+    sp.GetRequiredService<IMongoClient>().GetDatabase("MyDatabase"));
+
+services.AddNDjangoAdminDashboardMongo(
+    new AdminDashboardOptions
+    {
+        Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
+        DashboardTitle = "My Admin (MongoDB)",
+        RequireAuthentication = true,
+        CreateDefaultAdminUser = true,
+        DefaultAdminPassword = "admin",
+    },
+    mongo =>
+    {
+        mongo.AddCollection<Product>("products");
+        mongo.AddCollection<Customer>("customers");
+    }
+);
+
+app.UseNDjangoAdminDashboard("/admin");
+```
+
+When `RequireAuthentication` is enabled, the MongoDB provider:
+- Creates 5 auth collections (`auth_users`, `auth_groups`, `auth_permissions`, `auth_group_permissions`, `auth_user_groups`) with unique indexes
+- Seeds CRUD permissions for each registered collection
+- Creates a default `admin` superuser (when `CreateDefaultAdminUser = true`)
+- Auth entities (Users, Groups, Permissions) are editable through the dashboard while user collections follow the configured editability
+
+All authentication options (`RequireAuthentication`, `CreateDefaultAdminUser`, `CookieName`, `CookieExpiration`, `SkipStorageInitialization`) work identically for both providers. SAML SSO is also supported — see the [SAML SSO section](#saml-sso-optional).
+
+#### MongoDB limitations
+
 - **No FK lookups** — references between collections (e.g., `ObjectId RestaurantId`) display as plain IDs, not lookup popups
 
 ## Configuration
@@ -143,7 +177,7 @@ services.AddNDjangoAdminDashboard<AppDbContext>(new AdminDashboardOptions
 
 ### Authentication (optional)
 
-The dashboard supports built-in cookie-based authentication with users, groups, and permissions — similar to Django Admin. Auth tables are created automatically in your existing database via a background hosted service after the host starts.
+The dashboard supports built-in cookie-based authentication with users, groups, and permissions — similar to Django Admin. Auth storage is created automatically in your existing database via a background hosted service after the host starts. This works for both EF Core (SQL Server tables) and MongoDB (auth collections with unique indexes).
 
 ```csharp
 // ConfigureServices
@@ -397,7 +431,7 @@ cd sample-project-mongodb/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8001/admin/` to see a read-only dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, and all supported data types.
+Open `http://localhost:8001/admin/` to see the dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, and all supported data types.
 
 ### sample-project-sso
 
@@ -406,5 +440,4 @@ Demonstrates SAML SSO with AWS IAM Identity Center. See [`sample-project-sso/REA
 ## Known Gaps
 
 - **M2M relationships** not yet supported in the dashboard
-- **MongoDB write operations** (create/edit/delete) not yet implemented — V1 is read-only
-- **MongoDB authentication** not yet available — use custom `IAdminDashboardAuthorizationFilter` for access control
+- **MongoDB FK lookups** — references between MongoDB collections display as plain ObjectId strings, not lookup popups like the EF Core provider

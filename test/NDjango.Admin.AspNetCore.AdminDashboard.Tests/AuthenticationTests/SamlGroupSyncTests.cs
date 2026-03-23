@@ -41,7 +41,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
             var userId = await queries.CreateOrUpdateSamlUserAsync(username);
 
             // Assert
-            Assert.True(userId > 0);
+            Assert.False(string.IsNullOrEmpty(userId));
             var user = await queries.GetUserByUsernameAsync(username);
             Assert.NotNull(user);
             Assert.False(user.Value.IsSuperuser);
@@ -70,7 +70,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
                 cmd.CommandText = "SELECT last_login FROM dbo.auth_user WHERE id = @id";
                 var param = cmd.CreateParameter();
                 param.ParameterName = "@id";
-                param.Value = userId1;
+                param.Value = int.Parse(userId1);
                 cmd.Parameters.Add(param);
                 initialLastLogin = (DateTime)await cmd.ExecuteScalarAsync();
             }
@@ -98,7 +98,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
                 cmd.CommandText = "SELECT last_login FROM dbo.auth_user WHERE id = @id";
                 var param = cmd.CreateParameter();
                 param.ParameterName = "@id";
-                param.Value = userId2;
+                param.Value = int.Parse(userId2);
                 cmd.Parameters.Add(param);
                 var updatedLastLogin = (DateTime)await cmd.ExecuteScalarAsync();
                 Assert.True(updatedLastLogin >= initialLastLogin);

@@ -143,7 +143,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityCrudTests
             Assert.True(user.Value.IsActive);
         }
 
-        private async Task<(int Id, string Username, string PasswordHash, bool IsSuperuser, bool IsActive)?> GetAuthUserAsync(string username)
+        private async Task<(string Id, string Username, string PasswordHash, bool IsSuperuser, bool IsActive)?> GetAuthUserAsync(string username)
         {
             var authOptions = new DbContextOptionsBuilder<AuthDbContext>()
                 .UseSqlServer(_connectionString)

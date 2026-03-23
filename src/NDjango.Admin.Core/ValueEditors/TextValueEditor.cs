@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
@@ -46,7 +46,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption => "Text value editor";
+        public static new string STypeCaption => "Text value editor";
 
         /// <summary>
         /// Gets the XML definition of value editor.

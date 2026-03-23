@@ -1,18 +1,18 @@
-﻿namespace NDjango.Admin.EntityFrameworkCore
+namespace NDjango.Admin.EntityFrameworkCore
 {
     public interface IMetaEntityAttrCustomizer
     {
-        IMetaEntityAttrCustomizer SetDescription(string description);
-        IMetaEntityAttrCustomizer SetDisplayFormat(string displayFormat);
-        IMetaEntityAttrCustomizer SetDisplayName(string displayName);
-        IMetaEntityAttrCustomizer SetEditable(bool editable);
-        IMetaEntityAttrCustomizer SetIndex(int index);
-        IMetaEntityAttrCustomizer SetShowInLookup(bool showInLookup);
-        IMetaEntityAttrCustomizer SetShowOnCreate(bool showOnCreate);
-        IMetaEntityAttrCustomizer SetShowOnEdit(bool showOnEdit);
-        IMetaEntityAttrCustomizer SetShowOnView(bool showOnView);
-        IMetaEntityAttrCustomizer SetSorting(int sorting);
-        IMetaEntityAttrCustomizer SetDataType(DataType dataType);
-        IMetaEntityAttrCustomizer SetDefaultValue(object value);
+        public IMetaEntityAttrCustomizer SetDescription(string description);
+        public IMetaEntityAttrCustomizer SetDisplayFormat(string displayFormat);
+        public IMetaEntityAttrCustomizer SetDisplayName(string displayName);
+        public IMetaEntityAttrCustomizer SetEditable(bool editable);
+        public IMetaEntityAttrCustomizer SetIndex(int index);
+        public IMetaEntityAttrCustomizer SetShowInLookup(bool showInLookup);
+        public IMetaEntityAttrCustomizer SetShowOnCreate(bool showOnCreate);
+        public IMetaEntityAttrCustomizer SetShowOnEdit(bool showOnEdit);
+        public IMetaEntityAttrCustomizer SetShowOnView(bool showOnView);
+        public IMetaEntityAttrCustomizer SetSorting(int sorting);
+        public IMetaEntityAttrCustomizer SetDataType(DataType dataType);
+        public IMetaEntityAttrCustomizer SetDefaultValue(object value);
     }
 }

@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
 using MongoDB.Bson;
 using MongoDB.Driver;
-
-using Xunit;
-
 using NDjango.Admin.MongoDB.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
 {

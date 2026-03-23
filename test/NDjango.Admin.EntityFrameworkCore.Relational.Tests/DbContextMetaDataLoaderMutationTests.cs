@@ -197,7 +197,7 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
             var entity = meta.EntityRoot.SubEntities.First(e => e.ClrType == typeof(Shipper));
             var indices = entity.Attributes.Select(a => a.Index).ToList();
             Assert.Equal(3, indices.Count);
-            for (int i = 0; i < indices.Count; i++)
+            for (var i = 0; i < indices.Count; i++)
             {
                 Assert.Equal(i, indices[i]);
             }

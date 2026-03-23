@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-
 using NDjango.Admin.Services;
-
+using Newtonsoft.Json;
 using Xunit;
 
 namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests

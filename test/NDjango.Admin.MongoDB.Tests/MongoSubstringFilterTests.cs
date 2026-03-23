@@ -4,13 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using MongoDB.Bson;
-
-using Newtonsoft.Json;
-
 using NDjango.Admin.MongoDB;
-
+using Newtonsoft.Json;
 using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests

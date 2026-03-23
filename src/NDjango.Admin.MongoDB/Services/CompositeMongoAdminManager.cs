@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using MongoDB.Driver;
-
-using Newtonsoft.Json.Linq;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.MongoDB.Authentication.Entities;
 using NDjango.Admin.MongoDB.Authentication.Storage;
 using NDjango.Admin.Services;
+using Newtonsoft.Json.Linq;
 
 namespace NDjango.Admin.MongoDB
 {
@@ -71,28 +68,23 @@ namespace NDjango.Admin.MongoDB
             authLoader.LoadFromCollections();
 
             // Make auth entities editable
-            foreach (var entity in Model.EntityRoot.SubEntities)
-            {
+            foreach (var entity in Model.EntityRoot.SubEntities) {
                 if (!_authEntityIds.Contains(entity.Id))
                     continue;
 
                 entity.IsEditable = true;
-                foreach (var attr in entity.Attributes)
-                {
-                    if (attr.IsPrimaryKey)
-                    {
+                foreach (var attr in entity.Attributes) {
+                    if (attr.IsPrimaryKey) {
                         attr.ShowOnCreate = false;
                         attr.ShowOnEdit = true;
                         attr.IsEditable = false;
                     }
-                    else if (entity.Id == nameof(MongoAuthUser) && _systemManagedUserFields.Contains(attr.PropName))
-                    {
+                    else if (entity.Id == nameof(MongoAuthUser) && _systemManagedUserFields.Contains(attr.PropName)) {
                         attr.IsEditable = false;
                         attr.ShowOnCreate = false;
                         attr.ShowOnEdit = true;
                     }
-                    else
-                    {
+                    else {
                         attr.IsEditable = true;
                         attr.ShowOnCreate = true;
                         attr.ShowOnEdit = true;
@@ -130,8 +122,7 @@ namespace NDjango.Admin.MongoDB
         public override async Task<object> CreateRecordAsync(string modelId, string sourceId, JObject props,
             CancellationToken ct = default)
         {
-            if (sourceId == nameof(MongoAuthUser))
-            {
+            if (sourceId == nameof(MongoAuthUser)) {
                 HashPasswordInProps(props);
             }
             return await GetManagerFor(sourceId).CreateRecordAsync(modelId, sourceId, props, ct);
@@ -140,8 +131,7 @@ namespace NDjango.Admin.MongoDB
         public override async Task<object> UpdateRecordAsync(string modelId, string sourceId, JObject props,
             CancellationToken ct = default)
         {
-            if (sourceId == nameof(MongoAuthUser))
-            {
+            if (sourceId == nameof(MongoAuthUser)) {
                 HashPasswordInProps(props);
             }
             return await GetManagerFor(sourceId).UpdateRecordAsync(modelId, sourceId, props, ct);
@@ -173,11 +163,9 @@ namespace NDjango.Admin.MongoDB
 
         private static void HashPasswordInProps(JObject props)
         {
-            if (props.TryGetValue("Password", out var passwordToken))
-            {
+            if (props.TryGetValue("Password", out var passwordToken)) {
                 var password = passwordToken.Value<string>();
-                if (!string.IsNullOrEmpty(password))
-                {
+                if (!string.IsNullOrEmpty(password)) {
                     props["Password"] = PasswordHasher.HashPassword(password);
                 }
             }

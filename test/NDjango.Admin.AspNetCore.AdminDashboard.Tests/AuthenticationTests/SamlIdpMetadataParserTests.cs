@@ -1,8 +1,6 @@
 using System;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
 {

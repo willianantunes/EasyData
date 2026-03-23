@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,9 +16,11 @@ namespace NDjango.Admin.EntityFrameworkCore
             var p = entityType.Name.LastIndexOf('.');
             var entityName = entityType.Name.Substring(p + 1);
             p = entityName.IndexOf('`');
-            if (p > 0) entityName = entityName.Substring(0, p);
+            if (p > 0)
+                entityName = entityName.Substring(0, p);
             p = entityName.IndexOf('<');
-            if (p > 0) entityName = entityName.Substring(0, p);
+            if (p > 0)
+                entityName = entityName.Substring(0, p);
             return entityName;
         }
 
@@ -41,11 +43,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <returns>System.String.</returns>
         public static string GetDbSchema(this IEntityType entityType)
         {
-            var result = entityType.GetSchema();
-
-            if (result == null) {
-                result = entityType.GetViewSchema();
-            }
+            var result = entityType.GetSchema() ?? entityType.GetViewSchema();
 
             return result;
         }
@@ -57,11 +55,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <returns>System.String.</returns>
         public static string GetDbTableName(this IEntityType entityType)
         {
-            var result = entityType.GetTableName();
-
-            if (result == null) {
-                result = entityType.GetViewName();
-            }
+            var result = entityType.GetTableName() ?? entityType.GetViewName();
 
             return result;
         }
@@ -74,9 +68,11 @@ namespace NDjango.Admin.EntityFrameworkCore
         public static string GetDbColumnName(this IProperty property)
         {
             var entityType = property.DeclaringType as IEntityType;
-            if (entityType == null) return null;
+            if (entityType == null)
+                return null;
             var tableName = entityType.GetDbTableName();
-            if (tableName == null) return null;
+            if (tableName == null)
+                return null;
             var schema = entityType.GetDbSchema();
             var storeObjectIdentifier = StoreObjectIdentifier.Table(tableName, schema);
             var result = property.GetColumnName(storeObjectIdentifier);

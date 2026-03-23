@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -169,12 +169,12 @@ namespace NDjango.Admin
         /// <summary>
         /// Gets columns
         /// </summary>
-        IReadOnlyList<NDjangoAdminCol> Cols { get; }
+        public IReadOnlyList<NDjangoAdminCol> Cols { get; }
 
         /// <summary>
         /// Gets rows.
         /// </summary>
-        IEnumerable<NDjangoAdminRow> Rows { get; }
+        public IEnumerable<NDjangoAdminRow> Rows { get; }
     }
 
 

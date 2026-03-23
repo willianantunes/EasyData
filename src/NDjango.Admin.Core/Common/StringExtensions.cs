@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,7 +14,7 @@ namespace NDjango.Admin
         /// <returns>System.String.</returns>
         public static string GetSecondPart(this string s, char sep)
         {
-            string[] parts = s.Split(sep);
+            var parts = s.Split(sep);
             if (parts.Length > 1) {
                 return parts[1];
             }
@@ -31,8 +31,9 @@ namespace NDjango.Admin
         public static string ToIdentifier(this string s)
         {
             var sb = new StringBuilder(s);
-            for (int i = 0; i < sb.Length; i++) {
-                if (!char.IsLetterOrDigit(sb[i])) sb[i] = '_';
+            for (var i = 0; i < sb.Length; i++) {
+                if (!char.IsLetterOrDigit(sb[i]))
+                    sb[i] = '_';
             }
 
             return sb.ToString();

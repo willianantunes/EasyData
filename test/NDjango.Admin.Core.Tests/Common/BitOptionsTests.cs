@@ -76,7 +76,7 @@ namespace NDjango.Admin.Core.Tests
         public void ImplicitCastFromUlong_CreatesBitOptionsWithSignature()
         {
             // Arrange
-            ulong value = MetaDataReadWriteOptions.Editors;
+            var value = MetaDataReadWriteOptions.Editors;
 
             // Act
             BitOptions options = value;

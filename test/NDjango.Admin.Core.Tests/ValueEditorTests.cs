@@ -300,10 +300,11 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_DefaultValue_GetSet()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-
-            // Act
-            editor.DefaultValue = "hello";
+            var editor = new TextValueEditor("TVE01")
+            {
+                // Act
+                DefaultValue = "hello"
+            };
 
             // Assert
             Assert.Equal("hello", editor.DefaultValue);
@@ -313,8 +314,10 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_DefaultText_ReturnsDefaultValue()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-            editor.DefaultValue = "hello";
+            var editor = new TextValueEditor("TVE01")
+            {
+                DefaultValue = "hello"
+            };
 
             // Act
             var text = editor.DefaultText;
@@ -327,11 +330,13 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_DefaultText_SetterIsNoOp()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-            editor.DefaultValue = "original";
+            var editor = new TextValueEditor("TVE01")
+            {
+                DefaultValue = "original",
 
-            // Act
-            editor.DefaultText = "changed";
+                // Act
+                DefaultText = "changed"
+            };
 
             // Assert
             Assert.Equal("original", editor.DefaultText);
@@ -351,10 +356,11 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_Multiline_CanBeSetToTrue()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-
-            // Act
-            editor.Multiline = true;
+            var editor = new TextValueEditor("TVE01")
+            {
+                // Act
+                Multiline = true
+            };
 
             // Assert
             Assert.True(editor.Multiline);
@@ -364,10 +370,11 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_ResultType_GetSet()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-
-            // Act
-            editor.ResultType = DataType.Float;
+            var editor = new TextValueEditor("TVE01")
+            {
+                // Act
+                ResultType = DataType.Float
+            };
 
             // Assert
             Assert.Equal(DataType.Float, editor.ResultType);
@@ -377,9 +384,11 @@ namespace NDjango.Admin.Core.Tests
         public void TextValueEditor_XmlDefinition_ContainsValueAndMultiline()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE01");
-            editor.DefaultValue = "test";
-            editor.Multiline = true;
+            var editor = new TextValueEditor("TVE01")
+            {
+                DefaultValue = "test",
+                Multiline = true
+            };
 
             // Act
             var xml = editor.XmlDefinition;
@@ -395,9 +404,11 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new TextValueEditor("TVE_ROUND", DataType.Int32);
-            original.DefaultValue = "42";
-            original.Multiline = true;
+            var original = new TextValueEditor("TVE_ROUND", DataType.Int32)
+            {
+                DefaultValue = "42",
+                Multiline = true
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -416,9 +427,11 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new TextValueEditor("TVE_NML", DataType.String);
-            original.DefaultValue = "abc";
-            original.Multiline = false;
+            var original = new TextValueEditor("TVE_NML", DataType.String)
+            {
+                DefaultValue = "abc",
+                Multiline = false
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -475,10 +488,11 @@ namespace NDjango.Admin.Core.Tests
         public void DateTimeValueEditor_SubType_SetterRecalcsDefaultValue()
         {
             // Arrange
-            var editor = new DateTimeValueEditor("DTE01", DataType.Date);
-
-            // Act
-            editor.SubType = DataType.Time;
+            var editor = new DateTimeValueEditor("DTE01", DataType.Date)
+            {
+                // Act
+                SubType = DataType.Time
+            };
 
             // Assert
             Assert.Equal(DataType.Time, editor.SubType);
@@ -490,10 +504,11 @@ namespace NDjango.Admin.Core.Tests
         public void DateTimeValueEditor_DefaultValue_SetWithMacro_SetsDefaultText()
         {
             // Arrange
-            var editor = new DateTimeValueEditor("DTE01", DataType.Date);
-
-            // Act
-            editor.DefaultValue = "${{Yesterday}}";
+            var editor = new DateTimeValueEditor("DTE01", DataType.Date)
+            {
+                // Act
+                DefaultValue = "${{Yesterday}}"
+            };
 
             // Assert
             Assert.Equal("${{Yesterday}}", editor.DefaultValue);
@@ -504,10 +519,11 @@ namespace NDjango.Admin.Core.Tests
         public void DateTimeValueEditor_DefaultValue_SetEmpty_SetsDefaultTextEmpty()
         {
             // Arrange
-            var editor = new DateTimeValueEditor("DTE01", DataType.Date);
-
-            // Act
-            editor.DefaultValue = "";
+            var editor = new DateTimeValueEditor("DTE01", DataType.Date)
+            {
+                // Act
+                DefaultValue = ""
+            };
 
             // Assert
             Assert.Equal("", editor.DefaultValue);
@@ -578,8 +594,10 @@ namespace NDjango.Admin.Core.Tests
             EnsureCreatorsRegistered();
             // SubType setter calls RecalcDefValue() which resets DefaultValue to "${{Today}}"
             // When deserializing, subType is read after dval, so dval gets overwritten.
-            var original = new DateTimeValueEditor("DTE_MAC", DataType.Date);
-            original.DefaultValue = "${{Now}}";
+            var original = new DateTimeValueEditor("DTE_MAC", DataType.Date)
+            {
+                DefaultValue = "${{Now}}"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -620,10 +638,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomValueEditor_DefaultValue_AlwaysReturnsEmpty()
         {
             // Arrange
-            var editor = new CustomValueEditor("X");
-
-            // Act
-            editor.DefaultValue = "anything";
+            var editor = new CustomValueEditor("X")
+            {
+                // Act
+                DefaultValue = "anything"
+            };
 
             // Assert
             Assert.Equal("", editor.DefaultValue);
@@ -633,10 +652,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomValueEditor_DefaultText_AlwaysReturnsEmpty()
         {
             // Arrange
-            var editor = new CustomValueEditor("X");
-
-            // Act
-            editor.DefaultText = "anything";
+            var editor = new CustomValueEditor("X")
+            {
+                // Act
+                DefaultText = "anything"
+            };
 
             // Assert
             Assert.Equal("", editor.DefaultText);
@@ -646,10 +666,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomValueEditor_Data_GetSet()
         {
             // Arrange
-            var editor = new CustomValueEditor("X");
-
-            // Act
-            editor.Data = "custom-data-payload";
+            var editor = new CustomValueEditor("X")
+            {
+                // Act
+                Data = "custom-data-payload"
+            };
 
             // Assert
             Assert.Equal("custom-data-payload", editor.Data);
@@ -659,8 +680,10 @@ namespace NDjango.Admin.Core.Tests
         public void CustomValueEditor_XmlDefinition_ContainsTagAndData()
         {
             // Arrange
-            var editor = new CustomValueEditor("WIDGET");
-            editor.Data = "param=1";
+            var editor = new CustomValueEditor("WIDGET")
+            {
+                Data = "param=1"
+            };
 
             // Act
             var xml = editor.XmlDefinition;
@@ -676,8 +699,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new CustomValueEditor("SPECIALWIDGET");
-            original.Data = "some-data";
+            var original = new CustomValueEditor("SPECIALWIDGET")
+            {
+                Data = "some-data"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -694,8 +719,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new CustomValueEditor("MYTYPE");
-            original.Data = "d1";
+            var original = new CustomValueEditor("MYTYPE")
+            {
+                Data = "d1"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -747,10 +774,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomListValueEditor_DefaultValue_GetSet()
         {
             // Arrange
-            var editor = new CustomListValueEditor("CLVE01", "L1");
-
-            // Act
-            editor.DefaultValue = "val1";
+            var editor = new CustomListValueEditor("CLVE01", "L1")
+            {
+                // Act
+                DefaultValue = "val1"
+            };
 
             // Assert
             Assert.Equal("val1", editor.DefaultValue);
@@ -760,10 +788,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomListValueEditor_DefaultText_GetSet()
         {
             // Arrange
-            var editor = new CustomListValueEditor("CLVE01", "L1");
-
-            // Act
-            editor.DefaultText = "Display 1";
+            var editor = new CustomListValueEditor("CLVE01", "L1")
+            {
+                // Act
+                DefaultText = "Display 1"
+            };
 
             // Assert
             Assert.Equal("Display 1", editor.DefaultText);
@@ -773,10 +802,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomListValueEditor_ResultType_GetSet()
         {
             // Arrange
-            var editor = new CustomListValueEditor("CLVE01", "L1");
-
-            // Act
-            editor.ResultType = DataType.Int64;
+            var editor = new CustomListValueEditor("CLVE01", "L1")
+            {
+                // Act
+                ResultType = DataType.Int64
+            };
 
             // Assert
             Assert.Equal(DataType.Int64, editor.ResultType);
@@ -802,8 +832,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new CustomListValueEditor("CLVE_RT", "Categories", "MENU");
-            original.DefaultValue = "1";
+            var original = new CustomListValueEditor("CLVE_RT", "Categories", "MENU")
+            {
+                DefaultValue = "1"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -1000,10 +1032,11 @@ namespace NDjango.Admin.Core.Tests
         public void ConstValueList_Add_SetsIdAndText()
         {
             // Arrange
-            var list = new ConstValueList();
-
-            // Act
-            list.Add("key", "value");
+            var list = new ConstValueList
+            {
+                // Act
+                { "key", "value" }
+            };
 
             // Assert
             Assert.Equal("key", list[0].Id);
@@ -1109,8 +1142,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new FileValueEditor("FILE_RT");
-            original.Accept = ".jpg,.png";
+            var original = new FileValueEditor("FILE_RT")
+            {
+                Accept = ".jpg,.png"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -1130,8 +1165,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task WriteToJsonAsync_WritesTagIdResultTypeAsync()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE_JSON", DataType.Float);
-            editor.DefaultValue = "3.14";
+            var editor = new TextValueEditor("TVE_JSON", DataType.Float)
+            {
+                DefaultValue = "3.14"
+            };
 
             // Act
             var json = await SerializeEditorAsync(editor);
@@ -1146,8 +1183,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task WriteToJsonAsync_EmptyDefaultValue_OmitsDvalAsync()
         {
             // Arrange
-            var editor = new TextValueEditor("TVE_NODVAL", DataType.String);
-            editor.DefaultValue = "";
+            var editor = new TextValueEditor("TVE_NODVAL", DataType.String)
+            {
+                DefaultValue = ""
+            };
 
             // Act
             var json = await SerializeEditorAsync(editor);
@@ -1283,9 +1322,11 @@ namespace NDjango.Admin.Core.Tests
         public void ClearItems_ClearsSearchIndex()
         {
             // Arrange
-            var list = new ValueEditorList();
-            list.Add(new TextValueEditor("VE_C1"));
-            list.Add(new TextValueEditor("VE_C2"));
+            var list = new ValueEditorList
+            {
+                new TextValueEditor("VE_C1"),
+                new TextValueEditor("VE_C2")
+            };
 
             // Act
             list.Clear();
@@ -1410,8 +1451,10 @@ namespace NDjango.Admin.Core.Tests
             var list = new ValueEditorList();
             var targetEditor = new TextValueEditor("_DSDE");
             list.Add(targetEditor);
-            var oldEditor = new CustomListValueEditor("OLD01", "_DSDE");
-            oldEditor.ListName = "_DSDE";
+            var oldEditor = new CustomListValueEditor("OLD01", "_DSDE")
+            {
+                ListName = "_DSDE"
+            };
 
             // Act
             var result = list.ConvertOldSpecialDateTimeEditor(oldEditor);
@@ -1427,8 +1470,10 @@ namespace NDjango.Admin.Core.Tests
             var list = new ValueEditorList();
             var targetEditor = new TextValueEditor("_DSTE");
             list.Add(targetEditor);
-            var oldEditor = new CustomListValueEditor("OLD02", "_DSTE");
-            oldEditor.ListName = "_DSTE";
+            var oldEditor = new CustomListValueEditor("OLD02", "_DSTE")
+            {
+                ListName = "_DSTE"
+            };
 
             // Act
             var result = list.ConvertOldSpecialDateTimeEditor(oldEditor);
@@ -1443,8 +1488,10 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             EnsureCreatorsRegistered();
             var list = new ValueEditorList();
-            var textEditor = new TextValueEditor("VEL_T1", DataType.String);
-            textEditor.DefaultValue = "hello";
+            var textEditor = new TextValueEditor("VEL_T1", DataType.String)
+            {
+                DefaultValue = "hello"
+            };
             var constEditor = new ConstListValueEditor("VEL_C1");
             constEditor.Values.Add("a", "Alpha");
             list.Add(textEditor);
@@ -1499,8 +1546,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             var list = new ValueEditorList();
-            var defaultEditor = new TextValueEditor("DEF01");
-            defaultEditor.IsDefault = true;
+            var defaultEditor = new TextValueEditor("DEF01")
+            {
+                IsDefault = true
+            };
             var regularEditor = new TextValueEditor("REG01");
             list.Add(defaultEditor);
             list.Add(regularEditor);
@@ -1692,25 +1741,33 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             EnsureCreatorsRegistered();
 
-            var textEditor = new TextValueEditor("RT_TEXT", DataType.Int32);
-            textEditor.DefaultValue = "99";
-            textEditor.Multiline = true;
+            var textEditor = new TextValueEditor("RT_TEXT", DataType.Int32)
+            {
+                DefaultValue = "99",
+                Multiline = true
+            };
 
             var dtEditor = new DateTimeValueEditor("RT_DT", DataType.Time);
 
-            var customEditor = new CustomValueEditor("MYTYPE");
-            customEditor.Data = "payload";
+            var customEditor = new CustomValueEditor("MYTYPE")
+            {
+                Data = "payload"
+            };
 
-            var clEditor = new CustomListValueEditor("RT_CL", "Colors", "MENU");
-            clEditor.DefaultValue = "red";
+            var clEditor = new CustomListValueEditor("RT_CL", "Colors", "MENU")
+            {
+                DefaultValue = "red"
+            };
 
             var constEditor = new ConstListValueEditor("RT_CONST");
             constEditor.Values.Add("m", "Male");
             constEditor.Values.Add("f", "Female");
             constEditor.ExtraParams.Add("filter", "active");
 
-            var fileEditor = new FileValueEditor("RT_FILE");
-            fileEditor.Accept = ".pdf";
+            var fileEditor = new FileValueEditor("RT_FILE")
+            {
+                Accept = ".pdf"
+            };
 
             var editors = new ValueEditor[] { textEditor, dtEditor, customEditor, clEditor, constEditor, fileEditor };
 
@@ -1731,8 +1788,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             EnsureCreatorsRegistered();
-            var original = new TextValueEditor("TVE_RTYPE", DataType.Currency);
-            original.DefaultValue = "100.50";
+            var original = new TextValueEditor("TVE_RTYPE", DataType.Currency)
+            {
+                DefaultValue = "100.50"
+            };
 
             // Act
             var json = await SerializeEditorAsync(original);
@@ -1799,10 +1858,11 @@ namespace NDjango.Admin.Core.Tests
         public void IsDefault_CanBeSetToTrue()
         {
             // Arrange
-            var editor = new TextValueEditor("TEST_ISDEF2");
-
-            // Act
-            editor.IsDefault = true;
+            var editor = new TextValueEditor("TEST_ISDEF2")
+            {
+                // Act
+                IsDefault = true
+            };
 
             // Assert
             Assert.True(editor.IsDefault);
@@ -1880,10 +1940,11 @@ namespace NDjango.Admin.Core.Tests
         public void Id_CanBeChanged()
         {
             // Arrange
-            var editor = new TextValueEditor("ORIGINAL");
-
-            // Act
-            editor.Id = "CHANGED";
+            var editor = new TextValueEditor("ORIGINAL")
+            {
+                // Act
+                Id = "CHANGED"
+            };
 
             // Assert
             Assert.Equal("CHANGED", editor.Id);
@@ -1932,8 +1993,10 @@ namespace NDjango.Admin.Core.Tests
         public void CustomListValueEditor_XmlDefinition_ContainsMultiselect()
         {
             // Arrange
-            var editor = new CustomListValueEditor("CLVE_MS", "Items", "MENU");
-            editor.Multiselect = true;
+            var editor = new CustomListValueEditor("CLVE_MS", "Items", "MENU")
+            {
+                Multiselect = true
+            };
 
             // Act
             var xml = editor.XmlDefinition;
@@ -1948,8 +2011,10 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             EnsureCreatorsRegistered();
             var model = new MetaData();
-            var fileEditor = new FileValueEditor("FVE_META");
-            fileEditor.Accept = ".pdf,.docx";
+            var fileEditor = new FileValueEditor("FVE_META")
+            {
+                Accept = ".pdf,.docx"
+            };
             model.Editors.Add(fileEditor);
 
             // Act
@@ -1988,11 +2053,12 @@ namespace NDjango.Admin.Core.Tests
         public void ConstValueItem_Properties_GetSet()
         {
             // Arrange
-            var item = new ConstValueItem();
-
-            // Act
-            item.Id = "testId";
-            item.Text = "testText";
+            var item = new ConstValueItem
+            {
+                // Act
+                Id = "testId",
+                Text = "testText"
+            };
 
             // Assert
             Assert.Equal("testId", item.Id);
@@ -2080,10 +2146,11 @@ namespace NDjango.Admin.Core.Tests
         public void DateTimeValueEditor_DefaultValue_SetNonMacroDateString_SetsDefaultTextToUserFormat()
         {
             // Arrange
-            var editor = new DateTimeValueEditor("DTE_PLAIN", DataType.Date);
-
-            // Act
-            editor.DefaultValue = "2024-06-15";
+            var editor = new DateTimeValueEditor("DTE_PLAIN", DataType.Date)
+            {
+                // Act
+                DefaultValue = "2024-06-15"
+            };
 
             // Assert
             Assert.Equal("2024-06-15", editor.DefaultValue);
@@ -2096,10 +2163,11 @@ namespace NDjango.Admin.Core.Tests
         public void DateTimeValueEditor_DefaultValue_SetNonMacroTimeString_SetsDefaultTextToUserFormat()
         {
             // Arrange
-            var editor = new DateTimeValueEditor("DTE_TIME", DataType.Time);
-
-            // Act
-            editor.DefaultValue = "14:30:00";
+            var editor = new DateTimeValueEditor("DTE_TIME", DataType.Time)
+            {
+                // Act
+                DefaultValue = "14:30:00"
+            };
 
             // Assert
             Assert.Equal("14:30:00", editor.DefaultValue);

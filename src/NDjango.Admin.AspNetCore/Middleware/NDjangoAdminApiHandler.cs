@@ -1,17 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
-
+using NDjango.Admin.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using NDjango.Admin.Services;
 
 namespace NDjango.Admin.AspNetCore
 {
@@ -33,13 +30,15 @@ namespace NDjango.Admin.AspNetCore
         /// </summary>
         protected readonly NDjangoAdminOptions Options;
 
-        private static JsonSerializer _jsonSerializer;
+        private static readonly JsonSerializer _jsonSerializer;
 
         static NDjangoAdminApiHandler()
         {
-            _jsonSerializer = new JsonSerializer();
-            _jsonSerializer.MaxDepth = 1;
-            _jsonSerializer.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            _jsonSerializer = new JsonSerializer
+            {
+                MaxDepth = 1,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
         }
 
 
@@ -98,11 +97,11 @@ namespace NDjango.Admin.AspNetCore
             int? offset = null;
             int? fetch = null;
 
-            bool isLookup = false;
+            var isLookup = false;
 
             IEnumerable<EasyFilter> filters = null;
 
-            bool needTotal = false;
+            var needTotal = false;
 
             JObject requestParams;
             using (var requestReader = new HttpRequestStreamReader(HttpContext.Request.Body, Encoding.UTF8))
@@ -282,7 +281,7 @@ namespace NDjango.Admin.AspNetCore
         }
 
 
-        private static Encoding _utf8NoBom = new UTF8Encoding(false);
+        private static readonly Encoding _utf8NoBom = new UTF8Encoding(false);
 
         /// <summary>
         /// Writes a response in JSON format.

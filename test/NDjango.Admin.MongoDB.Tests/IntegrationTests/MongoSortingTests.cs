@@ -1,11 +1,8 @@
 using System.Net.Http;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
-using Xunit;
-
 using NDjango.Admin.MongoDB.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
 {

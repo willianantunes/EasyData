@@ -1,14 +1,13 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.ComponentModel;
 
 namespace NDjango.Admin.EntityFrameworkCore
 {
@@ -69,7 +68,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                         && typeof(DbSet<>).IsAssignableFrom(p.PropertyType.GetGenericTypeDefinition()));
 
             var result = new Dictionary<Type, int>();
-            int idx = 0;
+            var idx = 0;
             foreach (var prop in dbSetProps) {
                 var entType = prop.PropertyType.GetGenericArguments()[0];
                 if (!result.ContainsKey(entType)) {
@@ -163,7 +162,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                 if (EntityTypeEntities.TryGetValue(entityType, out var entity)) {
                     var navigations = entityType.GetNavigations();
 
-                    int attrCount = entity.Attributes
+                    var attrCount = entity.Attributes
                         .Select(attr => attr.Index)
                         .DefaultIfEmpty(0).Max() + 1;
 
@@ -218,37 +217,29 @@ namespace NDjango.Admin.EntityFrameworkCore
             var adminSettingsInterface = entityType.ClrType.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAdminSettings<>));
 
-            if (adminSettingsInterface != null)
-            {
-                try
-                {
+            if (adminSettingsInterface != null) {
+                try {
                     var instance = Activator.CreateInstance(entityType.ClrType);
                     var searchFieldsProp = adminSettingsInterface.GetProperty("SearchFields");
-                    if (searchFieldsProp != null)
-                    {
+                    if (searchFieldsProp != null) {
                         entity.SearchFields = searchFieldsProp.GetValue(instance) as IReadOnlyList<string>;
                     }
 
                     var actionsProp = entityType.ClrType.GetProperty("Actions");
-                    if (actionsProp != null)
-                    {
+                    if (actionsProp != null) {
                         var actionsObj = actionsProp.GetValue(instance);
-                        if (actionsObj != null)
-                        {
+                        if (actionsObj != null) {
                             var actionsListProp = actionsObj.GetType().GetProperty("Actions");
-                            if (actionsListProp != null)
-                            {
+                            if (actionsListProp != null) {
                                 var rawActions = actionsListProp.GetValue(actionsObj) as System.Collections.IList;
-                                if (rawActions != null && rawActions.Count > 0)
-                                {
+                                if (rawActions != null && rawActions.Count > 0) {
                                     var descriptors = new List<AdminActionDescriptor>();
                                     var handlers = new Dictionary<string, Func<IServiceProvider, IReadOnlyList<string>, Task<AdminActionResult>>>();
 
                                     var genericArgs = actionsObj.GetType().GetGenericArguments();
                                     var pkType = genericArgs.Length > 0 ? genericArgs[0] : typeof(string);
 
-                                    foreach (var registration in rawActions)
-                                    {
+                                    foreach (var registration in rawActions) {
                                         var regType = registration.GetType();
                                         var name = (string)regType.GetProperty("Name").GetValue(registration);
                                         var desc = (string)regType.GetProperty("Description").GetValue(registration);
@@ -266,8 +257,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                         }
                     }
                 }
-                catch (Exception ex) when (ex is MissingMethodException or TargetInvocationException or MemberAccessException)
-                {
+                catch (Exception ex) when (ex is MissingMethodException or TargetInvocationException or MemberAccessException) {
                     // Entity can't be instantiated - leave SearchFields null
                 }
             }
@@ -297,7 +287,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             }
 
             var properties = GetEntityProperties(entityType);
-            int attrCounter = 0;
+            var attrCounter = 0;
             foreach (var property in properties) {
                 if (Options.SkipForeignKeys && property.IsForeignKey())
                     continue;
@@ -455,11 +445,13 @@ namespace NDjango.Admin.EntityFrameworkCore
         {
             var columnType = DataUtils.GetDataTypeBySystemType(property.ClrType);
 
-            if (columnType == DataType.Unknown) return null;
+            if (columnType == DataType.Unknown)
+                return null;
 
             var propertyName = property.Name;
             var columnName = property.GetDbColumnName();
-            if (columnName == null) return null;
+            if (columnName == null)
+                return null;
 
             var entityAttr = Model.CreateEntityAttr(new MetaEntityAttrDescriptor()
             {
@@ -491,7 +483,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             var veId = $"VE_{entity.Id}_{propertyName}";
             if (property.ClrType.IsEnum) {
                 var editor = new ConstListValueEditor(veId);
-                FieldInfo[] fields = property.ClrType.GetFields();
+                var fields = property.ClrType.GetFields();
                 foreach (var field in fields.Where(f => !f.Name.Equals("value__"))) {
                     editor.Values.Add(field.GetRawConstantValue().ToString(), field.Name);
                 }
@@ -584,23 +576,16 @@ namespace NDjango.Admin.EntityFrameworkCore
             var invokeMethod = typedHandler.GetType().GetMethod("Invoke");
             var listType = typeof(List<>).MakeGenericType(pkType);
 
-            return async (sp, stringIds) =>
-            {
+            return async (sp, stringIds) => {
                 var parsedIds = (System.Collections.IList)Activator.CreateInstance(listType);
-                foreach (var sid in stringIds)
-                {
+                foreach (var sid in stringIds) {
                     try {
                         object parsed;
                         if (pkType == typeof(Guid))
                             parsed = Guid.Parse(sid);
                         else if (pkType == typeof(long))
                             parsed = long.Parse(sid);
-                        else if (pkType == typeof(int))
-                            parsed = int.Parse(sid);
-                        else if (pkType == typeof(string))
-                            parsed = sid;
-                        else
-                            parsed = Convert.ChangeType(sid, pkType);
+                        else parsed = pkType == typeof(int) ? int.Parse(sid) : pkType == typeof(string) ? sid : Convert.ChangeType(sid, pkType);
                         parsedIds.Add(parsed);
                     }
                     catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException) {

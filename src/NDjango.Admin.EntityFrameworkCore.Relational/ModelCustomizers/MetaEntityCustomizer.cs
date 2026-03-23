@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,7 +14,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         public MetaEntity Entity { get; private set; }
 
         private readonly MetaEntityAttrVoidCustomizer _voidAttributeBuilder;
-        private Dictionary<PropertyInfo, IMetaEntityAttrCustomizer> _builders = new Dictionary<PropertyInfo, IMetaEntityAttrCustomizer>();
+        private readonly Dictionary<PropertyInfo, IMetaEntityAttrCustomizer> _builders = new Dictionary<PropertyInfo, IMetaEntityAttrCustomizer>();
 
 
         /// <summary>
@@ -82,12 +82,7 @@ namespace NDjango.Admin.EntityFrameworkCore
 
             if (!_builders.TryGetValue(propertyInfo, out var attrBuilder)) {
                 var metaAttr = Entity.FindAttribute(attr => attr.PropInfo.Equals(propertyInfo));
-                if (metaAttr != null) {
-                    attrBuilder = new MetaEntityAttrCustomizer(metaAttr);
-                }
-                else {
-                    attrBuilder = _voidAttributeBuilder;
-                }
+                attrBuilder = metaAttr != null ? new MetaEntityAttrCustomizer(metaAttr) : _voidAttributeBuilder;
             }
 
             return attrBuilder;

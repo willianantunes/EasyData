@@ -348,7 +348,8 @@ namespace NDjango.Admin.MongoDB.Tests
             loader.LoadFromCollections();
 
             var entity = model.EntityRoot.SubEntities.Single();
-            foreach (var attr in entity.Attributes) {
+            foreach (var attr in entity.Attributes)
+            {
                 Assert.False(attr.IsEditable);
             }
         }
@@ -371,7 +372,8 @@ namespace NDjango.Admin.MongoDB.Tests
             Assert.False(pkAttr.IsEditable);
 
             var regularAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey).ToList();
-            foreach (var attr in regularAttrs) {
+            foreach (var attr in regularAttrs)
+            {
                 Assert.True(attr.IsEditable);
             }
         }
@@ -396,7 +398,8 @@ namespace NDjango.Admin.MongoDB.Tests
             Assert.False(pkAttr.IsEditable);
 
             var regularAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey).ToList();
-            foreach (var attr in regularAttrs) {
+            foreach (var attr in regularAttrs)
+            {
                 Assert.True(attr.ShowOnCreate);
                 Assert.True(attr.ShowOnEdit);
                 Assert.True(attr.IsEditable);
@@ -712,7 +715,8 @@ namespace NDjango.Admin.MongoDB.Tests
 
             var entity = model.EntityRoot.SubEntities.Single();
             var nonPkAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey);
-            foreach (var attr in nonPkAttrs) {
+            foreach (var attr in nonPkAttrs)
+            {
                 Assert.True(attr.ShowOnView);
             }
         }

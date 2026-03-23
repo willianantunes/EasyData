@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace NDjango.Admin.EntityFrameworkCore
@@ -17,7 +17,7 @@ namespace NDjango.Admin.EntityFrameworkCore
             _entityCache = new EntityClrTypeCache(_metadata);
         }
 
-        private Dictionary<Type, object> _builderCache = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _builderCache = new Dictionary<Type, object>();
 
         /// <summary>
         /// Gets the customizer for an entity by its type.
@@ -31,13 +31,9 @@ namespace NDjango.Admin.EntityFrameworkCore
                 return builderObj as IMetaEntityCustomizer<TEntity>;
             }
             else {
-                IMetaEntityCustomizer<TEntity> builder;
-                if (_entityCache.TryGetEntity<TEntity>(out var entity)) {
-                    builder = new MetaEntityCustomizer<TEntity>(entity);
-                }
-                else {
-                    builder = new MetaEntityVoidCustomizer<TEntity>(this);
-                }
+                var builder = _entityCache.TryGetEntity<TEntity>(out var entity)
+                    ? new MetaEntityCustomizer<TEntity>(entity)
+                    : (IMetaEntityCustomizer<TEntity>)new MetaEntityVoidCustomizer<TEntity>(this);
                 _builderCache[typeof(TEntity)] = builder;
 
                 return builder;

@@ -1,15 +1,12 @@
-﻿using System;
-using System.Threading;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-
-using Newtonsoft.Json.Linq;
-
 using Moq;
-using Xunit;
-
 using NDjango.Admin.Services;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Xunit;
 
 namespace NDjango.Admin.Core.Services.Tests
 {

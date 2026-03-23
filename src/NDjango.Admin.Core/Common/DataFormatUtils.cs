@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -6,7 +6,7 @@ namespace NDjango.Admin
 {
     public static class DataFormatUtils
     {
-        private static Regex _formatRegex = new Regex("{0:(.*?)}", RegexOptions.Singleline);
+        private static readonly Regex _formatRegex = new Regex("{0:(.*?)}", RegexOptions.Singleline);
 
         public static string ExtractFormatString(string displayFormat)
         {

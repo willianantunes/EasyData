@@ -125,7 +125,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append($"<p class=\"paginator\">{model.TotalRecords} {Encode(model.TotalRecords == 1 ? model.EntityName.ToLower() : model.EntityNamePlural.ToLower())}</p>");
 
             // Action form wrapper
-            bool hasActions = model.Actions.Count > 0 && !model.IsReadOnly;
+            var hasActions = model.Actions.Count > 0 && !model.IsReadOnly;
             if (hasActions) {
                 content.Append($"<form id=\"changelist-form\" method=\"post\" action=\"{model.BasePath}/{model.EntityId}/action/\">");
 
@@ -168,7 +168,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                     row.TryGetValue(model.PrimaryKeyField, out var pkForCheckbox);
                     content.Append($"<td class=\"action-checkbox\"><input type=\"checkbox\" name=\"_selected_ids\" value=\"{Encode(pkForCheckbox?.ToString() ?? "")}\" class=\"action-select\" /></td>");
                 }
-                bool first = true;
+                var first = true;
                 foreach (var col in model.Columns) {
                     row.TryGetValue(col.PropName, out var cellVal);
                     var displayValue = cellVal?.ToString() ?? "";
@@ -240,14 +240,14 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("</tr></thead><tbody>");
 
             foreach (var row in model.Rows) {
-                string pkValue = "";
+                var pkValue = "";
                 if (model.PrimaryKeyField != null) {
                     row.TryGetValue(model.PrimaryKeyField, out var pkVal);
                     pkValue = pkVal?.ToString() ?? "";
                 }
 
                 sb.Append("<tr>");
-                bool first = true;
+                var first = true;
                 foreach (var col in model.Columns) {
                     row.TryGetValue(col.PropName, out var cellVal);
                     var displayValue = cellVal?.ToString() ?? "";
@@ -477,8 +477,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             content.Append($"<input type=\"text\" id=\"{id}\" name=\"{field.PropName}\" value=\"{Encode(value)}\" class=\"vForeignKeyRawIdAdminField\"{required} />");
 
             // Lookup icon
-            if (!string.IsNullOrEmpty(field.LookupEntityId))
-            {
+            if (!string.IsNullOrEmpty(field.LookupEntityId)) {
                 var popupUrl = $"{basePath}/{field.LookupEntityId}/?_to_field=id&_popup=1";
                 content.Append($" <a href=\"{popupUrl}\" class=\"related-lookup\" id=\"lookup_{id}\" onclick=\"return showRelatedObjectLookupPopup(this);\" title=\"Lookup\">&#128269;</a>");
             }
@@ -585,7 +584,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                     sb.Append("<span class=\"page-ellipsis\">&hellip;</span> ");
             }
 
-            for (int p = startPage; p <= endPage; p++) {
+            for (var p = startPage; p <= endPage; p++) {
                 var qs = BuildPageQuery(model, p);
                 if (p == model.CurrentPage)
                     sb.Append($"<span class=\"this-page\">{p}</span> ");

@@ -1,13 +1,10 @@
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
-
-using Xunit;
-
 using NDjango.Admin.MongoDB.Authentication.Entities;
 using NDjango.Admin.MongoDB.Tests.Fixtures;
 using NDjango.Admin.Services;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
 {

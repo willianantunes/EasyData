@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,13 +71,10 @@ namespace NDjango.Admin.Export
             get => _beforeRowAdded;
             set {
                 _beforeRowAdded = value;
-                if (_beforeRowAdded != null) {
-                    BeforeRowInsert = (NDjangoAdminRow row, WriteRowFunc callback, CancellationToken token) =>
-                        BeforeRowAdded?.Invoke(row, (er, ed, ct) => callback(er, ed, ct), token);
-                }
-                else {
-                    BeforeRowInsert = null;
-                }
+                BeforeRowInsert = _beforeRowAdded != null
+                    ? ((NDjangoAdminRow row, WriteRowFunc callback, CancellationToken token) =>
+                        BeforeRowAdded?.Invoke(row, (er, ed, ct) => callback(er, ed, ct), token))
+                    : null;
             }
         }
 

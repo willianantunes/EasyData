@@ -1,15 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
-using NodaTime;
-
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
 {
-    class TestDbContext : DbContext
+    internal class TestDbContext : DbContext
     {
         public TestDbContext(DbContextOptions options)
            : base(options)
@@ -120,13 +118,13 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
         {
             get
             {
-                string res = this.FirstName;
+                var res = FirstName;
 
                 if (!string.IsNullOrEmpty(res))
                     res += " ";
 
-                if (!string.IsNullOrEmpty(this.LastName))
-                    res += this.LastName;
+                if (!string.IsNullOrEmpty(LastName))
+                    res += LastName;
                 return res;
             }
         }
@@ -185,7 +183,7 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
         {
             get
             {
-                return string.Format("{0:0000}-{1:yyyy-MM-dd}", this.Id, this.OrderDate);
+                return string.Format("{0:0000}-{1:yyyy-MM-dd}", Id, OrderDate);
             }
         }
 

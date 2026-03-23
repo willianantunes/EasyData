@@ -22,19 +22,13 @@ namespace Microsoft.AspNetCore.Builder
         {
             path = "/" + path.Trim('/');
 
-            var options = app.ApplicationServices.GetService(typeof(AdminDashboardOptions)) as AdminDashboardOptions;
-            if (options == null) {
-                throw new InvalidOperationException(
+            var options = app.ApplicationServices.GetService(typeof(AdminDashboardOptions)) as AdminDashboardOptions ?? throw new InvalidOperationException(
                     "AdminDashboardOptions is not registered. " +
                     "Register it via AddNDjangoAdminDashboard or AddNDjangoAdminDashboardMongo.");
-            }
 
-            var ndjangoAdminOptions = (NDjangoAdminOptions)app.ApplicationServices.GetService(typeof(NDjangoAdminOptions));
-            if (ndjangoAdminOptions == null) {
-                throw new InvalidOperationException(
+            var ndjangoAdminOptions = (NDjangoAdminOptions)app.ApplicationServices.GetService(typeof(NDjangoAdminOptions)) ?? throw new InvalidOperationException(
                     "NDjangoAdminOptions is not registered. " +
                     "Register it via AddNDjangoAdminDashboard or AddNDjangoAdminDashboardMongo.");
-            }
 
             ndjangoAdminOptions.PaginationCountTimeoutMs = options.PaginationCountTimeoutMs;
 

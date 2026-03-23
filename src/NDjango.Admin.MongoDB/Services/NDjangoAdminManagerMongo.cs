@@ -5,15 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
-
+using NDjango.Admin.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using NDjango.Admin.Services;
 
 namespace NDjango.Admin.MongoDB
 {
@@ -177,18 +174,12 @@ namespace NDjango.Admin.MongoDB
             var collectionName = modelEntity.DbSetName;
             var entityType = modelEntity.ClrType;
 
-            var pkAttr = modelEntity.Attributes.FirstOrDefault(a => a.IsPrimaryKey);
-            if (pkAttr == null)
-                throw new NDjangoAdminManagerException($"No primary key found for entity {sourceId}");
+            var pkAttr = modelEntity.Attributes.FirstOrDefault(a => a.IsPrimaryKey) ?? throw new NDjangoAdminManagerException($"No primary key found for entity {sourceId}");
 
             var keyValue = recordKeys.Values.First();
 
             var targetMethod = _fetchRecordGeneric.MakeGenericMethod(entityType);
-            var record = targetMethod.Invoke(this, new object[] { collectionName, pkAttr.PropInfo, keyValue });
-
-            if (record == null) {
-                throw new RecordNotFoundException(sourceId, keyValue);
-            }
+            var record = targetMethod.Invoke(this, new object[] { collectionName, pkAttr.PropInfo, keyValue }) ?? throw new RecordNotFoundException(sourceId, keyValue);
 
             return record;
         }
@@ -204,9 +195,7 @@ namespace NDjango.Admin.MongoDB
             var collectionName = modelEntity.DbSetName;
             var entityType = modelEntity.ClrType;
 
-            var pkAttr = modelEntity.Attributes.FirstOrDefault(a => a.IsPrimaryKey);
-            if (pkAttr == null)
-                throw new NDjangoAdminManagerException($"No primary key found for entity {sourceId}");
+            var pkAttr = modelEntity.Attributes.FirstOrDefault(a => a.IsPrimaryKey) ?? throw new NDjangoAdminManagerException($"No primary key found for entity {sourceId}");
 
             var keyValues = recordKeysList.Select(rk => rk.Values.First()).ToList();
 
@@ -358,8 +347,7 @@ namespace NDjango.Admin.MongoDB
         {
             var record = new T();
 
-            foreach (var attr in entity.Attributes)
-            {
+            foreach (var attr in entity.Attributes) {
                 if (attr.Kind == EntityAttrKind.Lookup || attr.PropInfo == null)
                     continue;
 
@@ -367,15 +355,12 @@ namespace NDjango.Admin.MongoDB
                 if (attr.IsPrimaryKey && attr.PropInfo.PropertyType == typeof(ObjectId))
                     continue;
 
-                if (props.TryGetValue(attr.PropName, out var token))
-                {
+                if (props.TryGetValue(attr.PropName, out var token)) {
                     var value = ConvertJTokenToPropertyType(token, attr.PropInfo.PropertyType);
-                    if (value != null)
-                    {
+                    if (value != null) {
                         attr.PropInfo.SetValue(record, value);
                     }
-                    else if (attr.IsNullable)
-                    {
+                    else if (attr.IsNullable) {
                         attr.PropInfo.SetValue(record, null);
                     }
                 }
@@ -401,24 +386,18 @@ namespace NDjango.Admin.MongoDB
             var collection = _database.GetCollection<T>(collectionName);
             var filter = Builders<T>.Filter.Eq("_id", parsedKey);
 
-            var existing = await collection.Find(filter).FirstOrDefaultAsync(ct);
-            if (existing == null)
-                throw new NDjangoAdminManagerException($"Record not found");
+            var existing = await collection.Find(filter).FirstOrDefaultAsync(ct) ?? throw new NDjangoAdminManagerException($"Record not found");
 
-            foreach (var attr in entity.Attributes)
-            {
+            foreach (var attr in entity.Attributes) {
                 if (attr.Kind == EntityAttrKind.Lookup || attr.PropInfo == null || attr.IsPrimaryKey)
                     continue;
 
-                if (props.TryGetValue(attr.PropName, out var token))
-                {
+                if (props.TryGetValue(attr.PropName, out var token)) {
                     var value = ConvertJTokenToPropertyType(token, attr.PropInfo.PropertyType);
-                    if (value != null)
-                    {
+                    if (value != null) {
                         attr.PropInfo.SetValue(existing, value);
                     }
-                    else if (attr.IsNullable)
-                    {
+                    else if (attr.IsNullable) {
                         attr.PropInfo.SetValue(existing, null);
                     }
                 }
@@ -452,8 +431,7 @@ namespace NDjango.Admin.MongoDB
             if (pkAttr == null || pkAttr.PropInfo == null)
                 throw new NDjangoAdminManagerException($"No primary key found for entity");
 
-            var parsedKeys = recordKeysList.Select(rk =>
-            {
+            var parsedKeys = recordKeysList.Select(rk => {
                 var keyValue = rk.Values.First();
                 return ParseKey(pkAttr.PropInfo.PropertyType, keyValue);
             }).ToList();
@@ -467,10 +445,7 @@ namespace NDjango.Admin.MongoDB
 
         private MetaEntity FindEntityBySourceId(string sourceId)
         {
-            var entity = Model.EntityRoot.SubEntities.FirstOrDefault(e => e.Id == sourceId);
-            if (entity == null) {
-                throw new ContainerNotFoundException(sourceId);
-            }
+            var entity = Model.EntityRoot.SubEntities.FirstOrDefault(e => e.Id == sourceId) ?? throw new ContainerNotFoundException(sourceId);
             return entity;
         }
 
@@ -497,14 +472,12 @@ namespace NDjango.Admin.MongoDB
 
             var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
-            if (underlying == typeof(ObjectId))
-            {
+            if (underlying == typeof(ObjectId)) {
                 var str = token.ToString();
                 return string.IsNullOrEmpty(str) ? ObjectId.Empty : ObjectId.Parse(str);
             }
 
-            if (underlying == typeof(DateTime))
-            {
+            if (underlying == typeof(DateTime)) {
                 if (token.Type == JTokenType.Date)
                     return token.Value<DateTime>();
                 if (DateTime.TryParse(token.ToString(), out var dt))
@@ -512,8 +485,7 @@ namespace NDjango.Admin.MongoDB
                 return null;
             }
 
-            if (underlying == typeof(bool))
-            {
+            if (underlying == typeof(bool)) {
                 if (token.Type == JTokenType.Boolean)
                     return token.Value<bool>();
                 var str = token.ToString();
@@ -549,8 +521,7 @@ namespace NDjango.Admin.MongoDB
             var type = document.GetType();
             var now = DateTime.UtcNow;
 
-            if (isCreate)
-            {
+            if (isCreate) {
                 SetDateTimePropertyIfExists(type, document, "CreatedAt", now);
                 SetDateTimePropertyIfExists(type, document, "CreatedDate", now);
                 SetDateTimePropertyIfExists(type, document, "CreationDate", now);
@@ -568,12 +539,10 @@ namespace NDjango.Admin.MongoDB
                 return;
 
             var propType = prop.PropertyType;
-            if (propType == typeof(DateTime) || propType == typeof(DateTime?))
-            {
+            if (propType == typeof(DateTime) || propType == typeof(DateTime?)) {
                 prop.SetValue(obj, value);
             }
-            else if (propType == typeof(DateTimeOffset) || propType == typeof(DateTimeOffset?))
-            {
+            else if (propType == typeof(DateTimeOffset) || propType == typeof(DateTimeOffset?)) {
                 prop.SetValue(obj, new DateTimeOffset(value, TimeSpan.Zero));
             }
         }

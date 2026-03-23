@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using MongoDB.Bson;
 using MongoDB.Driver;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.MongoDB.Authentication.Entities;
 using NDjango.Admin.MongoDB.Authentication.Storage;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests
 {

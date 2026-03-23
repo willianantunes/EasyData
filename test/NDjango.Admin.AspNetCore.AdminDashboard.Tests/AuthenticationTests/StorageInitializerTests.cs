@@ -1,13 +1,10 @@
 using System;
 using System.Threading.Tasks;
-
 using Microsoft.EntityFrameworkCore;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage;
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
 {
@@ -16,7 +13,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
         private readonly string _dbName;
         private readonly DbContextOptions<AuthDbContext> _options;
 
-        private static string ConnectionStringTemplate =
+        private static readonly string ConnectionStringTemplate =
             TestConnectionHelper.ConnectionStringTemplate;
 
         public StorageInitializerTests()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
@@ -75,7 +75,8 @@ namespace NDjango.Admin
         /// </exception>
         protected override void InsertItem(int index, DataType item)
         {
-            if (Contains(item)) return; //add new data type only if it does not exist in list yet.
+            if (Contains(item))
+                return; //add new data type only if it does not exist in list yet.
             base.InsertItem(index, item);
         }
 
@@ -85,7 +86,7 @@ namespace NDjango.Admin
         /// <param name="types">The list of types to add.</param>
         public void AddRange(IEnumerable<DataType> types)
         {
-            foreach (DataType type in types)
+            foreach (var type in types)
                 Add(type);
         }
 
@@ -96,7 +97,7 @@ namespace NDjango.Admin
         /// <param name="types">The list of types to add.</param>
         public void InsertRange(int index, IEnumerable<DataType> types)
         {
-            foreach (DataType type in types) {
+            foreach (var type in types) {
                 Insert(index, type);
                 index++;
             }
@@ -108,9 +109,10 @@ namespace NDjango.Admin
         /// <value>The text representation of type list delimited with the comma.</value>
         public string CommaText {
             get {
-                string result = "";
-                foreach (DataType type in this) {
-                    if (result != "") result += ", ";
+                var result = "";
+                foreach (var type in this) {
+                    if (result != "")
+                        result += ", ";
                     result += type.ToString();
                 }
                 return result;
@@ -120,8 +122,8 @@ namespace NDjango.Admin
                 Clear();
                 if (value != null) {
                     char[] delimiterChars = { ',' };
-                    string[] list = value.Split(delimiterChars);
-                    foreach (string s in list) {
+                    var list = value.Split(delimiterChars);
+                    foreach (var s in list) {
                         Add(s.StrToDataType());
                     }
                 }
@@ -134,7 +136,7 @@ namespace NDjango.Admin
         /// <param name="typeList">The array which the list initialized by.</param>
         public DataTypeList(DataType[] typeList) : base()
         {
-            foreach (DataType type in typeList)
+            foreach (var type in typeList)
                 Add(type);
         }
 
@@ -160,7 +162,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents the most common data types
         /// </summary>
-        static public readonly DataTypeList CommonDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList CommonDataTypes = new DataTypeList(new DataType[] {
             DataType.Autoinc,
             DataType.Blob,
             DataType.Bool,
@@ -182,7 +184,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents all ranged data types (numeric and boolean)
         /// </summary>
-        static public readonly DataTypeList RangeDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList RangeDataTypes = new DataTypeList(new DataType[] {
             DataType.Byte,
             DataType.Word,
             DataType.Int32,
@@ -197,7 +199,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents all float data types
         /// </summary>
-        static public readonly DataTypeList FloatDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList FloatDataTypes = new DataTypeList(new DataType[] {
             DataType.Float,
             DataType.Currency,
             DataType.BCD
@@ -206,7 +208,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents all integer-like data types (numeric and boolean)
         /// </summary>
-        static public readonly DataTypeList IntegerDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList IntegerDataTypes = new DataTypeList(new DataType[] {
             DataType.Byte,
             DataType.Word,
             DataType.Int32,
@@ -218,7 +220,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents all string data types (numeric and boolean)
         /// </summary>
-        static public readonly DataTypeList StringDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList StringDataTypes = new DataTypeList(new DataType[] {
             DataType.String,
             DataType.Memo,
             DataType.FixedChar
@@ -227,7 +229,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents all string data types (numeric and boolean)
         /// </summary>
-        static public readonly DataTypeList TimeDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList TimeDataTypes = new DataTypeList(new DataType[] {
             DataType.Date,
             DataType.Time,
             DataType.DateTime
@@ -236,7 +238,7 @@ namespace NDjango.Admin
         /// <summary>
         /// The list which represents the most common data types
         /// </summary>
-        static public readonly DataTypeList BoolDataTypes = new DataTypeList(new DataType[] {
+        public static readonly DataTypeList BoolDataTypes = new DataTypeList(new DataType[] {
             DataType.Bool
         });
 

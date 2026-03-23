@@ -16,9 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class AdminDashboardServiceCollectionExtensions
     {
-        private static Type _dbContextType;
-
-        internal static Type DbContextType => _dbContextType;
+        internal static Type DbContextType { get; private set; }
 
         public static IServiceCollection AddNDjangoAdminDashboard<TDbContext>(
             this IServiceCollection services,
@@ -28,7 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             dashboardOptions ??= new AdminDashboardOptions();
 
-            _dbContextType = typeof(TDbContext);
+            DbContextType = typeof(TDbContext);
 
             services.AddSingleton(dashboardOptions);
 
@@ -44,8 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<ISearchFilterFactory, SubstringFilterFactory>();
             services.AddSingleton<AuthBootstrapReadinessState>();
 
-            if (dashboardOptions.RequireAuthentication && !dashboardOptions.SkipStorageInitialization)
-            {
+            if (dashboardOptions.RequireAuthentication && !dashboardOptions.SkipStorageInitialization) {
                 services.AddHostedService<AuthBootstrapperHostedService>();
             }
 
@@ -78,7 +75,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var authNDjangoAdminOptions = new NDjangoAdminOptions();
             authNDjangoAdminOptions.UseDbContext<AuthDbContext>();
 
-            var dbContextType = _dbContextType;
+            var dbContextType = DbContextType;
 
             ndjangoAdminOptions.UseManager((services, opts) => {
                 var userManager = originalResolver(services, opts);

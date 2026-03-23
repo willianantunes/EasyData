@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
-
-using Saml;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage;
 using NDjango.Admin.AspNetCore.AdminDashboard.Routing;
+using Saml;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 {

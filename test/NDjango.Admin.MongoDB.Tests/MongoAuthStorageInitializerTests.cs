@@ -1,13 +1,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 using MongoDB.Driver;
-
-using Xunit;
-
 using NDjango.Admin.MongoDB.Authentication.Entities;
 using NDjango.Admin.MongoDB.Authentication.Storage;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests
 {

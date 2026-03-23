@@ -9,19 +9,19 @@ namespace NDjango.Admin.MongoDB
     {
         //Inspired by https://stackoverflow.com/a/31959568/5274
 
-        static readonly MethodInfo OrderByMethod = typeof(Queryable).GetMethods()
+        private static readonly MethodInfo OrderByMethod = typeof(Queryable).GetMethods()
             .Where(m => m.Name == "OrderBy" && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
             .Single();
 
-        static readonly MethodInfo OrderByDescendingMethod = typeof(Queryable).GetMethods()
+        private static readonly MethodInfo OrderByDescendingMethod = typeof(Queryable).GetMethods()
             .Where(m => m.Name == "OrderByDescending" && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
             .Single();
 
-        static readonly MethodInfo ThenByMethod = typeof(Queryable).GetMethods()
+        private static readonly MethodInfo ThenByMethod = typeof(Queryable).GetMethods()
             .Where(m => m.Name == "ThenBy" && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
             .Single();
 
-        static readonly MethodInfo ThenByDescendingMethod = typeof(Queryable).GetMethods()
+        private static readonly MethodInfo ThenByDescendingMethod = typeof(Queryable).GetMethods()
             .Where(m => m.Name == "ThenByDescending" && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
             .Single();
 
@@ -45,14 +45,12 @@ namespace NDjango.Admin.MongoDB
         }
 
 
-        static IOrderedQueryable<TSource> BuildQuery<TSource>(MethodInfo method, IQueryable<TSource> query,
+        private static IOrderedQueryable<TSource> BuildQuery<TSource>(MethodInfo method, IQueryable<TSource> query,
             string propertyName)
         {
             var entityType = typeof(TSource);
 
-            var propertyInfo = entityType.GetProperty(propertyName);
-            if (propertyInfo == null)
-                throw new ArgumentOutOfRangeException(nameof(propertyName), "Unknown column " + propertyName);
+            var propertyInfo = entityType.GetProperty(propertyName) ?? throw new ArgumentOutOfRangeException(nameof(propertyName), "Unknown column " + propertyName);
 
             var arg = Expression.Parameter(entityType, "x");
             var property = Expression.Property(arg, propertyName);

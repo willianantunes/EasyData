@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Xunit;
-
 using NDjango.Admin;
 using NDjango.Admin.Export;
+using Xunit;
 
 namespace NDjango.Admin.Core.Tests
 {
@@ -219,8 +217,10 @@ namespace NDjango.Admin.Core.Tests
         public void BeforeRowAdded_WhenSetToNull_ClearsBeforeRowInsert()
         {
             // Arrange
-            var settings = new BasicDataExportSettings();
-            settings.BeforeRowAdded = (row, cb, ct) => Task.CompletedTask;
+            var settings = new BasicDataExportSettings
+            {
+                BeforeRowAdded = (row, cb, ct) => Task.CompletedTask
+            };
             Assert.NotNull(settings.BeforeRowInsert);
 
             // Act
@@ -238,10 +238,11 @@ namespace NDjango.Admin.Core.Tests
         public void Title_CanBeSet()
         {
             // Arrange
-            var settings = new BasicDataExportSettings();
-
-            // Act
-            settings.Title = "My Report";
+            var settings = new BasicDataExportSettings
+            {
+                // Act
+                Title = "My Report"
+            };
 
             // Assert
             Assert.Equal("My Report", settings.Title);
@@ -251,10 +252,11 @@ namespace NDjango.Admin.Core.Tests
         public void Description_CanBeSet()
         {
             // Arrange
-            var settings = new BasicDataExportSettings();
-
-            // Act
-            settings.Description = "A detailed description";
+            var settings = new BasicDataExportSettings
+            {
+                // Act
+                Description = "A detailed description"
+            };
 
             // Assert
             Assert.Equal("A detailed description", settings.Description);
@@ -264,10 +266,11 @@ namespace NDjango.Admin.Core.Tests
         public void ShowColumnNames_CanBeSetToFalse()
         {
             // Arrange
-            var settings = new BasicDataExportSettings();
-
-            // Act
-            settings.ShowColumnNames = false;
+            var settings = new BasicDataExportSettings
+            {
+                // Act
+                ShowColumnNames = false
+            };
 
             // Assert
             Assert.False(settings.ShowColumnNames);
@@ -277,10 +280,11 @@ namespace NDjango.Admin.Core.Tests
         public void RowLimit_CanBeSet()
         {
             // Arrange
-            var settings = new BasicDataExportSettings();
-
-            // Act
-            settings.RowLimit = 100;
+            var settings = new BasicDataExportSettings
+            {
+                // Act
+                RowLimit = 100
+            };
 
             // Assert
             Assert.Equal(100, settings.RowLimit);

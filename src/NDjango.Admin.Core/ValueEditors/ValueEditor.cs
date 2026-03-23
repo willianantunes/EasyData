@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.ObjectModel;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Threading;
 
 namespace NDjango.Admin
 {
@@ -56,7 +55,7 @@ namespace NDjango.Admin
         /// Creates an instance of ValueEditor.
         /// </summary>
         /// <returns>ValueEditor object.</returns>
-        ValueEditor Create(string tag);
+        public ValueEditor Create(string tag);
     }
 
 
@@ -72,13 +71,17 @@ namespace NDjango.Admin
                     return new DateTimeValueEditor();
 
                 case EditorTags.Date:
-                    var dateEditor = new DateTimeValueEditor();
-                    dateEditor.SubType = DataType.Date;
+                    var dateEditor = new DateTimeValueEditor
+                    {
+                        SubType = DataType.Date
+                    };
                     return dateEditor;
 
                 case EditorTags.Time:
-                    var timeEditor = new DateTimeValueEditor();
-                    timeEditor.SubType = DataType.Time;
+                    var timeEditor = new DateTimeValueEditor
+                    {
+                        SubType = DataType.Time
+                    };
                     return timeEditor;
 
                 case EditorTags.CustomList:
@@ -88,13 +91,17 @@ namespace NDjango.Admin
                     return new ConstListValueEditor();
 
                 case EditorTags.ConstListBox:
-                    var listBoxEditor = new ConstListValueEditor();
-                    listBoxEditor.ControlType = "LISTBOX";
+                    var listBoxEditor = new ConstListValueEditor
+                    {
+                        ControlType = "LISTBOX"
+                    };
                     return listBoxEditor;
 
                 case EditorTags.ConstListMulty:
-                    var multiListEditor = new ConstListValueEditor();
-                    multiListEditor.ControlType = "MULTILIST";
+                    var multiListEditor = new ConstListValueEditor
+                    {
+                        ControlType = "MULTILIST"
+                    };
                     return multiListEditor;
 
                 case EditorTags.Custom:
@@ -125,7 +132,7 @@ namespace NDjango.Admin
         /// </summary>
         /// <param name="creator">An object that implementats IValueEditorCeator iterface.</param>
         /// <returns>Returns true if registration succeed. Otherwise - false.</returns>
-        static public bool RegisterCreator(IValueEditorCreator creator)
+        public static bool RegisterCreator(IValueEditorCreator creator)
         {
             Creators.Add(creator);
             return true;
@@ -193,7 +200,7 @@ namespace NDjango.Admin
         /// Gets or sets a value indicating whether this editor is one of the default ones.
         /// </summary>
         /// <value><c>true</c> if this instance is default; otherwise, <c>false</c>.</value>
-        public bool IsDefault { get; internal protected set; } = false;
+        public bool IsDefault { get; protected internal set; } = false;
 
         /// <summary>
         /// Gets the base part of identifier.
@@ -255,7 +262,7 @@ namespace NDjango.Admin
         /// <param name="model">The model.</param>
         public void CheckInModel(MetaData model)
         {
-            if (model.Editors.IndexById(this.Id) < 0) {
+            if (model.Editors.IndexById(Id) < 0) {
                 model.Editors.Add(this);
             }
         }
@@ -442,7 +449,7 @@ namespace NDjango.Admin
         /// <returns>Operator object or null if operator with specified ID was not found.</returns>
         public ValueEditor FindById(string editorId)
         {
-            int index = IndexById(editorId);
+            var index = IndexById(editorId);
             if (index >= 0) {
                 return this[index];
             }
@@ -452,20 +459,15 @@ namespace NDjango.Admin
 
         internal string NormalizeId(string id)
         {
-            int num = 1;
-            string baseId = "";
+            var num = 1;
+            var baseId = "";
             if (id == "CustomList value editor")
                 baseId = "CLVE";
             else if (id == "SqlList value editor")
                 baseId = "SLVE";
-            else if (id == "DateTime value editor")
-                baseId = "DTVE";
-            else if (id == "Text value editor")
-                baseId = "TxtVE";
-            else
-                baseId = id;
+            else baseId = id == "DateTime value editor" ? "DTVE" : id == "Text value editor" ? "TxtVE" : id;
 
-            string result = baseId + num.ToString("D2");
+            var result = baseId + num.ToString("D2");
 
             while (IndexById(result) >= 0) {
                 num++;
@@ -488,7 +490,7 @@ namespace NDjango.Admin
         public async Task WriteToJsonAsync(JsonWriter writer, BitOptions rwOptions, bool includeDefaults = false, CancellationToken ct = default)
         {
             await writer.WriteStartArrayAsync(ct).ConfigureAwait(false);
-            foreach (ValueEditor editor in this) {
+            foreach (var editor in this) {
                 if (editor != null && (includeDefaults || !editor.IsDefault)) {
                     await editor.WriteToJsonAsync(writer, rwOptions, ct).ConfigureAwait(false);
                 }
@@ -528,7 +530,7 @@ namespace NDjango.Admin
         {
             if (editor != null && editor is CustomListValueEditor clEditor
                 && (clEditor.ListName == "_DSDE" || clEditor.ListName == "_DSTE")) {
-                editor = this.FindById(clEditor.ListName);
+                editor = FindById(clEditor.ListName);
             }
 
             return editor;

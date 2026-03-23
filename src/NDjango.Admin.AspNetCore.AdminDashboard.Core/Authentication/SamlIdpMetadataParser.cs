@@ -39,10 +39,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
                 throw new InvalidOperationException("SAML metadata XML is missing the entityID attribute.");
             }
 
-            var idpDescriptor = entityDescriptor.Element(Md + "IDPSSODescriptor");
-            if (idpDescriptor == null) {
-                throw new InvalidOperationException("SAML metadata XML does not contain an IDPSSODescriptor element.");
-            }
+            var idpDescriptor = entityDescriptor.Element(Md + "IDPSSODescriptor") ?? throw new InvalidOperationException("SAML metadata XML does not contain an IDPSSODescriptor element.");
 
             // Extract signing certificate
             var certificate = idpDescriptor

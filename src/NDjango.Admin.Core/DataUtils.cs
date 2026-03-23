@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,7 +16,7 @@ namespace NDjango.Admin
 
             var result = new StringBuilder();
 
-            bool prevCharIsUpper = true;
+            var prevCharIsUpper = true;
             foreach (var ch in name) {
 
                 if (ch == ' ') {
@@ -177,7 +177,7 @@ namespace NDjango.Admin
         {
             if (string.IsNullOrEmpty(val))
                 return DateTime.Now;
-            string format = GetDateTimeInternalFormat(dataType);
+            var format = GetDateTimeInternalFormat(dataType);
             DateTime result;
             if (!DateTime.TryParseExact(val, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AllowWhiteSpaces, out result)) {
                 format = GetDateTimeInternalFormat(DataType.Date);
@@ -199,7 +199,7 @@ namespace NDjango.Admin
         /// <returns></returns>
 		public static string DateTimeToInternalFormat(DateTime dt, DataType dataType)
         {
-            string format = GetDateTimeInternalFormat(dataType);
+            var format = GetDateTimeInternalFormat(dataType);
             return dt.ToString(format);
         }
 
@@ -215,11 +215,11 @@ namespace NDjango.Admin
         {
             switch (dataType) {
                 case DataType.Date:
-                    return internalDateFormat;
+                    return InternalDateFormat;
                 case DataType.Time:
-                    return internalTimeFormat;
+                    return InternalTimeFormat;
                 default:
-                    return $"{internalDateFormat} {(shortTime ? internalShortTimeFormat : internalTimeFormat)}";
+                    return $"{InternalDateFormat} {(shortTime ? internalShortTimeFormat : InternalTimeFormat)}";
             }
 
         }
@@ -235,28 +235,26 @@ namespace NDjango.Admin
         {
             if (_internalFormatProvider == null) {
                 var ci = new CultureInfo("en-US");
-                ci.DateTimeFormat.LongDatePattern = internalDateFormat;
-                ci.DateTimeFormat.LongTimePattern = internalTimeFormat;
+                ci.DateTimeFormat.LongDatePattern = InternalDateFormat;
+                ci.DateTimeFormat.LongTimePattern = InternalTimeFormat;
                 _internalFormatProvider = ci;
             }
             return _internalFormatProvider;
         }
 
-        private static string internalDateFormat = "yyyy'-'MM'-'dd";
-        private static string internalTimeFormat = "HH':'mm':'ss";
-        private static string internalShortTimeFormat = "HH':'mm";
+        private static readonly string internalShortTimeFormat = "HH':'mm";
 
         /// <summary>
         /// Gets the internal date format (yyyy-MM-dd).
         /// </summary>
         /// <value>The internal date format.</value>
-		public static string InternalDateFormat => internalDateFormat;
+		public static string InternalDateFormat { get; } = "yyyy'-'MM'-'dd";
 
         /// <summary>
         /// Gets the internal time format (HH:mm:ss).
         /// </summary>
         /// <value>The internal time format.</value>
-		public static string InternalTimeFormat => internalTimeFormat;
+		public static string InternalTimeFormat { get; } = "HH':'mm':'ss";
 
 
         /// <summary>
@@ -269,9 +267,15 @@ namespace NDjango.Admin
         {
             string format;
             switch (dataType) {
-                case DataType.Date: format = "d"; break;
-                case DataType.Time: format = "T"; break;
-                default: format = "G"; break;
+                case DataType.Date:
+                    format = "d";
+                    break;
+                case DataType.Time:
+                    format = "T";
+                    break;
+                default:
+                    format = "G";
+                    break;
             }
             return dt.ToString(format, System.Globalization.DateTimeFormatInfo.CurrentInfo);
         }

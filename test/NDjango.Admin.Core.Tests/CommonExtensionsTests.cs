@@ -1,6 +1,5 @@
-using Xunit;
-
 using NDjango.Admin;
+using Xunit;
 
 namespace NDjango.Admin.Core.Tests
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -17,7 +17,8 @@ namespace NDjango.Admin.EntityFrameworkCore
         public static bool IsInheritedFrom(this Type type, string fullTypeName)
         {
             while (type != null) {
-                if (type.FullName.Equals(fullTypeName)) return true;
+                if (type.FullName.Equals(fullTypeName))
+                    return true;
                 type = type.GetTypeInfo().BaseType;
             }
             return false;
@@ -96,7 +97,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         {
             //return Attribute.IsDefined(typeToCheck, typeof(ComplexTypeAttribute))
             var attrs = typeToCheck.GetTypeInfo().GetCustomAttributes();
-            foreach (System.Attribute attr in attrs) {
+            foreach (var attr in attrs) {
                 if (attr.GetType().Name == "ComplexTypeAttribute")
                     return true;
             }
@@ -142,8 +143,8 @@ namespace NDjango.Admin.EntityFrameworkCore
         public static bool IsAttributeDefined(this PropertyInfo pi, string attrName)
         {
             var attrs = pi.GetCustomAttributes();
-            foreach (System.Attribute attr in attrs) {
-                Type attrType = attr.GetType();
+            foreach (var attr in attrs) {
+                var attrType = attr.GetType();
                 if (attrType.Name == attrName)
                     return true;
             }
@@ -158,7 +159,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         /// <returns>IEnumerable&lt;PropertyInfo&gt;.</returns>
         public static IEnumerable<PropertyInfo> GetMappedProperties(this IEnumerable<PropertyInfo> source)
         {
-            foreach (PropertyInfo pi in source)
+            foreach (var pi in source)
                 if (!pi.IsAttributeDefined("NotMappedAttribute"))
                     yield return pi;
         }
@@ -175,7 +176,7 @@ namespace NDjango.Admin.EntityFrameworkCore
                 return true;
             }
 
-            foreach (Type type in typeToCheck.GetInterfaces()) {
+            foreach (var type in typeToCheck.GetInterfaces()) {
                 if (type == typeof(IEnumerable) ||
                     (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
                     return true;

@@ -161,7 +161,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 Type clrType;
 
                 if (attr.Kind == EntityAttrKind.Lookup) {
-                    if (attr.DataAttr == null) continue;
+                    if (attr.DataAttr == null)
+                        continue;
                     propName = attr.DataAttr.PropName;
                     dataType = attr.DataAttr.DataType;
                     clrType = attr.DataAttr.PropInfo?.PropertyType;

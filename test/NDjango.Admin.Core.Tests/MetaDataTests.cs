@@ -134,10 +134,11 @@ namespace NDjango.Admin.Core.Tests
         public void Name_SetAndGet_ReturnsSetValue()
         {
             // Arrange
-            var model = new MetaData();
-
-            // Act
-            model.Name = "TestModel";
+            var model = new MetaData
+            {
+                // Act
+                Name = "TestModel"
+            };
 
             // Assert
             Assert.Equal("TestModel", model.Name);
@@ -147,10 +148,11 @@ namespace NDjango.Admin.Core.Tests
         public void Description_SetAndGet_ReturnsSetValue()
         {
             // Arrange
-            var model = new MetaData();
-
-            // Act
-            model.Description = "A test description";
+            var model = new MetaData
+            {
+                // Act
+                Description = "A test description"
+            };
 
             // Assert
             Assert.Equal("A test description", model.Description);
@@ -170,10 +172,11 @@ namespace NDjango.Admin.Core.Tests
         public void CustomInfo_SetAndGet_ReturnsSetValue()
         {
             // Arrange
-            var model = new MetaData();
-
-            // Act
-            model.CustomInfo = "some custom data";
+            var model = new MetaData
+            {
+                // Act
+                CustomInfo = "some custom data"
+            };
 
             // Assert
             Assert.Equal("some custom data", model.CustomInfo);
@@ -183,10 +186,11 @@ namespace NDjango.Admin.Core.Tests
         public void FilePath_SetAndGet_ReturnsSetValue()
         {
             // Arrange
-            var model = new MetaData();
-
-            // Act
-            model.FilePath = "/some/path/model.json";
+            var model = new MetaData
+            {
+                // Act
+                FilePath = "/some/path/model.json"
+            };
 
             // Assert
             Assert.Equal("/some/path/model.json", model.FilePath);
@@ -196,10 +200,11 @@ namespace NDjango.Admin.Core.Tests
         public void FormatVersionJson_SetAndGet_ReturnsSetValue()
         {
             // Arrange
-            var model = new MetaData();
-
-            // Act
-            model.FormatVersionJson = 3;
+            var model = new MetaData
+            {
+                // Act
+                FormatVersionJson = 3
+            };
 
             // Assert
             Assert.Equal(3, model.FormatVersionJson);
@@ -716,8 +721,10 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var model = new MetaData();
             var entity = model.AddEntity(null, "Customer");
-            var attr = new MetaEntityAttr(entity, EntityAttrKind.Virtual);
-            attr.Expr = "CalcField";
+            var attr = new MetaEntityAttr(entity, EntityAttrKind.Virtual)
+            {
+                Expr = "CalcField"
+            };
             entity.Attributes.Add(attr);
 
             // Act
@@ -733,8 +740,10 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var model = new MetaData();
             var entity = model.AddEntity(null, "Customer");
-            var attr = new MetaEntityAttr(entity, EntityAttrKind.Data);
-            attr.Expr = "Company.Name";
+            var attr = new MetaEntityAttr(entity, EntityAttrKind.Data)
+            {
+                Expr = "Company.Name"
+            };
             entity.Attributes.Add(attr);
 
             // Act
@@ -758,8 +767,10 @@ namespace NDjango.Admin.Core.Tests
                 Caption = "Field1"
             });
 
-            var attr2 = new MetaEntityAttr(entity, EntityAttrKind.Data);
-            attr2.Expr = "Field";
+            var attr2 = new MetaEntityAttr(entity, EntityAttrKind.Data)
+            {
+                Expr = "Field"
+            };
             entity.Attributes.Add(attr2);
 
             // Act
@@ -920,8 +931,10 @@ namespace NDjango.Admin.Core.Tests
         public void OnModelChanged_WithHandler_FiresModelChangedEvent()
         {
             // Arrange
-            var model = new MetaData();
-            model.MainSyncContext = null;
+            var model = new MetaData
+            {
+                MainSyncContext = null
+            };
             var eventFired = false;
             model.ModelChanged += (sender, args) => eventFired = true;
 
@@ -936,8 +949,10 @@ namespace NDjango.Admin.Core.Tests
         public void OnModelChanged_WithoutHandler_DoesNotThrow()
         {
             // Arrange
-            var model = new MetaData();
-            model.MainSyncContext = null;
+            var model = new MetaData
+            {
+                MainSyncContext = null
+            };
 
             // Act
             var exception = Record.Exception(() => model.OnModelChanged());
@@ -950,8 +965,10 @@ namespace NDjango.Admin.Core.Tests
         public void OnModelChanged_EventSenderIsModel()
         {
             // Arrange
-            var model = new MetaData();
-            model.MainSyncContext = null;
+            var model = new MetaData
+            {
+                MainSyncContext = null
+            };
             object capturedSender = null;
             model.ModelChanged += (sender, args) => capturedSender = sender;
 
@@ -970,8 +987,10 @@ namespace NDjango.Admin.Core.Tests
         public void TryRunWithMainSyncContext_NullContext_RunsDirectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.MainSyncContext = null;
+            var model = new MetaData
+            {
+                MainSyncContext = null
+            };
             var executed = false;
 
             // Act
@@ -985,8 +1004,10 @@ namespace NDjango.Admin.Core.Tests
         public void TryRunWithMainSyncContext_WithContext_DoesNotThrow()
         {
             // Arrange
-            var model = new MetaData();
-            model.MainSyncContext = new SynchronizationContext();
+            var model = new MetaData
+            {
+                MainSyncContext = new SynchronizationContext()
+            };
 
             // Act
             var exception = Record.Exception(() => model.TryRunWithMainSyncContext(() => { }));
@@ -1030,11 +1051,13 @@ namespace NDjango.Admin.Core.Tests
         public void Clone_ModelWithEntitiesAndAttributes_ReturnsIdenticalModel()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "TestModel";
-            model.Description = "Test description";
-            model.CustomInfo = "Custom data";
-            model.ModelVersion = 5;
+            var model = new MetaData
+            {
+                Name = "TestModel",
+                Description = "Test description",
+                CustomInfo = "Custom data",
+                ModelVersion = 5
+            };
 
             var entity = model.AddEntity(null, "Customer");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -1075,8 +1098,10 @@ namespace NDjango.Admin.Core.Tests
         public void Clone_EmptyModel_ReturnsEmptyModel()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "EmptyModel";
+            var model = new MetaData
+            {
+                Name = "EmptyModel"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -1096,8 +1121,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_Default_ReturnsNonEmptyString()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "TestModel";
+            var model = new MetaData
+            {
+                Name = "TestModel"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -1112,11 +1139,13 @@ namespace NDjango.Admin.Core.Tests
         public void LoadFromJsonString_ValidJson_RestoresModel()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "MyModel";
-            original.Description = "My model description";
-            original.CustomInfo = "info123";
-            original.ModelVersion = 3;
+            var original = new MetaData
+            {
+                Name = "MyModel",
+                Description = "My model description",
+                CustomInfo = "info123",
+                ModelVersion = 3
+            };
             var json = original.SaveToJsonString();
 
             var loaded = new MetaData();
@@ -1168,8 +1197,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveLoadJsonString_PreservesFormatVersion()
         {
             // Arrange
-            var model = new MetaData();
-            model.FormatVersionJson = MetaData.LastJsonFormatVersion;
+            var model = new MetaData
+            {
+                FormatVersionJson = MetaData.LastJsonFormatVersion
+            };
             var json = model.SaveToJsonString();
 
             var loaded = new MetaData();
@@ -1427,8 +1458,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonStream_WritesToStream()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "StreamTest";
+            var model = new MetaData
+            {
+                Name = "StreamTest"
+            };
             var stream = new MemoryStream();
 
             // Act
@@ -1445,8 +1478,10 @@ namespace NDjango.Admin.Core.Tests
         public void LoadFromJsonStream_ValidStream_RestoresModel()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "StreamLoad";
+            var original = new MetaData
+            {
+                Name = "StreamLoad"
+            };
             var json = original.SaveToJsonString();
             var bytes = Encoding.UTF8.GetBytes(json);
             var stream = new MemoryStream(bytes);
@@ -1507,8 +1542,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_ContainsNameProperty()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "SomeName";
+            var model = new MetaData
+            {
+                Name = "SomeName"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -1522,8 +1559,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_WithDescription_ContainsDescProperty()
         {
             // Arrange
-            var model = new MetaData();
-            model.Description = "Hello World";
+            var model = new MetaData
+            {
+                Description = "Hello World"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -1537,8 +1576,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_WithCustomInfo_ContainsCstinfProperty()
         {
             // Arrange
-            var model = new MetaData();
-            model.CustomInfo = "custom-data";
+            var model = new MetaData
+            {
+                CustomInfo = "custom-data"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -1604,8 +1645,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_EmptyId_GeneratesNewGuid()
         {
             // Arrange
-            var model = new MetaData();
-            model.Id = "";
+            var model = new MetaData
+            {
+                Id = ""
+            };
 
             // Act
             model.SaveToJsonString();
@@ -1619,8 +1662,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteToJson_SyncOverload_ProducesValidJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "SyncWrite";
+            var model = new MetaData
+            {
+                Name = "SyncWrite"
+            };
             var sb = new StringBuilder();
             using var textWriter = new StringWriter(sb);
             using var jsonWriter = new JsonTextWriter(textWriter);
@@ -1639,8 +1684,10 @@ namespace NDjango.Admin.Core.Tests
         public void ReadFromJson_WithOptions_RestoresModel()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "ReadFromJsonTest";
+            var model = new MetaData
+            {
+                Name = "ReadFromJsonTest"
+            };
             var entity = model.AddEntity(null, "TestEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -1677,11 +1724,13 @@ namespace NDjango.Admin.Core.Tests
         public void SaveLoadJsonString_ComprehensiveModel_RoundTrips()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "FullModel";
-            model.Description = "Full model description";
-            model.CustomInfo = "{\"key\": \"value\"}";
-            model.ModelVersion = 7;
+            var model = new MetaData
+            {
+                Name = "FullModel",
+                Description = "Full model description",
+                CustomInfo = "{\"key\": \"value\"}",
+                ModelVersion = 7
+            };
 
             var customer = model.AddEntity(null, "Customer");
             customer.Description = "Customer entity";
@@ -1809,8 +1858,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStringAsync_Default_ReturnsJsonAsync()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "AsyncTest";
+            var model = new MetaData
+            {
+                Name = "AsyncTest"
+            };
 
             // Act
             var json = await model.SaveToJsonStringAsync();
@@ -1824,8 +1875,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task LoadFromJsonStringAsync_ValidJson_RestoresModelAsync()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "AsyncLoadTest";
+            var original = new MetaData
+            {
+                Name = "AsyncLoadTest"
+            };
             var json = await original.SaveToJsonStringAsync();
             var loaded = new MetaData();
 
@@ -1841,8 +1894,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStreamAsync_Default_WritesToStreamAsync()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "StreamAsyncTest";
+            var model = new MetaData
+            {
+                Name = "StreamAsyncTest"
+            };
             var stream = new MemoryStream();
 
             // Act
@@ -1859,8 +1914,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task LoadFromJsonStreamAsync_ValidStream_RestoresModelAsync()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "StreamLoadAsync";
+            var original = new MetaData
+            {
+                Name = "StreamLoadAsync"
+            };
             var json = await original.SaveToJsonStringAsync();
             var bytes = Encoding.UTF8.GetBytes(json);
             var stream = new MemoryStream(bytes);
@@ -1877,8 +1934,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task WriteToJsonAsync_WithDefaultOptions_ProducesValidJsonAsync()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "AsyncWriteTest";
+            var model = new MetaData
+            {
+                Name = "AsyncWriteTest"
+            };
             var sb = new StringBuilder();
             using var textWriter = new StringWriter(sb);
             using var jsonWriter = new JsonTextWriter(textWriter);
@@ -1966,10 +2025,11 @@ namespace NDjango.Admin.Core.Tests
         public void MetaEntityAttrDescriptor_SetIsVirtualTrue_SetsKindToVirtual()
         {
             // Arrange
-            var desc = new MetaEntityAttrDescriptor();
-
-            // Act
-            desc.IsVirtual = true;
+            var desc = new MetaEntityAttrDescriptor
+            {
+                // Act
+                IsVirtual = true
+            };
 
             // Assert
             Assert.Equal(EntityAttrKind.Virtual, desc.Kind);
@@ -1980,11 +2040,13 @@ namespace NDjango.Admin.Core.Tests
         public void MetaEntityAttrDescriptor_SetIsVirtualFalse_SetsKindToData()
         {
             // Arrange
-            var desc = new MetaEntityAttrDescriptor();
-            desc.Kind = EntityAttrKind.Virtual;
+            var desc = new MetaEntityAttrDescriptor
+            {
+                Kind = EntityAttrKind.Virtual,
 
-            // Act
-            desc.IsVirtual = false;
+                // Act
+                IsVirtual = false
+            };
 
             // Assert
             Assert.Equal(EntityAttrKind.Data, desc.Kind);
@@ -2058,8 +2120,10 @@ namespace NDjango.Admin.Core.Tests
                 Caption = "Old Field"
             });
 
-            var newModel = new MetaData();
-            newModel.Name = "NewModel";
+            var newModel = new MetaData
+            {
+                Name = "NewModel"
+            };
             var newEntity = newModel.AddEntity(null, "NewEntity");
             newModel.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2092,8 +2156,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonStream_WithHumanReadableOption_ProducesFormattedJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "FormattedModel";
+            var model = new MetaData
+            {
+                Name = "FormattedModel"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -2119,8 +2185,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_WithoutDescriptionOption_OmitsDesc()
         {
             // Arrange
-            var model = new MetaData();
-            model.Description = "Should be omitted";
+            var model = new MetaData
+            {
+                Description = "Should be omitted"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Editors
                                | MetaDataReadWriteOptions.KeepCurrent;
@@ -2136,8 +2204,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_WithoutCustomInfoOption_OmitsCstinf()
         {
             // Arrange
-            var model = new MetaData();
-            model.CustomInfo = "Should be omitted";
+            var model = new MetaData
+            {
+                CustomInfo = "Should be omitted"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Editors
                                | MetaDataReadWriteOptions.KeepCurrent;
@@ -2466,8 +2536,10 @@ namespace NDjango.Admin.Core.Tests
         public void IncreaseModelVersion_AfterJsonRoundtrip_Independent()
         {
             // Arrange
-            var model = new MetaData();
-            model.ModelVersion = 5;
+            var model = new MetaData
+            {
+                ModelVersion = 5
+            };
             var json = model.SaveToJsonString();
             var cloned = new MetaData();
             cloned.LoadFromJsonString(json);
@@ -2499,9 +2571,11 @@ namespace NDjango.Admin.Core.Tests
         public void SaveLoadJsonString_NullDescription_RoundTrips()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "NullDescModel";
-            model.Description = null;
+            var model = new MetaData
+            {
+                Name = "NullDescModel",
+                Description = null
+            };
 
             var json = model.SaveToJsonString();
             var loaded = new MetaData();
@@ -2517,8 +2591,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveLoadJsonString_NullName_RoundTrips()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = null;
+            var model = new MetaData
+            {
+                Name = null
+            };
 
             var json = model.SaveToJsonString();
             var loaded = new MetaData();
@@ -2555,9 +2631,11 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonFile_And_LoadFromJsonFile_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "FileTest";
-            model.Description = "Test description";
+            var model = new MetaData
+            {
+                Name = "FileTest",
+                Description = "Test description"
+            };
             var entity = model.AddEntity(null, "TestEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2590,9 +2668,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonFileAsync_And_LoadFromJsonFileAsync_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "AsyncFileTest";
-            model.Description = "Async test description";
+            var model = new MetaData
+            {
+                Name = "AsyncFileTest",
+                Description = "Async test description"
+            };
             var entity = model.AddEntity(null, "AsyncEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2625,9 +2705,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonFileAsync_WithOptions_WritesFileCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "FileOptionsTest";
-            model.Description = "With options";
+            var model = new MetaData
+            {
+                Name = "FileOptionsTest",
+                Description = "With options"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -2656,8 +2738,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonFile_WithOptions_WritesFileCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "SyncFileOptionsTest";
+            var model = new MetaData
+            {
+                Name = "SyncFileOptionsTest"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -2684,8 +2768,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task LoadFromJsonFileAsync_DefaultOverload_SetsFilePath()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DefaultLoadAsync";
+            var model = new MetaData
+            {
+                Name = "DefaultLoadAsync"
+            };
             var tmpFile = Path.GetTempFileName();
             model.SaveToJsonFile(tmpFile);
             var loaded = new MetaData();
@@ -2709,9 +2795,11 @@ namespace NDjango.Admin.Core.Tests
         public void LoadFromJsonFile_WithOptions_RestoresModel()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LoadWithOptions";
-            model.Description = "Desc for options";
+            var model = new MetaData
+            {
+                Name = "LoadWithOptions",
+                Description = "Desc for options"
+            };
             var tmpFile = Path.GetTempFileName();
             model.SaveToJsonFile(tmpFile);
             var loaded = new MetaData();
@@ -2746,9 +2834,11 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonStream_And_LoadFromJsonStream_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "StreamRoundtrip";
-            model.Description = "Stream roundtrip description";
+            var model = new MetaData
+            {
+                Name = "StreamRoundtrip",
+                Description = "Stream roundtrip description"
+            };
             var entity = model.AddEntity(null, "StreamEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2777,8 +2867,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonStream_WithOptions_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "StreamWithOptions";
+            var model = new MetaData
+            {
+                Name = "StreamWithOptions"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -2805,9 +2897,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStreamAsync_WithHumanReadable_ProducesIndentedJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "IndentTest";
-            BitOptions options = MetaDataReadWriteOptions.Defaults
+            var model = new MetaData
+            {
+                Name = "IndentTest"
+            };
+            var options = MetaDataReadWriteOptions.Defaults
                 .With(MetaDataReadWriteOptions.HumanReadable);
 
             // Act
@@ -2824,9 +2918,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStreamAsync_WithOptions_RoundtripsViaLoadAsync()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "AsyncStreamOptions";
-            model.Description = "Async stream options test";
+            var model = new MetaData
+            {
+                Name = "AsyncStreamOptions",
+                Description = "Async stream options test"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -2858,8 +2954,10 @@ namespace NDjango.Admin.Core.Tests
             model.AddEntity(null, "ExistingEntity");
             Assert.False(model.IsEmpty);
 
-            var sourceModel = new MetaData();
-            sourceModel.Name = "New";
+            var sourceModel = new MetaData
+            {
+                Name = "New"
+            };
             var json = sourceModel.SaveToJsonString();
 
             // Act
@@ -2874,12 +2972,16 @@ namespace NDjango.Admin.Core.Tests
         public async Task ReadFromJsonAsync_WithKeepCurrent_DoesNotCallClear()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "OldName";
+            var model = new MetaData
+            {
+                Name = "OldName"
+            };
 
             // Create JSON that only has model props (no entities) so entroot does not overwrite
-            var sourceModel = new MetaData();
-            sourceModel.Name = "New";
+            var sourceModel = new MetaData
+            {
+                Name = "New"
+            };
             BitOptions writeOptions = MetaDataReadWriteOptions.Description
                                     | MetaDataReadWriteOptions.CustomInfo
                                     | MetaDataReadWriteOptions.Editors
@@ -2902,8 +3004,10 @@ namespace NDjango.Admin.Core.Tests
         {
             // Arrange
             // Build JSON that uses the old "dataFormats" alias instead of "displayFormats"
-            var model = new MetaData();
-            model.Name = "DataFormatsAlias";
+            var model = new MetaData
+            {
+                Name = "DataFormatsAlias"
+            };
             var json = model.SaveToJsonString();
             // Replace "displayFormats" with "dataFormats" to simulate old format
             var aliasJson = json.Replace("displayFormats", "dataFormats");
@@ -2926,8 +3030,10 @@ namespace NDjango.Admin.Core.Tests
         public void LoadFromJsonString_UnknownProperty_SkipsWithoutError()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "SkipTest";
+            var model = new MetaData
+            {
+                Name = "SkipTest"
+            };
             var json = model.SaveToJsonString();
             // Inject an unknown property into the JSON
             var modifiedJson = json.Replace("\"name\":", "\"unknownProp123\":\"someValue\",\"name\":");
@@ -2948,9 +3054,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStringAsync_WithOptions_ReturnsFilteredJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "OptionsAsync";
-            model.Description = "Should be excluded";
+            var model = new MetaData
+            {
+                Name = "OptionsAsync",
+                Description = "Should be excluded"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Editors
                                | MetaDataReadWriteOptions.CustomInfo
@@ -2972,10 +3080,12 @@ namespace NDjango.Admin.Core.Tests
         public void WriteToJson_And_ReadFromJson_RoundtripCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "SyncJsonRoundtrip";
-            model.Description = "Sync roundtrip test";
-            model.CustomInfo = "custom-sync";
+            var model = new MetaData
+            {
+                Name = "SyncJsonRoundtrip",
+                Description = "Sync roundtrip test",
+                CustomInfo = "custom-sync"
+            };
             var entity = model.AddEntity(null, "SyncEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3011,9 +3121,11 @@ namespace NDjango.Admin.Core.Tests
         public void WriteToJson_WithOptions_RespectsFlags()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "WriteWithOpts";
-            model.Description = "ShouldAppear";
+            var model = new MetaData
+            {
+                Name = "WriteWithOpts",
+                Description = "ShouldAppear"
+            };
             BitOptions options = MetaDataReadWriteOptions.Entities
                                | MetaDataReadWriteOptions.Description
                                | MetaDataReadWriteOptions.Editors
@@ -3042,8 +3154,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task WriteToJsonAsync_DefaultOverload_ProducesValidJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "AsyncDefaultOverload";
+            var model = new MetaData
+            {
+                Name = "AsyncDefaultOverload"
+            };
             var sb = new StringBuilder();
             using var textWriter = new StringWriter(sb);
             using var jsonWriter = new JsonTextWriter(textWriter);
@@ -3066,8 +3180,10 @@ namespace NDjango.Admin.Core.Tests
         public void SaveToJsonString_EmptyId_GeneratesNewIdVisibleAfterReload()
         {
             // Arrange
-            var model = new MetaData();
-            model.Id = "";
+            var model = new MetaData
+            {
+                Id = ""
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -3087,10 +3203,12 @@ namespace NDjango.Admin.Core.Tests
         public void SaveLoadJsonString_PopulatedModel_ProducesIndependentCopy()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "OriginalCopy";
-            model.Description = "Copy desc";
-            model.CustomInfo = "copy-info";
+            var model = new MetaData
+            {
+                Name = "OriginalCopy",
+                Description = "Copy desc",
+                CustomInfo = "copy-info"
+            };
             var entity = model.AddEntity(null, "CopyEntity");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3123,8 +3241,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task LoadFromJsonStreamAsync_DefaultOverload_RestoresModel()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "StreamDefaultAsync";
+            var original = new MetaData
+            {
+                Name = "StreamDefaultAsync"
+            };
             var json = original.SaveToJsonString();
             var bytes = Encoding.UTF8.GetBytes(json);
             using var stream = new MemoryStream(bytes);
@@ -3142,9 +3262,11 @@ namespace NDjango.Admin.Core.Tests
         public async Task LoadFromJsonStreamAsync_WithOptions_RestoresModel()
         {
             // Arrange
-            var original = new MetaData();
-            original.Name = "StreamOptionsAsync";
-            original.Description = "Stream options desc";
+            var original = new MetaData
+            {
+                Name = "StreamOptionsAsync",
+                Description = "Stream options desc"
+            };
             var json = original.SaveToJsonString();
             var bytes = Encoding.UTF8.GetBytes(json);
             using var stream = new MemoryStream(bytes);
@@ -3171,8 +3293,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonStreamAsync_DefaultOverload_WritesToStream()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DefaultStreamAsync";
+            var model = new MetaData
+            {
+                Name = "DefaultStreamAsync"
+            };
             var stream = new MemoryStream();
 
             // Act
@@ -3193,8 +3317,10 @@ namespace NDjango.Admin.Core.Tests
         public async Task SaveToJsonFileAsync_DefaultOverload_WritesFile()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DefaultFileAsync";
+            var model = new MetaData
+            {
+                Name = "DefaultFileAsync"
+            };
             var tmpFile = Path.GetTempFileName();
 
             try
@@ -3249,11 +3375,13 @@ namespace NDjango.Admin.Core.Tests
 
         private static MetaData CreatePopulatedModel()
         {
-            var model = new MetaData();
-            model.Name = "PopulatedModel";
-            model.Description = "A fully populated model for testing";
-            model.CustomInfo = "custom-info-data";
-            model.ModelVersion = 3;
+            var model = new MetaData
+            {
+                Name = "PopulatedModel",
+                Description = "A fully populated model for testing",
+                CustomInfo = "custom-info-data",
+                ModelVersion = 3
+            };
 
             var customer = model.AddEntity(null, "Customer");
             model.AddEntityAttr(new MetaEntityAttrDescriptor

@@ -4,24 +4,20 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 using MongoDB.Bson;
 using MongoDB.Driver;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 using NDjango.Admin.MongoDB.Authentication.Entities;
 using NDjango.Admin.MongoDB.Authentication.Storage;
 using NDjango.Admin.MongoDB.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.MongoDB.Tests.IntegrationTests
 {

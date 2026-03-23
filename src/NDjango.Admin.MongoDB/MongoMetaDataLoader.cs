@@ -104,7 +104,7 @@ namespace NDjango.Admin.MongoDB
             }
 
             var properties = documentType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            int attrCounter = 0;
+            var attrCounter = 0;
 
             foreach (var property in properties) {
                 if (!ApplyPropertyFilters(property))
@@ -141,12 +141,9 @@ namespace NDjango.Admin.MongoDB
             else {
                 // Unwrap Nullable<T> for enum detection since DataUtils does not handle Nullable<Enum>
                 var unwrapped = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
-                if (unwrapped.IsEnum) {
-                    columnType = DataUtils.GetDataTypeBySystemType(unwrapped.GetEnumUnderlyingType());
-                }
-                else {
-                    columnType = DataUtils.GetDataTypeBySystemType(propertyType);
-                }
+                columnType = unwrapped.IsEnum
+                    ? DataUtils.GetDataTypeBySystemType(unwrapped.GetEnumUnderlyingType())
+                    : DataUtils.GetDataTypeBySystemType(propertyType);
 
                 if (columnType == DataType.Unknown) {
                     // Check if it's a collection type (excluding string and byte[])
@@ -192,32 +189,27 @@ namespace NDjango.Admin.MongoDB
 
             entityAttr.ShowOnView = true;
 
-            if (descriptor.IsReadOnly)
-            {
+            if (descriptor.IsReadOnly) {
                 entityAttr.IsEditable = false;
                 entityAttr.ShowOnCreate = false;
                 entityAttr.ShowOnEdit = true;
             }
-            else if (isPrimaryKey)
-            {
+            else if (isPrimaryKey) {
                 entityAttr.IsEditable = false;
                 entityAttr.ShowOnCreate = false;
                 entityAttr.ShowOnEdit = true;
             }
-            else if (IsAutoTimestamp(property))
-            {
+            else if (IsAutoTimestamp(property)) {
                 entityAttr.IsEditable = false;
                 entityAttr.ShowOnCreate = false;
                 entityAttr.ShowOnEdit = true;
             }
-            else if (IsCollectionType(propertyType) || IsComplexType(propertyType))
-            {
+            else if (IsCollectionType(propertyType) || IsComplexType(propertyType)) {
                 entityAttr.IsEditable = false;
                 entityAttr.ShowOnCreate = false;
                 entityAttr.ShowOnEdit = true;
             }
-            else
-            {
+            else {
                 entityAttr.IsEditable = true;
                 entityAttr.ShowOnCreate = true;
                 entityAttr.ShowOnEdit = true;

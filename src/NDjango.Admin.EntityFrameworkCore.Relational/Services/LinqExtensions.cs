@@ -1,13 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-using Exp = System.Linq.Expressions.Expression;
-
+using Microsoft.EntityFrameworkCore;
 using NDjango.Admin.EntityFrameworkCore;
+using Exp = System.Linq.Expressions.Expression;
 
 namespace NDjango.Admin.Services
 {
@@ -136,21 +134,11 @@ namespace NDjango.Admin.Services
                         foreach (var txt in texts) {
                             var constant = Exp.Constant(txt, typeof(string));
                             Exp containsExp = Exp.Call(peLower, typeof(string).GetMethod("Contains", new[] { typeof(string) }), constant);
-                            if (conditionExp != null) {
-                                conditionExp = Exp.OrElse(conditionExp, containsExp);
-                            }
-                            else {
-                                conditionExp = containsExp;
-                            }
+                            conditionExp = conditionExp != null ? Exp.OrElse(conditionExp, containsExp) : containsExp;
                         }
 
-                        Exp andExp = (notNullExp != null) ? Exp.AndAlso(notNullExp, conditionExp) : conditionExp;
-                        if (predicateBody != null) {
-                            predicateBody = Exp.OrElse(predicateBody, andExp);
-                        }
-                        else {
-                            predicateBody = andExp;
-                        }
+                        var andExp = (notNullExp != null) ? Exp.AndAlso(notNullExp, conditionExp) : conditionExp;
+                        predicateBody = predicateBody != null ? Exp.OrElse(predicateBody, andExp) : andExp;
                     }
 
                     //If this property is't simple and the depth > 0

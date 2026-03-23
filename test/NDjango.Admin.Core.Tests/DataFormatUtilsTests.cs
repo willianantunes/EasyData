@@ -486,7 +486,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Float_WithDisplayFormat_FormatsWithCulture()
         {
             // Arrange
-            float val = 1234.56f;
+            var val = 1234.56f;
             var displayFormat = "{0:N2}";
 
             // Act
@@ -500,7 +500,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Float_WithoutDisplayFormat_UsesDefaultFormat()
         {
             // Arrange
-            float val = 1234.56f;
+            var val = 1234.56f;
             var expected = string.Format(InvCulture, "{0}", val);
 
             // Act
@@ -514,7 +514,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Double_WithDisplayFormat_FormatsWithCulture()
         {
             // Arrange
-            double val = 9876.54;
+            var val = 9876.54;
             var displayFormat = "{0:F1}";
 
             // Act
@@ -528,7 +528,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Double_WithoutDisplayFormat_UsesDefaultFormat()
         {
             // Arrange
-            double val = 9876.54;
+            var val = 9876.54;
             var expected = string.Format(InvCulture, "{0}", val);
 
             // Act
@@ -542,7 +542,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Int_WithDisplayFormat_FormatsWithCulture()
         {
             // Arrange
-            int val = 42;
+            var val = 42;
             var displayFormat = "{0:D5}";
 
             // Act
@@ -556,7 +556,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Int_WithoutDisplayFormat_UsesDefaultFormat()
         {
             // Arrange
-            int val = 42;
+            var val = 42;
             var expected = string.Format(InvCulture, "{0}", val);
 
             // Act
@@ -570,7 +570,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Decimal_WithDisplayFormat_FormatsWithCulture()
         {
             // Arrange
-            decimal val = 1234.5678m;
+            var val = 1234.5678m;
             var displayFormat = "{0:C}";
 
             // Act
@@ -584,7 +584,7 @@ namespace NDjango.Admin.Core.Tests
         public void GetFormattedValue_Decimal_WithoutDisplayFormat_UsesDefaultFormat()
         {
             // Arrange
-            decimal val = 1234.5678m;
+            var val = 1234.5678m;
             var expected = string.Format(InvCulture, "{0}", val);
 
             // Act

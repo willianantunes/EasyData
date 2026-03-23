@@ -4,6 +4,6 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Routing
 {
     public interface IDashboardDispatcher
     {
-        Task DispatchAsync(AdminDashboardContext context, DashboardRouteMatch match);
+        public Task DispatchAsync(AdminDashboardContext context, DashboardRouteMatch match);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,13 +14,13 @@ namespace NDjango.Admin.Services
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns>System.String.</returns>
-        string GetValue(string key);
+        public string GetValue(string key);
 
         /// <summary>
         /// Puts the key:value pair to the cache
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        void PutValue(string key, string value);
+        public void PutValue(string key, string value);
     }
 }

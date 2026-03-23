@@ -1,8 +1,6 @@
 using System.Linq;
-
-using Xunit;
-
 using NDjango.Admin.Aggregation;
+using Xunit;
 
 namespace NDjango.Admin.Core.Tests
 {

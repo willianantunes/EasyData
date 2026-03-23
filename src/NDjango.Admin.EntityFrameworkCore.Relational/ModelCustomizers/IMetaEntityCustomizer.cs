@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 namespace NDjango.Admin.EntityFrameworkCore
 {
     public interface IMetaEntityCustomizer<TEntity> where TEntity : class
     {
-        IMetaEntityCustomizer<TEntity> SetDescription(string description);
-        IMetaEntityCustomizer<TEntity> SetDisplayName(string displayName);
-        IMetaEntityCustomizer<TEntity> SetDisplayNamePlural(string displayNamePlural);
-        IMetaEntityCustomizer<TEntity> SetEditable(bool editable);
-        IMetaEntityAttrCustomizer Attribute(Expression<Func<TEntity, object>> propertySelector);
+        public IMetaEntityCustomizer<TEntity> SetDescription(string description);
+        public IMetaEntityCustomizer<TEntity> SetDisplayName(string displayName);
+        public IMetaEntityCustomizer<TEntity> SetDisplayNamePlural(string displayNamePlural);
+        public IMetaEntityCustomizer<TEntity> SetEditable(bool editable);
+        public IMetaEntityAttrCustomizer Attribute(Expression<Func<TEntity, object>> propertySelector);
     }
 }

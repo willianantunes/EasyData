@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -42,8 +42,10 @@ namespace NDjango.Admin
                 desc.IsDefault = isDefault;
             }
             else {
-                desc = new DisplayFormatDescriptor(name, format);
-                desc.IsDefault = isDefault;
+                desc = new DisplayFormatDescriptor(name, format)
+                {
+                    IsDefault = isDefault
+                };
                 if (_dict.TryGetValue(type, out var formats)) {
                     if (isDefault) {
                         foreach (var fmt in formats) {

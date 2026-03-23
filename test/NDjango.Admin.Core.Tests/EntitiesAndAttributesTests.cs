@@ -1789,10 +1789,11 @@ namespace NDjango.Admin.Core.Tests
         public void MetaEntityAttrDescriptor_IsVirtual_SetTrue_ChangesKindToVirtual()
         {
             // Arrange
-            var desc = new MetaEntityAttrDescriptor();
-
-            // Act
-            desc.IsVirtual = true;
+            var desc = new MetaEntityAttrDescriptor
+            {
+                // Act
+                IsVirtual = true
+            };
 
             // Assert
             Assert.Equal(EntityAttrKind.Virtual, desc.Kind);
@@ -1803,10 +1804,11 @@ namespace NDjango.Admin.Core.Tests
         public void MetaEntityAttrDescriptor_IsVirtual_SetFalse_ChangesKindToData()
         {
             // Arrange
-            var desc = new MetaEntityAttrDescriptor { Kind = EntityAttrKind.Virtual };
-
-            // Act
-            desc.IsVirtual = false;
+            var desc = new MetaEntityAttrDescriptor
+            {
+                Kind = EntityAttrKind.Virtual,             // Act
+                IsVirtual = false
+            };
 
             // Assert
             Assert.Equal(EntityAttrKind.Data, desc.Kind);
@@ -1903,9 +1905,11 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_EntityWithAttributes_PreservesStructure()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "TestModel";
-            model.Description = "Test Description";
+            var model = new MetaData
+            {
+                Name = "TestModel",
+                Description = "Test Description"
+            };
 
             var entity = model.AddEntity(null, "Category");
             entity.Description = "A category";
@@ -1969,8 +1973,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_NestedEntities_PreservesHierarchy()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "HierarchyModel";
+            var model = new MetaData
+            {
+                Name = "HierarchyModel"
+            };
 
             var parent = model.AddEntity(null, "Parent");
             parent.Description = "Parent Entity";
@@ -2016,8 +2022,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_AttributeWithAllProperties_PreservesAllValues()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "FullAttrModel";
+            var model = new MetaData
+            {
+                Name = "FullAttrModel"
+            };
 
             var entity = model.AddEntity(null, "Order");
 
@@ -2070,8 +2078,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_LookupAttributes_PreservesReferences()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupModel";
+            var model = new MetaData
+            {
+                Name = "LookupModel"
+            };
 
             var orderEntity = model.AddEntity(null, "Order");
             var customerEntity = model.AddEntity(null, "Customer");
@@ -2132,8 +2142,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_MultipleEntities_PreservesAll()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "MultiEntityModel";
+            var model = new MetaData
+            {
+                Name = "MultiEntityModel"
+            };
 
             var entity1 = model.AddEntity(null, "Category");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -2175,9 +2187,11 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_EmptyModel_PreservesBasicProperties()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "EmptyModel";
-            model.Description = "An empty model";
+            var model = new MetaData
+            {
+                Name = "EmptyModel",
+                Description = "An empty model"
+            };
 
             // Act
             var json = model.SaveToJsonString();
@@ -2195,8 +2209,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_EntityAttrKinds_PreservedCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "KindModel";
+            var model = new MetaData
+            {
+                Name = "KindModel"
+            };
 
             var entity = model.AddEntity(null, "TestEntity");
 
@@ -2241,9 +2257,11 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_DoubleSerialize_ProducesConsistentOutput()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "ConsistencyModel";
-            model.Description = "Test consistency";
+            var model = new MetaData
+            {
+                Name = "ConsistencyModel",
+                Description = "Test consistency"
+            };
 
             var entity = model.AddEntity(null, "Product");
             entity.NamePlural = "Products";
@@ -2529,16 +2547,22 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             // Create an entity without a model (using internal constructor via reflection-free approach:
             // MetaEntity(MetaEntity parent) sets parent but no model)
-            var standaloneRoot = new MetaEntity((MetaEntity)null);
-            standaloneRoot.Name = "StandaloneRoot";
+            var standaloneRoot = new MetaEntity((MetaEntity)null)
+            {
+                Name = "StandaloneRoot"
+            };
 
-            var child = new MetaEntity(standaloneRoot);
-            child.Name = "ChildEntity";
+            var child = new MetaEntity(standaloneRoot)
+            {
+                Name = "ChildEntity"
+            };
             standaloneRoot.SubEntities.Add(child);
 
-            var attr = new MetaEntityAttr(child, EntityAttrKind.Data);
-            attr.Id = "test-attr";
-            attr._lookupEntityId = "SomeEntity";
+            var attr = new MetaEntityAttr(child, EntityAttrKind.Data)
+            {
+                Id = "test-attr",
+                _lookupEntityId = "SomeEntity"
+            };
             child.Attributes.Add(attr);
 
             // Act & Assert
@@ -2551,12 +2575,16 @@ namespace NDjango.Admin.Core.Tests
         public void CheckModel_NullModelSingleEntity_ThrowsMetaDataException()
         {
             // Arrange
-            var standaloneEntity = new MetaEntity((MetaEntity)null);
-            standaloneEntity.Name = "Standalone";
+            var standaloneEntity = new MetaEntity((MetaEntity)null)
+            {
+                Name = "Standalone"
+            };
 
-            var attr = new MetaEntityAttr(standaloneEntity, EntityAttrKind.Data);
-            attr.Id = "attr1";
-            attr._lookupEntityId = "X";
+            var attr = new MetaEntityAttr(standaloneEntity, EntityAttrKind.Data)
+            {
+                Id = "attr1",
+                _lookupEntityId = "X"
+            };
             standaloneEntity.Attributes.Add(attr);
 
             // Act & Assert
@@ -2726,8 +2754,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithDisplayFormat_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DisplayFormatModel";
+            var model = new MetaData
+            {
+                Name = "DisplayFormatModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2752,8 +2782,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithDescription_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DescModel";
+            var model = new MetaData
+            {
+                Name = "DescModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2778,8 +2810,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithUserData_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "UserDataModel";
+            var model = new MetaData
+            {
+                Name = "UserDataModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2804,8 +2838,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithLookupAttr_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupAttrModel";
+            var model = new MetaData
+            {
+                Name = "LookupAttrModel"
+            };
             var entity = model.AddEntity(null, "Order");
             var dataAttr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2841,8 +2877,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithDataAttr_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DataAttrModel";
+            var model = new MetaData
+            {
+                Name = "DataAttrModel"
+            };
             var entity = model.AddEntity(null, "Order");
             var dataAttr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2878,8 +2916,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithLookupEntity_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupEntityModel";
+            var model = new MetaData
+            {
+                Name = "LookupEntityModel"
+            };
             var orderEntity = model.AddEntity(null, "Order");
             var customerEntity = model.AddEntity(null, "Customer");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -2916,8 +2956,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithLookupDataAttribute_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupDataAttrModel";
+            var model = new MetaData
+            {
+                Name = "LookupDataAttrModel"
+            };
             var orderEntity = model.AddEntity(null, "Order");
             var customerEntity = model.AddEntity(null, "Customer");
             var customerNameAttr = model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -2955,8 +2997,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_WithDefaultEditor_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "EditorModel";
+            var model = new MetaData
+            {
+                Name = "EditorModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -2983,8 +3027,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_NoOptionalProperties_RoundtripsCorrectly()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "MinimalModel";
+            var model = new MetaData
+            {
+                Name = "MinimalModel"
+            };
             var entity = model.AddEntity(null, "Simple");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3016,8 +3062,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_VirtualKind_SetsKindToVirtual()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "VirtualReadModel";
+            var model = new MetaData
+            {
+                Name = "VirtualReadModel"
+            };
             var entity = model.AddEntity(null, "Order");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3047,8 +3095,10 @@ namespace NDjango.Admin.Core.Tests
         public void MetaEntityAttrStore_ReadFromJson_ReadsMultipleAttributes()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "StoreReadModel";
+            var model = new MetaData
+            {
+                Name = "StoreReadModel"
+            };
             var entity = model.AddEntity(null, "Product");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3599,8 +3649,10 @@ namespace NDjango.Admin.Core.Tests
         public void WriteAndReadJson_UnknownProperty_SkippedGracefully()
         {
             // Arrange - build a model, serialize, then manually inject an unknown property
-            var model = new MetaData();
-            model.Name = "UnknownPropModel";
+            var model = new MetaData
+            {
+                Name = "UnknownPropModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3694,8 +3746,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_VirtualAttribute_PreservesVirtualKind()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "VirtualAttrModel";
+            var model = new MetaData
+            {
+                Name = "VirtualAttrModel"
+            };
             var entity = model.AddEntity(null, "TestEntity");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3726,8 +3780,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_AttributeWithDefaultValue_WritesDefValToJson()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "DefaultValueModel";
+            var model = new MetaData
+            {
+                Name = "DefaultValueModel"
+            };
             var entity = model.AddEntity(null, "TestEntity");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3753,8 +3809,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_WithOpgProperty_SkippedGracefully()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "OpgModel";
+            var model = new MetaData
+            {
+                Name = "OpgModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3785,8 +3843,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_WithUnknownAttrProperty_SkippedGracefully()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "UnknownAttrModel";
+            var model = new MetaData
+            {
+                Name = "UnknownAttrModel"
+            };
             var entity = model.AddEntity(null, "Product");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -3817,8 +3877,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_LookupEntityId_ResolvesAfterDeserialization()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupEntityResolveModel";
+            var model = new MetaData
+            {
+                Name = "LookupEntityResolveModel"
+            };
             var orderEntity = model.AddEntity(null, "Order");
             var customerEntity = model.AddEntity(null, "Customer");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -3858,8 +3920,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_LookupDataAttrId_ResolvesAfterDeserialization()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "LookupDataAttrResolveModel";
+            var model = new MetaData
+            {
+                Name = "LookupDataAttrResolveModel"
+            };
             var orderEntity = model.AddEntity(null, "Order");
             var customerEntity = model.AddEntity(null, "Customer");
             var customerNameAttr = model.AddEntityAttr(new MetaEntityAttrDescriptor
@@ -4090,8 +4154,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_WithUnknownEntityProperty_SkippedGracefully()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "UnknownEntPropModel";
+            var model = new MetaData
+            {
+                Name = "UnknownEntPropModel"
+            };
             var entity = model.AddEntity(null, "Product");
             model.AddEntityAttr(new MetaEntityAttrDescriptor
             {
@@ -4122,8 +4188,10 @@ namespace NDjango.Admin.Core.Tests
         public void JsonRoundtrip_VirtualBooleanProperty_SetsKindToVirtual()
         {
             // Arrange
-            var model = new MetaData();
-            model.Name = "VirtualBoolModel";
+            var model = new MetaData
+            {
+                Name = "VirtualBoolModel"
+            };
             var entity = model.AddEntity(null, "TestEntity");
             var attr = model.AddEntityAttr(new MetaEntityAttrDescriptor
             {

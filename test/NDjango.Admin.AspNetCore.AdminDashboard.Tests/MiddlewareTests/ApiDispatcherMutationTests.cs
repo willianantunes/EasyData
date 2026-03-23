@@ -5,13 +5,10 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers;
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.MiddlewareTests
 {

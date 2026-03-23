@@ -72,11 +72,13 @@ namespace NDjango.Admin.Core.Tests
         public void InsertItem_DuplicateType_PreventsDuplicates()
         {
             // Arrange
-            var list = new DataTypeList();
-            list.Add(DataType.String);
+            var list = new DataTypeList
+            {
+                DataType.String,
 
-            // Act
-            list.Add(DataType.String);
+                // Act
+                DataType.String
+            };
 
             // Assert
             Assert.Single(list);
@@ -87,11 +89,13 @@ namespace NDjango.Admin.Core.Tests
         public void InsertItem_UniqueType_AddsSuccessfully()
         {
             // Arrange
-            var list = new DataTypeList();
-            list.Add(DataType.String);
+            var list = new DataTypeList
+            {
+                DataType.String,
 
-            // Act
-            list.Add(DataType.Int32);
+                // Act
+                DataType.Int32
+            };
 
             // Assert
             Assert.Equal(2, list.Count);
@@ -238,10 +242,11 @@ namespace NDjango.Admin.Core.Tests
         public void CommaText_Setter_ParsesAndSets()
         {
             // Arrange
-            var list = new DataTypeList();
-
-            // Act
-            list.CommaText = "Date,Time,DateTime";
+            var list = new DataTypeList
+            {
+                // Act
+                CommaText = "Date,Time,DateTime"
+            };
 
             // Assert
             Assert.Equal(3, list.Count);
@@ -254,10 +259,11 @@ namespace NDjango.Admin.Core.Tests
         public void CommaText_Setter_ClearsPreviousItems()
         {
             // Arrange
-            var list = new DataTypeList(new[] { DataType.String, DataType.Int32 });
-
-            // Act
-            list.CommaText = "Bool";
+            var list = new DataTypeList(new[] { DataType.String, DataType.Int32 })
+            {
+                // Act
+                CommaText = "Bool"
+            };
 
             // Assert
             Assert.Single(list);
@@ -268,10 +274,11 @@ namespace NDjango.Admin.Core.Tests
         public void CommaText_Setter_WithNull_ClearsList()
         {
             // Arrange
-            var list = new DataTypeList(new[] { DataType.String, DataType.Int32 });
-
-            // Act
-            list.CommaText = null;
+            var list = new DataTypeList(new[] { DataType.String, DataType.Int32 })
+            {
+                // Act
+                CommaText = null
+            };
 
             // Assert
             Assert.Empty(list);

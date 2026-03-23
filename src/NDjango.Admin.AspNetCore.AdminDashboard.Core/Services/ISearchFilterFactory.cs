@@ -11,6 +11,6 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Services
     /// </summary>
     internal interface ISearchFilterFactory
     {
-        Task<EasyFilter> CreateSearchFilterAsync(MetaData model, string searchQuery, CancellationToken ct = default);
+        public Task<EasyFilter> CreateSearchFilterAsync(MetaData model, string searchQuery, CancellationToken ct = default);
     }
 }

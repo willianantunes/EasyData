@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using NDjango.Admin.Services;
 using NDjango.Admin.AspNetCore;
+using NDjango.Admin.Services;
 
 namespace Microsoft.AspNetCore.Builder
 {

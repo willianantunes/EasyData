@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -8,7 +8,7 @@ namespace NDjango.Admin.Export
 {
     public static class ExportHelpers
     {
-        private static Regex _varEntry = new Regex("{{(.+?)}}");
+        private static readonly Regex _varEntry = new Regex("{{(.+?)}}");
 
         public static string ApplyGroupFooterColumnTemplate(string template, string val, Dictionary<string, object> extraData)
         {
@@ -30,7 +30,7 @@ namespace NDjango.Admin.Export
         public static Dictionary<string, IFormatProvider> GetPredefinedFormatters(IReadOnlyList<NDjangoAdminCol> cols, IDataExportSettings settings)
         {
             var result = new Dictionary<string, IFormatProvider>();
-            for (int i = 0; i < cols.Count; i++) {
+            for (var i = 0; i < cols.Count; i++) {
                 var dfmt = cols[i].DisplayFormat;
                 if (!string.IsNullOrEmpty(dfmt) && !result.ContainsKey(dfmt)) {
                     var format = DataFormatUtils.ExtractFormatString(dfmt);

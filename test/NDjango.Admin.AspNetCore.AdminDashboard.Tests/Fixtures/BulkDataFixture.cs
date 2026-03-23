@@ -1,13 +1,11 @@
 using System;
 using System.Linq;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Hosting;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
@@ -17,7 +15,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         private readonly IHost _host;
         private readonly string _dbName;
 
-        private static string ConnectionStringTemplate =
+        private static readonly string ConnectionStringTemplate =
             TestConnectionHelper.ConnectionStringTemplate;
 
         public const int TotalIngredients = 60;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 
@@ -7,7 +7,7 @@ namespace NDjango.Admin
     public class EntityClrTypeCache
     {
         private readonly MetaData _metadata;
-        private Dictionary<Type, MetaEntity> _cache = new Dictionary<Type, MetaEntity>();
+        private readonly Dictionary<Type, MetaEntity> _cache = new Dictionary<Type, MetaEntity>();
 
         public EntityClrTypeCache(MetaData metadata)
         {

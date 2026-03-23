@@ -1,10 +1,9 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
-using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 using Newtonsoft.Json;
 
 namespace NDjango.Admin
@@ -148,7 +147,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption => "Custom list value editor";
+        public static new string STypeCaption => "Custom list value editor";
 
         /// <summary>
         /// Gets the base part of identifier.
@@ -247,9 +246,11 @@ namespace NDjango.Admin
         /// <returns>The index of new item in list.</returns>
         public int Add(string id, string text)
         {
-            ConstValueItem item = new ConstValueItem();
-            item.Id = id;
-            item.Text = text;
+            ConstValueItem item = new ConstValueItem
+            {
+                Id = id,
+                Text = text
+            };
             base.Add(item);
             return Count - 1;
         }
@@ -265,7 +266,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption => "Constant list value editor";
+        public static new string STypeCaption => "Constant list value editor";
 
         /// <summary>
         /// Gets the name of the value editor type.
@@ -285,11 +286,13 @@ namespace NDjango.Admin
             get {
                 string defID = "", defText = "";
 
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Encoding = System.Text.Encoding.UTF8;
-                settings.OmitXmlDeclaration = true;
-                settings.ConformanceLevel = ConformanceLevel.Fragment;
-                settings.CloseOutput = true;
+                XmlWriterSettings settings = new XmlWriterSettings
+                {
+                    Encoding = System.Text.Encoding.UTF8,
+                    OmitXmlDeclaration = true,
+                    ConformanceLevel = ConformanceLevel.Fragment,
+                    CloseOutput = true
+                };
 
                 StringWriter sw = new StringWriter();
                 using (XmlWriter writer = XmlWriter.Create(sw, settings)) {
@@ -300,7 +303,7 @@ namespace NDjango.Admin
                     writer.WriteAttributeString("controlType", ControlType);
                     writer.WriteAttributeString("multiselect", Multiselect.ToString());
 
-                    foreach (ConstValueItem item in Values) {
+                    foreach (var item in Values) {
                         writer.WriteStartElement("Item");
                         writer.WriteAttributeString("value", item.Id);
                         writer.WriteAttributeString("text", item.Text);
@@ -316,7 +319,7 @@ namespace NDjango.Admin
             }
         }
 
-        private ConstValueList _values;
+        private readonly ConstValueList _values;
         /// <summary>
         /// Gets the list of available values.
         /// </summary>

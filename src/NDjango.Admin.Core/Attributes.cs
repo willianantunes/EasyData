@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Dynamic;
@@ -255,7 +255,7 @@ namespace NDjango.Admin
 
         public virtual ValueEditor GetValueEditor(DataType? type = null)
         {
-            ValueEditor result = DefaultEditor;
+            var result = DefaultEditor;
 
             type = type ?? DataType;
             if (result == null) {
@@ -317,11 +317,11 @@ namespace NDjango.Admin
         protected void CheckModel()
         {
             if (Entity == null) {
-                throw new MetaDataException("Entity is not specified for attribute: " + this.Id);
+                throw new MetaDataException("Entity is not specified for attribute: " + Id);
             }
 
             if (Model == null) {
-                MetaEntity ent = Entity;
+                var ent = Entity;
 
                 while (ent.Parent != null) {
                     ent = ent.Parent;
@@ -452,7 +452,7 @@ namespace NDjango.Admin
         /// </value>
         public string FullExpr {
             get {
-                return IsVirtual ? this.Expr : GetDataAttrFullExpr();
+                return IsVirtual ? Expr : GetDataAttrFullExpr();
             }
         }
 
@@ -463,7 +463,7 @@ namespace NDjango.Admin
         /// <returns></returns>
         protected virtual string GetDataAttrFullExpr()
         {
-            return Entity.GetFullName(".") + ':' + this.Expr;
+            return Entity.GetFullName(".") + ':' + Expr;
         }
 
         /// <summary>
@@ -781,7 +781,7 @@ namespace NDjango.Admin
     /// </summary>
     public class MetaEntityAttrStore : MetaEntityAttrList
     {
-        private MetaEntity _entity = null;
+        private readonly MetaEntity _entity = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:EntityAttrStore"/> class.
@@ -796,7 +796,7 @@ namespace NDjango.Admin
         /// <summary>Gets the DataModel object this entity attribute belongs to</summary>
         /// <value>The model.</value>
         public MetaData Model {
-            get { return _entity != null ? _entity.Model : null; }
+            get { return _entity?.Model; }
         }
 
         /// <summary>

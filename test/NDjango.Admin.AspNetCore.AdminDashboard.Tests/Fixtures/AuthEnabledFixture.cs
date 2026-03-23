@@ -1,17 +1,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
-using Xunit;
-
+using Microsoft.Extensions.Hosting;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
 {
@@ -20,7 +17,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         private IHost _host;
         private readonly string _dbName;
 
-        private static string ConnectionStringTemplate =
+        private static readonly string ConnectionStringTemplate =
             TestConnectionHelper.ConnectionStringTemplate;
 
         public AuthEnabledFixture()

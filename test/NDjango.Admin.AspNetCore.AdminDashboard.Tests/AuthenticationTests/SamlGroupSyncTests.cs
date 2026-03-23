@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using Microsoft.EntityFrameworkCore;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage;
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.AuthenticationTests
 {

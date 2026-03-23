@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
-
-using NDjango.Admin.Services;
 using NDjango.Admin.AspNetCore.AdminDashboard.Routing;
 using NDjango.Admin.AspNetCore.AdminDashboard.Services;
 using NDjango.Admin.AspNetCore.AdminDashboard.ViewModels;
+using NDjango.Admin.Services;
 
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
@@ -146,7 +144,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var rows = new List<Dictionary<string, object>>();
             foreach (var row in dataset.Rows) {
                 var dict = new Dictionary<string, object>();
-                for (int i = 0; i < dataset.Cols.Count; i++) {
+                for (var i = 0; i < dataset.Cols.Count; i++) {
                     var col = dataset.Cols[i];
                     var attr = attrs.FirstOrDefault(a => a.Id == col.OrginAttrId);
                     if (attr != null)
@@ -244,7 +242,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             foreach (var attr in entity.Attributes) {
                 if (attr.Kind == EntityAttrKind.Lookup) {
                     var showOnForm = isEdit ? attr.ShowOnEdit : attr.ShowOnCreate;
-                    if (!showOnForm) continue;
+                    if (!showOnForm)
+                        continue;
 
                     var field = new FieldViewModel
                     {
@@ -268,7 +267,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 }
                 else {
                     var showOnForm = isEdit ? attr.ShowOnEdit : attr.ShowOnCreate;
-                    if (!showOnForm) continue;
+                    if (!showOnForm)
+                        continue;
 
                     var field = new FieldViewModel
                     {

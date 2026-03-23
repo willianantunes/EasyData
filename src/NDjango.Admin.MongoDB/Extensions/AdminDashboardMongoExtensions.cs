@@ -42,13 +42,11 @@ namespace NDjango.Admin.MongoDB
             services.AddSingleton<ISearchFilterFactory, MongoSearchFilterFactory>();
             services.AddSingleton<AuthBootstrapReadinessState>();
 
-            if (dashboardOptions.RequireAuthentication)
-            {
+            if (dashboardOptions.RequireAuthentication) {
                 _pendingMongoOptionsBuilder = mongoOptionsBuilder;
                 services.AddDataProtection();
 
-                services.AddScoped<IAdminAuthQueries>(sp =>
-                {
+                services.AddScoped<IAdminAuthQueries>(sp => {
                     var database = sp.GetRequiredService<IMongoDatabase>();
                     return new MongoAuthStorageQueries(database);
                 });
@@ -56,8 +54,7 @@ namespace NDjango.Admin.MongoDB
                 AdminDashboardApplicationBuilderExtensions.AuthManagerConfigurator =
                     ConfigureCompositeMongoManager;
 
-                if (!dashboardOptions.SkipStorageInitialization)
-                {
+                if (!dashboardOptions.SkipStorageInitialization) {
                     services.AddHostedService<MongoAuthBootstrapperHostedService>();
                 }
             }
@@ -84,8 +81,7 @@ namespace NDjango.Admin.MongoDB
             authMongoOptions.AddCollection<MongoAuthGroupPermission>(AuthCollectionNames.GroupPermissions);
             authMongoOptions.AddCollection<MongoAuthUserGroup>(AuthCollectionNames.UserGroups);
 
-            ndjangoAdminOptions.UseManager((services, opts) =>
-            {
+            ndjangoAdminOptions.UseManager((services, opts) => {
                 // Create user manager (for data access only, model loaded by composite)
                 var userManager = new NDjangoAdminManagerMongo(services, opts, userMongoOptions);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,7 +14,7 @@ namespace NDjango.Admin.EntityFrameworkCore
     /// </summary>
     public class DbContextMetaDataLoaderOptions
     {
-        private List<EntityFilter> _entityFilters = new List<EntityFilter>();
+        private readonly List<EntityFilter> _entityFilters = new List<EntityFilter>();
 
         /// <summary>
         /// Gets the list of entity filters
@@ -22,7 +22,7 @@ namespace NDjango.Admin.EntityFrameworkCore
         public IReadOnlyList<EntityFilter> EntityFilters => _entityFilters;
 
 
-        private List<PropertyFilter> _propertyFilters = new List<PropertyFilter>();
+        private readonly List<PropertyFilter> _propertyFilters = new List<PropertyFilter>();
 
         /// <summary>
         /// Gets the list of property filters.

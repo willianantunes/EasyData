@@ -1,17 +1,14 @@
-﻿using System;
+using System;
 using System.Data.Common;
-
-using Microsoft.Data.Sqlite;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.TestHost;
+using Korzh.DbUtils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Hosting;
 using NDjango.Admin.Services;
-using Korzh.DbUtils;
 
 namespace NDjango.Admin.AspNetCore.Tests
 {

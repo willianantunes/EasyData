@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -57,7 +57,7 @@ namespace NDjango.Admin
                 return null;
         }
 
-        private static HashSet<Type> _appliedTypes = new HashSet<Type>
+        private static readonly HashSet<Type> _appliedTypes = new HashSet<Type>
         {
             typeof(bool),
             typeof(sbyte),
@@ -77,12 +77,12 @@ namespace NDjango.Admin
                         return HandleOtherFormats(fmt, arg);
                     }
                     catch (FormatException e) {
-                        throw new FormatException(String.Format("The format of '{0}' is invalid.", fmt), e);
+                        throw new FormatException(string.Format("The format of '{0}' is invalid.", fmt), e);
                     }
                 }
 
                 if (arg is bool boolVal) {
-                    if (_values.TryGetValue((boolVal) ? 1 : 0, out var result))
+                    if (_values.TryGetValue(boolVal ? 1 : 0, out var result))
                         return result;
                 }
                 else {
@@ -104,7 +104,7 @@ namespace NDjango.Admin
             else if (arg != null)
                 return arg.ToString();
             else
-                return String.Empty;
+                return string.Empty;
         }
     }
 }

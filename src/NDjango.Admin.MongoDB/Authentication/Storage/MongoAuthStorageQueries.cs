@@ -30,7 +30,8 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
                 .Find(u => u.Username == username)
                 .FirstOrDefaultAsync(ct);
 
-            if (user == null) return null;
+            if (user == null)
+                return null;
 
             return (user.Id.ToString(), user.Username, user.Password, user.IsSuperuser, user.IsActive);
         }
@@ -93,15 +94,12 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
                 .Select(p => new MongoAuthPermission { Name = p.Name, Codename = p.Codename })
                 .ToList();
 
-            if (toInsert.Count > 0)
-            {
-                try
-                {
+            if (toInsert.Count > 0) {
+                try {
                     await collection.InsertManyAsync(toInsert,
                         new InsertManyOptions { IsOrdered = false }, ct);
                 }
-                catch (MongoBulkWriteException ex) when (ex.WriteErrors.All(e => e.Category == ServerErrorCategory.DuplicateKey))
-                {
+                catch (MongoBulkWriteException ex) when (ex.WriteErrors.All(e => e.Category == ServerErrorCategory.DuplicateKey)) {
                     // Concurrent bootstrap seeded some permissions — safe to ignore
                 }
             }
@@ -111,8 +109,7 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
         {
             var collection = _database.GetCollection<MongoAuthUser>(AuthCollectionNames.Users);
 
-            try
-            {
+            try {
                 await collection.InsertOneAsync(new MongoAuthUser
                 {
                     Username = "admin",
@@ -122,8 +119,7 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
                     DateJoined = DateTime.UtcNow,
                 }, cancellationToken: ct);
             }
-            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
-            {
+            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey) {
                 // Admin user already exists — safe to ignore
             }
         }
@@ -135,8 +131,7 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
                 .Find(u => u.Username == username)
                 .FirstOrDefaultAsync(ct);
 
-            if (existing != null)
-            {
+            if (existing != null) {
                 await collection.UpdateOneAsync(
                     u => u.Id == existing.Id,
                     Builders<MongoAuthUser>.Update.Set(u => u.LastLogin, DateTime.UtcNow),
@@ -154,13 +149,11 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
                 LastLogin = DateTime.UtcNow,
             };
 
-            try
-            {
+            try {
                 await collection.InsertOneAsync(newUser, cancellationToken: ct);
                 return newUser.Id.ToString();
             }
-            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
-            {
+            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey) {
                 // Concurrent insert won — fetch the existing user
                 var inserted = await collection.Find(u => u.Username == username).FirstOrDefaultAsync(ct);
                 return inserted.Id.ToString();
@@ -175,13 +168,11 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
 
             using var session = await _database.Client.StartSessionAsync(cancellationToken: ct);
             session.StartTransaction();
-            try
-            {
+            try {
                 // Remove all existing memberships
                 await userGroupsCol.DeleteManyAsync(session, ug => ug.UserId == objectId, cancellationToken: ct);
 
-                if (samlGroupIds != null && samlGroupIds.Count > 0)
-                {
+                if (samlGroupIds != null && samlGroupIds.Count > 0) {
                     // Find matching groups by name
                     var groupsCol = _database.GetCollection<MongoAuthGroup>(AuthCollectionNames.Groups);
                     var trimmedIds = samlGroupIds.Select(g => g.Trim()).ToList();
@@ -202,8 +193,7 @@ namespace NDjango.Admin.MongoDB.Authentication.Storage
 
                 await session.CommitTransactionAsync(ct);
             }
-            catch
-            {
+            catch {
                 await session.AbortTransactionAsync(ct);
                 throw;
             }

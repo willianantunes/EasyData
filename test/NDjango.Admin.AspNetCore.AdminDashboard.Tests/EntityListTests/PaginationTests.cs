@@ -2,12 +2,9 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityListTests
 {
@@ -28,7 +25,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityListTests
         private static int CountTableBodyRows(string html)
         {
             var tbodyMatch = Regex.Match(html, @"<tbody>(.*?)</tbody>", RegexOptions.Singleline);
-            if (!tbodyMatch.Success) return 0;
+            if (!tbodyMatch.Success)
+                return 0;
             return Regex.Matches(tbodyMatch.Groups[1].Value, @"<tr>").Count;
         }
 

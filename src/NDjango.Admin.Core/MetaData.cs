@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -82,7 +82,7 @@ namespace NDjango.Admin
         /// <summary>
         /// Read-only constant that represent the latest format version of data model definition JSON files
         /// </summary>
-        static public readonly int LastJsonFormatVersion = 4;
+        public static readonly int LastJsonFormatVersion = 4;
 
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace NDjango.Admin
         /// <returns>A duplicate of original DataModel object</returns>
         public MetaData Clone()
         {
-            var model = Activator.CreateInstance(this.GetType()) as MetaData;
+            var model = Activator.CreateInstance(GetType()) as MetaData;
             using (MemoryStream buffer = new MemoryStream(2000000)) {
                 SaveToJsonStream(buffer);
                 buffer.Position = 0;
@@ -383,7 +383,7 @@ namespace NDjango.Admin
             entity.Attributes.SortByCaption();
         }
 
-        MetaEntity nullEntity = null;
+        private readonly MetaEntity nullEntity = null;
 
         /// <summary>
         /// Gets a value indicating whether this model is empty (doesn't contain any entity or attribute) or not.
@@ -424,11 +424,7 @@ namespace NDjango.Admin
         /// <returns></returns>
         public MetaEntityAttr FindEntityAttr(string attrDef)
         {
-            var attr = EntityRoot.FindAttributeById(attrDef);
-            if (attr == null)
-                attr = EntityRoot.FindAttributeByExpression(attrDef);
-            if (attr == null)
-                attr = EntityRoot.FindAttributeByCaption(attrDef);
+            var attr = (EntityRoot.FindAttributeById(attrDef) ?? EntityRoot.FindAttributeByExpression(attrDef)) ?? EntityRoot.FindAttributeByCaption(attrDef);
 
             return attr;
         }
@@ -496,14 +492,14 @@ namespace NDjango.Admin
         /// <param name="attr">The EntityAttr object.</param>
         public virtual void AssignEntityAttrID(MetaEntityAttr attr)
         {
-            string id = "";
+            var id = "";
             if (attr.IsVirtual) {
                 id = "VEA_" + GetNextEntityAttrId().ToString();
             }
             else {
-                string baseID = attr.Expr.ToIdentifier();
+                var baseID = attr.Expr.ToIdentifier();
                 id = baseID;
-                int N = 1;
+                var N = 1;
                 while (EntityRoot.FindAttributeById(id) != null) {
                     N++;
                     id = baseID + N.ToString();
@@ -995,7 +991,7 @@ namespace NDjango.Admin
 
             while (await reader.ReadAsync(ct)) {
                 if (reader.TokenType == JsonToken.PropertyName) {
-                    string propName = reader.Value.ToString();
+                    var propName = reader.Value.ToString();
                     await ReadOneModelPropFromJsonAsync(reader, propName, ct).ConfigureAwait(false);
                 }
                 else if (reader.TokenType == JsonToken.EndObject) {
@@ -1057,7 +1053,7 @@ namespace NDjango.Admin
             }
         }
 
-        protected async virtual Task ReadDisplayFormatsFromJsonAsync(JsonReader reader, CancellationToken ct)
+        protected virtual async Task ReadDisplayFormatsFromJsonAsync(JsonReader reader, CancellationToken ct)
         {
             DisplayFormats.Clear();
             if (reader.TokenType != JsonToken.StartObject) {

@@ -1,7 +1,7 @@
-﻿using System.IO;
-using System.Threading.Tasks;
 using System.Globalization;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NDjango.Admin.Export
 {
@@ -13,14 +13,14 @@ namespace NDjango.Admin.Export
         /// <summary>
         /// Default settings of the exporter.
         /// </summary>
-        IDataExportSettings GetDefaultSettings(CultureInfo culture = null);
+        public IDataExportSettings GetDefaultSettings(CultureInfo culture = null);
 
         /// <summary>
         /// Exports the specified data to the stream.
         /// </summary>
         /// <param name="data">The fetched data.</param>
         /// <param name="stream">The stream.</param>
-        void Export(INDjangoAdminResultSet data, Stream stream);
+        public void Export(INDjangoAdminResultSet data, Stream stream);
 
         /// <summary>
         /// Exports the specified data to the stream with the specified formats.
@@ -28,7 +28,7 @@ namespace NDjango.Admin.Export
         /// <param name="data">The fetched data.</param>
         /// <param name="stream">The stream.</param>
         /// <param name="settings">Some exporting settings.</param>
-        void Export(INDjangoAdminResultSet data, Stream stream, IDataExportSettings settings);
+        public void Export(INDjangoAdminResultSet data, Stream stream, IDataExportSettings settings);
 
         /// <summary>
         /// Asynchronical version of <see cref="IDataExporter.Export(INDjangoAdminResultSet, Stream)"/> method.
@@ -37,7 +37,7 @@ namespace NDjango.Admin.Export
         /// <param name="stream">The stream.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>Task.</returns>
-        Task ExportAsync(INDjangoAdminResultSet data, Stream stream, CancellationToken ct = default);
+        public Task ExportAsync(INDjangoAdminResultSet data, Stream stream, CancellationToken ct = default);
 
         /// <summary>
         /// Asynchronical version of <see cref="IDataExporter.Export(INDjangoAdminResultSet,Stream, IDataExportSettings)" /> method.
@@ -47,18 +47,18 @@ namespace NDjango.Admin.Export
         /// <param name="settings">Some exporting settings.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>Task.</returns>
-        Task ExportAsync(INDjangoAdminResultSet data, Stream stream, IDataExportSettings settings, CancellationToken ct = default);
+        public Task ExportAsync(INDjangoAdminResultSet data, Stream stream, IDataExportSettings settings, CancellationToken ct = default);
 
         /// <summary>
         /// Gets the MIME content type of the exporting format.
         /// </summary>
         /// <returns>System.String.</returns>
-        string GetContentType();
+        public string GetContentType();
 
         /// <summary>
         /// Gets the preferred file extension by the exporting format.
         /// </summary>
         /// <returns>A string object that represents the file extension (without the dot)</returns>
-        string GetFileExtension();
+        public string GetFileExtension();
     }
 }

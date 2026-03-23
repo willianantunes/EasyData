@@ -2,12 +2,9 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityListTests
 {
@@ -191,7 +188,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityListTests
             {
                 var marker = "name=\"_selected_ids\" value=\"";
                 var pos = listHtml.IndexOf(marker, searchIdx);
-                if (pos < 0) break;
+                if (pos < 0)
+                    break;
                 var start = pos + marker.Length;
                 var end = listHtml.IndexOf("\"", start);
                 idList.Add(listHtml.Substring(start, end - start));

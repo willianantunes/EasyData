@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -126,9 +126,11 @@ namespace NDjango.Admin
         /// </value>
         public bool IsEmpty {
             get {
-                if (Attributes.Count != 0) return false;
-                foreach (MetaEntity subEntity in SubEntities) {
-                    if (!subEntity.IsEmpty) return false;
+                if (Attributes.Count != 0)
+                    return false;
+                foreach (var subEntity in SubEntities) {
+                    if (!subEntity.IsEmpty)
+                        return false;
                 }
                 return true;
             }
@@ -166,11 +168,11 @@ namespace NDjango.Admin
         /// <summary>
         /// Called when the entity is inserted into model.
         /// </summary>
-        internal protected virtual void OnModelAssignment()
+        protected internal virtual void OnModelAssignment()
         {
-            foreach (MetaEntity ent in SubEntities)
+            foreach (var ent in SubEntities)
                 ent.OnModelAssignment();
-            foreach (MetaEntityAttr attr in Attributes)
+            foreach (var attr in Attributes)
                 attr.OnModelAssignment();
         }
 
@@ -181,9 +183,9 @@ namespace NDjango.Admin
         /// <value>The full name.</value>
         public string GetFullName(string separator)
         {
-            string parentName = Parent?.GetFullName(separator);
-            string entityName = Name ?? "";
-            string result = string.IsNullOrEmpty(parentName) ? Name : parentName + separator + entityName;
+            var parentName = Parent?.GetFullName(separator);
+            var entityName = Name ?? "";
+            var result = string.IsNullOrEmpty(parentName) ? Name : parentName + separator + entityName;
 
             return result;
         }
@@ -208,11 +210,13 @@ namespace NDjango.Admin
         /// <returns>An Attribute object.</returns>
         public MetaEntityAttr GetFirstLeaf()
         {
-            if (Attributes.Count > 0) return Attributes[0];
+            if (Attributes.Count > 0)
+                return Attributes[0];
             MetaEntityAttr result;
-            foreach (MetaEntity subEntity in SubEntities) {
+            foreach (var subEntity in SubEntities) {
                 result = subEntity.GetFirstLeaf();
-                if (result != null) return result;
+                if (result != null)
+                    return result;
             }
             return null;
         }
@@ -278,7 +282,7 @@ namespace NDjango.Admin
         public MetaEntity FindSubEntity(string entityName)
         {
             MetaEntity result = null;
-            foreach (MetaEntity subEntity in SubEntities) {
+            foreach (var subEntity in SubEntities) {
                 if (string.Equals(subEntity.Name, entityName,
                     StringComparison.InvariantCultureIgnoreCase)) {
                     result = subEntity;
@@ -302,13 +306,14 @@ namespace NDjango.Admin
         /// <returns>MetaEntityAttr.</returns>
         public MetaEntity FindSubEntity(Func<MetaEntity, bool> predicate)
         {
-            foreach (MetaEntity subEntity in SubEntities) {
+            foreach (var subEntity in SubEntities) {
                 if (predicate(subEntity)) {
                     return subEntity;
                 }
 
                 var result = subEntity.FindSubEntity(predicate);
-                if (result != null) return result;
+                if (result != null)
+                    return result;
             }
 
             return null;
@@ -321,9 +326,9 @@ namespace NDjango.Admin
         /// <returns>The amount of deleted entities</returns>
         public int DeleteSubEntities(params string[] namesToDelete)
         {
-            int count = 0;
+            var count = 0;
 
-            for (int i = SubEntities.Count - 1; i >= 0; i--) {
+            for (var i = SubEntities.Count - 1; i >= 0; i--) {
                 if (namesToDelete.Contains(SubEntities[i].Name)) {
                     SubEntities.RemoveAt(i);
                     count++;
@@ -339,9 +344,9 @@ namespace NDjango.Admin
         /// <returns>The amount of deleted entities</returns>
         public virtual int DeleteSubEntities(Func<MetaEntity, bool> entityToDeleteFilter)
         {
-            int count = 0;
+            var count = 0;
 
-            for (int i = SubEntities.Count - 1; i >= 0; i--) {
+            for (var i = SubEntities.Count - 1; i >= 0; i--) {
                 if (entityToDeleteFilter.Invoke(SubEntities[i])) {
                     SubEntities.RemoveAt(i);
                     count++;
@@ -365,13 +370,13 @@ namespace NDjango.Admin
             }
 
             //run through all sub-entities
-            foreach (MetaEntity ent in this.SubEntities) {
+            foreach (var ent in SubEntities) {
                 ent.Scan(entityHandler, attrHandler, true);
             }
 
             if (processRoot && attrHandler != null) {
                 //run through all attributes of this entity
-                foreach (MetaEntityAttr attr in this.Attributes) {
+                foreach (var attr in Attributes) {
                     attrHandler(attr);
                 }
             }
@@ -551,7 +556,7 @@ namespace NDjango.Admin
     /// </summary>
     public class MetaEntityStore : MetaEntityList
     {
-        private MetaEntity _parentEntity = null;
+        private readonly MetaEntity _parentEntity = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:EntityStore"/> class.

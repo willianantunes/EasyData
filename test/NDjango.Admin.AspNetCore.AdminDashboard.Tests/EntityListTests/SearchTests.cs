@@ -1,11 +1,8 @@
 using System.Net.Http;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.TestHost;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.EntityListTests
 {

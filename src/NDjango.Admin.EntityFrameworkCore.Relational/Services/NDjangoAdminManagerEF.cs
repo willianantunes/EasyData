@@ -1,16 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Newtonsoft.Json.Linq;
-
 using NDjango.Admin.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 namespace NDjango.Admin.Services
 {
     public class NDjangoAdminManagerEF<TDbContext> : NDjangoAdminManager where TDbContext : DbContext
@@ -102,9 +100,7 @@ namespace NDjango.Admin.Services
             foreach (var record in records) {
                 var values = attrs.Select(attr => {
                     var prop = attrIdProps[attr.Id];
-                    return (object)(prop.PropertyInfo != null
-                        ? prop.PropertyInfo.GetValue(record)
-                        : null);
+                    return (object)(prop.PropertyInfo?.GetValue(record));
                 }).ToList();
                 result.Rows.Add(new NDjangoAdminRow(values));
             }
@@ -133,11 +129,8 @@ namespace NDjango.Admin.Services
 
             var entityType = GetCurrentEntityType(DbContext, sourceId);
             var keys = GetKeys(entityType, recordKeys);
-            var record = FindRecord(DbContext, entityType.ClrType, keys.Values);
-            if (record == null) {
-                throw new RecordNotFoundException(sourceId,
+            var record = FindRecord(DbContext, entityType.ClrType, keys.Values) ?? throw new RecordNotFoundException(sourceId,
                     $"({string.Join(";", keys.Select(kv => $"{kv.Key.Name}: {kv.Value}"))})");
-            }
 
             return Task.FromResult(record);
         }
@@ -166,11 +159,8 @@ namespace NDjango.Admin.Services
             var entityType = GetCurrentEntityType(DbContext, sourceId);
 
             var keys = GetKeys(entityType, props);
-            var record = FindRecord(DbContext, entityType.ClrType, keys.Values);
-            if (record == null) {
-                throw new RecordNotFoundException(sourceId,
+            var record = FindRecord(DbContext, entityType.ClrType, keys.Values) ?? throw new RecordNotFoundException(sourceId,
                     $"({string.Join(";", keys.Select(kv => $"{kv.Key.Name}: {kv.Value}"))})");
-            }
 
             MapProperties(record, props);
 
@@ -187,11 +177,8 @@ namespace NDjango.Admin.Services
             var entityType = GetCurrentEntityType(DbContext, sourceId);
 
             var keys = GetKeys(entityType, props);
-            var record = FindRecord(DbContext, entityType.ClrType, keys.Values);
-            if (record == null) {
-                throw new RecordNotFoundException(sourceId,
+            var record = FindRecord(DbContext, entityType.ClrType, keys.Values) ?? throw new RecordNotFoundException(sourceId,
                     $"({string.Join(";", keys.Select(kv => $"{kv.Key.Name}: {kv.Value}"))})");
-            }
 
             DbContext.Remove(record);
             await DbContext.SaveChangesAsync(ct);
@@ -240,11 +227,7 @@ namespace NDjango.Admin.Services
         private static IEntityType GetCurrentEntityType(DbContext dbContext, string sourceId)
         {
             var entityType = dbContext.Model.GetEntityTypes()
-                .FirstOrDefault(entType => Utils.GetEntityName(entType) == sourceId);
-
-            if (entityType == null) {
-                throw new ContainerNotFoundException(sourceId);
-            }
+                .FirstOrDefault(entType => Utils.GetEntityName(entType) == sourceId) ?? throw new ContainerNotFoundException(sourceId);
 
             return entityType;
         }
@@ -253,9 +236,7 @@ namespace NDjango.Admin.Services
         {
             foreach (var entProp in props) {
                 var prop = entity.GetType().GetProperty(entProp.Key);
-                if (prop != null) {
-                    prop.SetValue(entity, entProp.Value.ToObject(prop.PropertyType));
-                }
+                prop?.SetValue(entity, entProp.Value.ToObject(prop.PropertyType));
             }
         }
 

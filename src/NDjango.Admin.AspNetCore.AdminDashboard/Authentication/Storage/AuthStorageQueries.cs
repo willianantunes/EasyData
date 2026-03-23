@@ -157,7 +157,7 @@ WHERE ug.user_id = @userId";
                 using var cmd = conn.CreateCommand();
 
                 var paramNames = new List<string>();
-                for (int i = 0; i < samlGroupIds.Count; i++) {
+                for (var i = 0; i < samlGroupIds.Count; i++) {
                     var paramName = $"@g{i}";
                     paramNames.Add(paramName);
                     var param = cmd.CreateParameter();

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using NDjango.Admin.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using NDjango.Admin.EntityFrameworkCore;
 
 namespace NDjango.Admin.Services
 {

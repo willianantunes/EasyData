@@ -40,25 +40,21 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             // Configure/EnsureCreated) to start before we attempt database access.
             await Task.Yield();
 
-            for (int attempt = 1; attempt <= MaxRetries; attempt++)
-            {
+            for (var attempt = 1; attempt <= MaxRetries; attempt++) {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                try
-                {
+                try {
                     await BootstrapAsync(stoppingToken);
                     _readinessState.SetReady();
                     _logger.LogInformation("Auth bootstrap completed successfully.");
                     return;
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) {
                     _readinessState.SetFailed();
                     _logger.LogWarning("Auth bootstrap was cancelled during shutdown.");
                     return;
                 }
-                catch (Exception ex) when (attempt < MaxRetries)
-                {
+                catch (Exception ex) when (attempt < MaxRetries) {
                     var delay = InitialDelay * Math.Pow(2, attempt - 1);
                     if (delay > TimeSpan.FromSeconds(30))
                         delay = TimeSpan.FromSeconds(30);
@@ -69,8 +65,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
 
                     await Task.Delay(delay, stoppingToken);
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     _readinessState.SetFailed();
                     _logger.LogError(ex, "Auth bootstrap failed after {MaxRetries} attempts. The admin dashboard may not function correctly.", MaxRetries);
                     return;
@@ -102,8 +97,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
             await seeder.SeedPermissionsAsync(model, stoppingToken);
 
             // Create default admin user
-            if (_dashboardOptions.CreateDefaultAdminUser)
-            {
+            if (_dashboardOptions.CreateDefaultAdminUser) {
                 await queries.CreateDefaultAdminUserAsync(
                     _dashboardOptions.DefaultAdminPassword, stoppingToken);
             }

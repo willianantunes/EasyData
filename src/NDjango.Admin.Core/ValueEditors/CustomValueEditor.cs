@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,7 +39,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption => "Custom editor";
+        public static new string STypeCaption => "Custom editor";
 
         /// <summary>
         /// Gets the XML definition of value editor.

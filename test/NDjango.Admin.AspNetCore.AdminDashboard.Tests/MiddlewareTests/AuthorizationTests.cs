@@ -2,18 +2,15 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using Xunit;
-
 using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
 using NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures;
+using Xunit;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.MiddlewareTests
 {
@@ -21,7 +18,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.MiddlewareTests
     {
         private readonly string _dbName;
 
-        private static string ConnectionStringTemplate =
+        private static readonly string ConnectionStringTemplate =
             TestConnectionHelper.ConnectionStringTemplate;
 
         public AuthorizationTests()

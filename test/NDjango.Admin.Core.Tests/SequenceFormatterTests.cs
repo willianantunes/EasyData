@@ -146,7 +146,7 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var format = "SZero=0|One=1|Ten=10";
             var formatter = new SequenceFormatter(format);
-            long input = 10L;
+            var input = 10L;
 
             // Act
             var result = formatter.Format(format, input, formatter);
@@ -221,7 +221,7 @@ namespace NDjango.Admin.Core.Tests
             // Arrange
             var format = "SZero=0|One=1";
             var formatter = new SequenceFormatter(format);
-            int input = 99;
+            var input = 99;
 
             // Act
             var result = formatter.Format(format, input, formatter);
@@ -282,7 +282,7 @@ namespace NDjango.Admin.Core.Tests
             var culture = new CultureInfo("de-DE");
             var format = "SNo|Yes";
             var formatter = new SequenceFormatter(format, culture);
-            double value = 1234.56;
+            var value = 1234.56;
 
             // Act
             var result = formatter.Format("N2", value, formatter);

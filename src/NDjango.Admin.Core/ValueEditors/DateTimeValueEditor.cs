@@ -1,9 +1,8 @@
-﻿using System;
+using System;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Xml;
-
 using Newtonsoft.Json;
 
 namespace NDjango.Admin
@@ -18,7 +17,7 @@ namespace NDjango.Admin
         /// <summary>
         /// Gets the list of default values
         /// </summary>
-        ConstValueList DefaultValues {
+        public ConstValueList DefaultValues {
             get;
         }
     }
@@ -42,14 +41,11 @@ namespace NDjango.Admin
             }
         }
 
-        private ConstValueList _defaultValues = new ConstValueList();
         /// <summary>
         /// Gets the list of default values
         /// </summary>
         /// <value></value>
-		public ConstValueList DefaultValues {
-            get { return _defaultValues; }
-        }
+        public ConstValueList DefaultValues { get; } = new ConstValueList();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DateTimeValueEditor"/> class.
@@ -66,8 +62,8 @@ namespace NDjango.Admin
         /// <param name="subType">Sub-Type of the editor.</param>
         public DateTimeValueEditor(string id, DataType subType) : this()
         {
-            this.Id = id;
-            this.SubType = subType;
+            Id = id;
+            SubType = subType;
         }
 
 
@@ -76,7 +72,7 @@ namespace NDjango.Admin
         /// Gets the full name of the value editor class type.
         /// </summary>
         /// <value></value>
-        new public static string STypeCaption {
+        public static new string STypeCaption {
             get { return "Date time value editor"; }
         }
 
@@ -174,16 +170,16 @@ namespace NDjango.Admin
         /// <value>The default text.</value>
         public override string DefaultText { get; set; } = "";
 
-        private static Regex _macroRegex = new Regex("\\$\\{\\{(.*)\\}\\}");
+        private static readonly Regex _macroRegex = new Regex("\\$\\{\\{(.*)\\}\\}");
 
         private void ResetDefaultText()
         {
-            MatchCollection macroMatches = _macroRegex.Matches(_defaultValue);
+            var macroMatches = _macroRegex.Matches(_defaultValue);
             if (macroMatches.Count > 0) {
                 DefaultText = macroMatches[0].Groups[1].Value;
             }
             else if (_defaultValue != "") {
-                DateTime dt = DataUtils.InternalFormatToDateTime(_defaultValue, SubType);
+                var dt = DataUtils.InternalFormatToDateTime(_defaultValue, SubType);
                 DefaultText = DataUtils.DateTimeToUserFormat(dt, SubType);
             }
             else {

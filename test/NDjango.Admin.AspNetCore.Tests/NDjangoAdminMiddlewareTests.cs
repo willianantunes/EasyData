@@ -1,18 +1,14 @@
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.IO;
-using System.Collections.Generic;
-
-
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using Xunit;
 
 namespace NDjango.Admin.AspNetCore.Tests

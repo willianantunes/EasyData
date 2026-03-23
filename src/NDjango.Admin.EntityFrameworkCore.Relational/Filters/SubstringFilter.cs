@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,8 +66,7 @@ namespace NDjango.Admin.Services
             return new FullTextSearchOptions
             {
                 Filter = (prop) => {
-                    if (searchFields != null && searchFields.Count > 0)
-                    {
+                    if (searchFields != null && searchFields.Count > 0) {
                         return searchFields.Contains(prop.Name);
                     }
 

@@ -44,4 +44,5 @@ jobs:
         run: |
           set -e
           docker compose up --detach --wait --wait-timeout 120 db
+          docker compose up --detach --wait --wait-timeout 120 --remove-orphans mongoClusterSetup
           ./scripts/start-sonarcloud.sh

@@ -1,0 +1,670 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+using NDjango.Admin.MongoDB;
+
+using Xunit;
+
+namespace NDjango.Admin.MongoDB.Tests
+{
+    #region Test document classes
+
+    public class SimpleDocument
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+
+    public class DocumentWithBsonId
+    {
+        [BsonId]
+        public string CustomKey { get; set; }
+        public string Title { get; set; }
+    }
+
+    public class DocumentWithBsonIgnore
+    {
+        public ObjectId Id { get; set; }
+        public string Visible { get; set; }
+        [BsonIgnore]
+        public string Ignored { get; set; }
+    }
+
+    public class DocumentWithBsonElement
+    {
+        public ObjectId Id { get; set; }
+        [BsonElement("custom_name")]
+        public string CustomField { get; set; }
+        public string RegularField { get; set; }
+    }
+
+    public class DocumentWithCollections
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public List<string> Tags { get; set; }
+        public int[] Scores { get; set; }
+    }
+
+    public class DocumentWithGuid
+    {
+        public Guid Id { get; set; }
+        public string Label { get; set; }
+    }
+
+    public enum DocumentStatus
+    {
+        Active = 0,
+        Inactive = 1,
+        Archived = 2
+    }
+
+    public class DocumentWithEnum
+    {
+        public ObjectId Id { get; set; }
+        public DocumentStatus Status { get; set; }
+    }
+
+    public class DocumentWithAllTypes
+    {
+        public ObjectId Id { get; set; }
+        public string StringProp { get; set; }
+        public int IntProp { get; set; }
+        public long LongProp { get; set; }
+        public decimal DecimalProp { get; set; }
+        public bool BoolProp { get; set; }
+        public DateTime DateTimeProp { get; set; }
+        public double DoubleProp { get; set; }
+        public float FloatProp { get; set; }
+        public short ShortProp { get; set; }
+        public byte ByteProp { get; set; }
+        public Guid GuidProp { get; set; }
+    }
+
+    public class DocumentWithDisplayAttribute
+    {
+        public ObjectId Id { get; set; }
+        [Display(Name = "Full Name", Description = "The full name of the person")]
+        public string Name { get; set; }
+    }
+
+    public class DocumentWithNullableObjectId
+    {
+        public ObjectId? Id { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class NestedObject
+    {
+        public string Street { get; set; }
+        public string City { get; set; }
+    }
+
+    public class DocumentWithComplexType
+    {
+        public ObjectId Id { get; set; }
+        public NestedObject Address { get; set; }
+    }
+
+    public class DocumentWithConventionId
+    {
+        public string Id { get; set; }
+        public string Data { get; set; }
+    }
+
+    public class DocumentWithNullableEnum
+    {
+        public ObjectId Id { get; set; }
+        public DocumentStatus? Status { get; set; }
+    }
+
+    public class DocumentWithSearchFields : IAdminSettings<DocumentWithSearchFields>
+    {
+        public ObjectId Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Internal { get; set; }
+        public PropertyList<DocumentWithSearchFields> SearchFields =>
+            new(x => x.Name, x => x.Description);
+    }
+
+    #endregion
+
+    public class MongoMetaDataLoaderTests
+    {
+        [Fact]
+        public void SimpleDocument_ProducesCorrectMetaEntity()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "simple_docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.Equal("SimpleDocument", entity.Id);
+            Assert.Equal("Simple Document", entity.Name);
+            Assert.Equal(typeof(SimpleDocument), entity.ClrType);
+            Assert.False(entity.IsEditable);
+            Assert.Equal("simple_docs", entity.DbSetName);
+        }
+
+        [Fact]
+        public void ObjectIdProperty_IsMappedAsStringDataType()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.PropName == "Id");
+
+            Assert.Equal(DataType.String, idAttr.DataType);
+            Assert.True(idAttr.IsPrimaryKey);
+        }
+
+        [Fact]
+        public void BsonIgnore_PropertiesAreSkipped()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithBsonIgnore), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.DoesNotContain(entity.Attributes, a => a.PropName == "Ignored");
+            Assert.Contains(entity.Attributes, a => a.PropName == "Visible");
+        }
+
+        [Fact]
+        public void BsonId_OnNonIdProperty_IsDetectedAsPrimaryKey()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithBsonId), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var pkAttr = entity.Attributes.First(a => a.PropName == "CustomKey");
+
+            Assert.True(pkAttr.IsPrimaryKey);
+            Assert.Equal(DataType.String, pkAttr.DataType);
+        }
+
+        [Fact]
+        public void BsonElement_SetsExprCorrectly()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithBsonElement), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var customAttr = entity.Attributes.First(a => a.PropName == "CustomField");
+            var regularAttr = entity.Attributes.First(a => a.PropName == "RegularField");
+
+            Assert.Equal("custom_name", customAttr.Expr);
+            Assert.Equal("RegularField", regularAttr.Expr);
+        }
+
+        [Fact]
+        public void CollectionTypes_AreIncludedAsStringDataType()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithCollections), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var tagsAttr = entity.Attributes.First(a => a.PropName == "Tags");
+            var scoresAttr = entity.Attributes.First(a => a.PropName == "Scores");
+
+            Assert.Equal(DataType.String, tagsAttr.DataType);
+            Assert.Equal(DataType.String, scoresAttr.DataType);
+        }
+
+        [Fact]
+        public void AllEntities_HaveIsEditableFalse()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.False(entity.IsEditable);
+        }
+
+        [Fact]
+        public void AllAttributes_HaveIsEditableFalse()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            foreach (var attr in entity.Attributes) {
+                Assert.False(attr.IsEditable);
+            }
+        }
+
+        [Fact]
+        public void AllAttributes_HaveShowOnCreateFalse_AndShowOnEditTrue()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            foreach (var attr in entity.Attributes) {
+                Assert.False(attr.ShowOnCreate);
+                Assert.True(attr.ShowOnEdit);
+            }
+        }
+
+        [Fact]
+        public void HidePrimaryKeys_HidesPkFromView()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = true };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.IsPrimaryKey);
+            Assert.False(idAttr.ShowOnView);
+        }
+
+        [Fact]
+        public void HidePrimaryKeys_False_ShowsPkInView()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.IsPrimaryKey);
+            Assert.True(idAttr.ShowOnView);
+        }
+
+        [Fact]
+        public void PropertyFilters_ExcludeMatchingProperties()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+            options.AddPropertyFilter(p => p.Name != "Age");
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.DoesNotContain(entity.Attributes, a => a.PropName == "Age");
+            Assert.Contains(entity.Attributes, a => a.PropName == "Name");
+        }
+
+        [Fact]
+        public void EntityFilters_ExcludeMatchingEntities()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs"),
+                new MongoCollectionDescriptor(typeof(DocumentWithGuid), "guids")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+            options.AddEntityFilter(t => t != typeof(SimpleDocument));
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            Assert.Single(model.EntityRoot.SubEntities);
+            Assert.Equal(typeof(DocumentWithGuid), model.EntityRoot.SubEntities[0].ClrType);
+        }
+
+        [Fact]
+        public void GuidProperty_IsSupportedAsGuidDataType()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithGuid), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.PropName == "Id");
+
+            Assert.Equal(DataType.Guid, idAttr.DataType);
+            Assert.True(idAttr.IsPrimaryKey);
+        }
+
+        [Fact]
+        public void EnumProperty_IsSupported()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithEnum), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var statusAttr = entity.Attributes.First(a => a.PropName == "Status");
+
+            Assert.NotNull(statusAttr.DefaultEditor);
+            Assert.Contains("Active", statusAttr.DisplayFormat);
+        }
+
+        [Fact]
+        public void NullableEnum_IsSupported()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithNullableEnum), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var statusAttr = entity.Attributes.First(a => a.PropName == "Status");
+
+            Assert.NotNull(statusAttr.DefaultEditor);
+        }
+
+        [Fact]
+        public void AllNumericAndCommonTypes_AreMapped()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithAllTypes), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+
+            Assert.Equal(DataType.String, entity.Attributes.First(a => a.PropName == "Id").DataType);
+            Assert.Equal(DataType.String, entity.Attributes.First(a => a.PropName == "StringProp").DataType);
+            Assert.Equal(DataType.Int32, entity.Attributes.First(a => a.PropName == "IntProp").DataType);
+            Assert.Equal(DataType.Int64, entity.Attributes.First(a => a.PropName == "LongProp").DataType);
+            Assert.Equal(DataType.Currency, entity.Attributes.First(a => a.PropName == "DecimalProp").DataType);
+            Assert.Equal(DataType.Bool, entity.Attributes.First(a => a.PropName == "BoolProp").DataType);
+            Assert.Equal(DataType.DateTime, entity.Attributes.First(a => a.PropName == "DateTimeProp").DataType);
+            Assert.Equal(DataType.Float, entity.Attributes.First(a => a.PropName == "DoubleProp").DataType);
+            Assert.Equal(DataType.Float, entity.Attributes.First(a => a.PropName == "FloatProp").DataType);
+            Assert.Equal(DataType.Word, entity.Attributes.First(a => a.PropName == "ShortProp").DataType);
+            Assert.Equal(DataType.Byte, entity.Attributes.First(a => a.PropName == "ByteProp").DataType);
+            Assert.Equal(DataType.Guid, entity.Attributes.First(a => a.PropName == "GuidProp").DataType);
+        }
+
+        [Fact]
+        public void DisplayAttribute_SetsCaption()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithDisplayAttribute), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var nameAttr = entity.Attributes.First(a => a.PropName == "Name");
+
+            Assert.Equal("Full Name", nameAttr.Caption);
+            Assert.Equal("The full name of the person", nameAttr.Description);
+        }
+
+        [Fact]
+        public void NullableObjectId_IsMappedAsString()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithNullableObjectId), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.PropName == "Id");
+
+            Assert.Equal(DataType.String, idAttr.DataType);
+            Assert.True(idAttr.IsPrimaryKey);
+        }
+
+        [Fact]
+        public void ComplexType_IsMappedAsStringDataType()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithComplexType), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var addressAttr = entity.Attributes.First(a => a.PropName == "Address");
+
+            Assert.Equal(DataType.String, addressAttr.DataType);
+        }
+
+        [Fact]
+        public void ConventionId_PropertyNamedId_IsDetectedAsPk()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithConventionId), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var idAttr = entity.Attributes.First(a => a.PropName == "Id");
+
+            Assert.True(idAttr.IsPrimaryKey);
+        }
+
+        [Fact]
+        public void MultipleCollections_AllAreLoaded()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "simple"),
+                new MongoCollectionDescriptor(typeof(DocumentWithGuid), "guids")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            Assert.Equal(2, model.EntityRoot.SubEntities.Count);
+        }
+
+        [Fact]
+        public void EntityNamePlural_IsSetCorrectly()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.Equal("Simple Documents", entity.NamePlural);
+        }
+
+        [Fact]
+        public void IAdminSettings_SearchFields_AreDetected()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(DocumentWithSearchFields), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            Assert.NotNull(entity.SearchFields);
+            Assert.Equal(2, entity.SearchFields.Count);
+            Assert.Contains("Name", entity.SearchFields);
+            Assert.Contains("Description", entity.SearchFields);
+        }
+
+        [Fact]
+        public void NonVisibleAttributes_HaveShowOnViewTrue()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var nonPkAttrs = entity.Attributes.Where(a => !a.IsPrimaryKey);
+            foreach (var attr in nonPkAttrs) {
+                Assert.True(attr.ShowOnView);
+            }
+        }
+
+        [Fact]
+        public void AttributeId_ComposedCorrectly()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "docs")
+            };
+            var options = new MongoMetaDataLoaderOptions { HidePrimaryKeys = false };
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            var entity = model.EntityRoot.SubEntities.Single();
+            var nameAttr = entity.Attributes.First(a => a.PropName == "Name");
+
+            Assert.Equal("SimpleDocument.Name", nameAttr.Id);
+        }
+
+        [Fact]
+        public void SkipOption_ExcludesDocumentType()
+        {
+            var model = new MetaData();
+            var collections = new List<MongoCollectionDescriptor>
+            {
+                new MongoCollectionDescriptor(typeof(SimpleDocument), "simple"),
+                new MongoCollectionDescriptor(typeof(DocumentWithGuid), "guids")
+            };
+            var options = new MongoMetaDataLoaderOptions();
+            options.Skip<SimpleDocument>();
+
+            var loader = new MongoMetaDataLoader(model, collections, options);
+            loader.LoadFromCollections();
+
+            Assert.Single(model.EntityRoot.SubEntities);
+            Assert.Equal(typeof(DocumentWithGuid), model.EntityRoot.SubEntities[0].ClrType);
+        }
+    }
+}

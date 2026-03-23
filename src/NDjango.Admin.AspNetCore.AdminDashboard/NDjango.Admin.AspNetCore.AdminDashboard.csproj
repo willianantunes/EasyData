@@ -1,9 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <RootNamespace>NDjango.Admin.AspNetCore.AdminDashboard</RootNamespace>
     <Description>Admin dashboard for NDjango.Admin library. Provides a Django-admin-style CRUD interface for EF Core DbContext models.</Description>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,18 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetSaml" Version="2.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NDjango.Admin.Core\NDjango.Admin.Core.csproj" />
-    <ProjectReference Include="..\NDjango.Admin.AspNetCore\NDjango.Admin.AspNetCore.csproj" />
+    <ProjectReference Include="..\NDjango.Admin.AspNetCore.AdminDashboard.Core\NDjango.Admin.AspNetCore.AdminDashboard.Core.csproj" />
     <ProjectReference Include="..\NDjango.Admin.EntityFrameworkCore.Relational\NDjango.Admin.EntityFrameworkCore.Relational.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="wwwroot\**\*" />
   </ItemGroup>
 
 </Project>

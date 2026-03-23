@@ -93,10 +93,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
                 dashboardContext.AuthenticatedUserId = authResult.Value.UserId;
                 dashboardContext.AuthenticatedUsername = authResult.Value.Username;
 
-                var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-                if (authDbContext != null) {
-                    var queries = new AuthStorageQueries(authDbContext);
-                    var user = await queries.GetUserByUsernameAsync(authResult.Value.Username, httpContext.RequestAborted);
+                var authQueries = httpContext.RequestServices.GetService(typeof(IAdminAuthQueries)) as IAdminAuthQueries;
+                if (authQueries != null) {
+                    var user = await authQueries.GetUserByUsernameAsync(authResult.Value.Username, httpContext.RequestAborted);
                     if (user != null) {
                         dashboardContext.IsSuperuser = user.Value.IsSuperuser;
                     }
@@ -122,10 +121,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard
             if (_options.RequireAuthentication && !IsAuthExempt(relativePath)) {
                 var requiredPermission = GetRequiredPermission(relativePath, routeMatch);
                 if (requiredPermission != null) {
-                    var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-                    if (authDbContext != null) {
-                        var queries = new AuthStorageQueries(authDbContext);
-                        var permissionChecker = new PermissionChecker(queries);
+                    var authQueries = httpContext.RequestServices.GetService(typeof(IAdminAuthQueries)) as IAdminAuthQueries;
+                    if (authQueries != null) {
+                        var permissionChecker = new PermissionChecker(authQueries);
                         var hasPermission = await permissionChecker.HasPermissionAsync(
                             httpContext, dashboardContext.AuthenticatedUserId, dashboardContext.IsSuperuser,
                             requiredPermission, httpContext.RequestAborted);

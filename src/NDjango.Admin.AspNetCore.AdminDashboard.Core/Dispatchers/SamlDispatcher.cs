@@ -98,16 +98,15 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 .ToList() ?? new List<string>();
 
             // Create or update user and sync groups
-            var authDbContext = httpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-            if (authDbContext == null) {
+            var authQueries = httpContext.RequestServices.GetService(typeof(IAdminAuthQueries)) as IAdminAuthQueries;
+            if (authQueries == null) {
                 httpContext.Response.StatusCode = 500;
                 await httpContext.Response.WriteAsync("Auth database not available.");
                 return;
             }
 
-            var queries = new AuthStorageQueries(authDbContext);
-            var userId = await queries.CreateOrUpdateSamlUserAsync(username, ct);
-            await queries.SyncUserGroupsAsync(userId, groupIds, ct);
+            var userId = await authQueries.CreateOrUpdateSamlUserAsync(username, ct);
+            await authQueries.SyncUserGroupsAsync(userId, groupIds, ct);
 
             // Set auth cookie
             var cookieService = httpContext.Items.TryGetValue("NDjango.Admin.CookieAuthService", out var service)

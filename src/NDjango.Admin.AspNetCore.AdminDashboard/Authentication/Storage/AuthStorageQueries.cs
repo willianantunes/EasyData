@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage
 {
-    internal class AuthStorageQueries
+    internal class AuthStorageQueries : IAdminAuthQueries
     {
         private readonly AuthDbContext _dbContext;
 

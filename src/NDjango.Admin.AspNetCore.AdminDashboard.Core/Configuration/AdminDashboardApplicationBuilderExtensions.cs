@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using NDjango.Admin.AspNetCore.AdminDashboard;
@@ -15,6 +14,8 @@ namespace Microsoft.AspNetCore.Builder
 {
     public static class AdminDashboardApplicationBuilderExtensions
     {
+        internal static Action<NDjangoAdminOptions> AuthManagerConfigurator { get; set; }
+
         public static IApplicationBuilder UseNDjangoAdminDashboard(
             this IApplicationBuilder app,
             string path = "/admin")
@@ -25,20 +26,20 @@ namespace Microsoft.AspNetCore.Builder
             if (options == null) {
                 throw new InvalidOperationException(
                     "AdminDashboardOptions is not registered. " +
-                    "Call services.AddNDjangoAdminDashboard<TDbContext>() in ConfigureServices first.");
+                    "Register it via AddNDjangoAdminDashboard or AddNDjangoAdminDashboardMongo.");
             }
 
             var ndjangoAdminOptions = (NDjangoAdminOptions)app.ApplicationServices.GetService(typeof(NDjangoAdminOptions));
             if (ndjangoAdminOptions == null) {
                 throw new InvalidOperationException(
                     "NDjangoAdminOptions is not registered. " +
-                    "Call services.AddNDjangoAdminDashboard<TDbContext>() in ConfigureServices first.");
+                    "Register it via AddNDjangoAdminDashboard or AddNDjangoAdminDashboardMongo.");
             }
 
             ndjangoAdminOptions.PaginationCountTimeoutMs = options.PaginationCountTimeoutMs;
 
-            if (options.RequireAuthentication) {
-                ConfigureCompositeManager(ndjangoAdminOptions);
+            if (options.RequireAuthentication && AuthManagerConfigurator != null) {
+                AuthManagerConfigurator(ndjangoAdminOptions);
             }
 
             if (options.EnableSaml) {
@@ -49,24 +50,6 @@ namespace Microsoft.AspNetCore.Builder
             app.UseMiddleware<AdminDashboardMiddleware>(options, ndjangoAdminOptions, path);
 
             return app;
-        }
-
-        private static void ConfigureCompositeManager(NDjangoAdminOptions ndjangoAdminOptions)
-        {
-            // Store the original resolver and wrap with composite
-            var originalResolver = ndjangoAdminOptions.ManagerResolver;
-            var authNDjangoAdminOptions = new NDjangoAdminOptions();
-            authNDjangoAdminOptions.UseDbContext<AuthDbContext>();
-
-            var dbContextType = AdminDashboardServiceCollectionExtensions.DbContextType;
-
-            ndjangoAdminOptions.UseManager((services, opts) => {
-                var userManager = originalResolver(services, opts);
-                var authManager = authNDjangoAdminOptions.ManagerResolver(services, authNDjangoAdminOptions);
-                var userDbContext = (DbContext)services.GetService(dbContextType);
-                var authDbCtx = services.GetService(typeof(AuthDbContext)) as DbContext;
-                return new CompositeNDjangoAdminManager(services, opts, userManager, authManager, userDbContext, authDbCtx);
-            });
         }
 
         private static void ResolveSamlMetadata(AdminDashboardOptions options)

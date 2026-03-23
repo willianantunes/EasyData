@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 using NDjango.Admin.Services;
-using NDjango.Admin.EntityFrameworkCore;
 using NDjango.Admin.AspNetCore.AdminDashboard.Routing;
 using NDjango.Admin.AspNetCore.AdminDashboard.Services;
 using NDjango.Admin.AspNetCore.AdminDashboard.ViewModels;
 
-using Newtonsoft.Json.Linq;
 
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 {
@@ -104,14 +102,11 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var filters = new List<NDjango.Admin.Services.EasyFilter>();
             if (isSearchEnabled && !string.IsNullOrEmpty(searchQuery)) {
                 var model = await metadataService.GetModelAsync(ct);
-                var filter = new SubstringFilter(model);
-                var jobj = new JObject { ["class"] = SubstringFilter.Class, ["value"] = searchQuery };
-                var json = jobj.ToString(Newtonsoft.Json.Formatting.None);
-                using (var sr = new System.IO.StringReader(json))
-                using (var jr = new Newtonsoft.Json.JsonTextReader(sr)) {
-                    await filter.ReadFromJsonAsync(jr, ct);
+                var filterFactory = (ISearchFilterFactory)context.HttpContext.RequestServices.GetService(typeof(ISearchFilterFactory));
+                if (filterFactory != null) {
+                    var filter = await filterFactory.CreateSearchFilterAsync(model, searchQuery, ct);
+                    filters.Add(filter);
                 }
-                filters.Add(filter);
             }
 
             var sorters = new List<NDjango.Admin.Services.EasySorter>();

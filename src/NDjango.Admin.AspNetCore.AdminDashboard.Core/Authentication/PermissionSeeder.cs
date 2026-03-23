@@ -9,9 +9,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
 {
     internal class PermissionSeeder
     {
-        private readonly AuthStorageQueries _queries;
+        private readonly IAdminAuthQueries _queries;
 
-        public PermissionSeeder(AuthStorageQueries queries)
+        public PermissionSeeder(IAdminAuthQueries queries)
         {
             _queries = queries;
         }

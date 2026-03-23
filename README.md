@@ -3,7 +3,11 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=juntossomosmais_NDjango.Admin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=juntossomosmais_NDjango.Admin)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=juntossomosmais_NDjango.Admin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=juntossomosmais_NDjango.Admin)
 
-A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core. Automatically generates a full admin interface from your `DbContext` — list views with pagination/sorting and opt-in search, create/edit forms with FK lookup popups, and delete confirmations.
+A Django-admin-inspired admin dashboard for ASP.NET Core. Automatically generates a full admin interface from your data model — list views with pagination/sorting and opt-in search, create/edit forms with FK lookup popups, and delete confirmations.
+
+**Supported providers:**
+- **Entity Framework Core** — full CRUD from your `DbContext`
+- **MongoDB** — read-only dashboard from your MongoDB collections (V1)
 
 ## What you get
 
@@ -17,11 +21,13 @@ A Django-admin-inspired CRUD dashboard for ASP.NET Core + Entity Framework Core.
 
 ## Quick start
 
-### 1. Install packages
+### Entity Framework Core
+
+#### 1. Install packages
 
 Add a reference to the `NDjango.Admin.AspNetCore.AdminDashboard` project.
 
-### 2. Register services
+#### 2. Register services
 
 ```csharp
 // Program.cs or Startup.ConfigureServices
@@ -32,7 +38,7 @@ services.AddNDjangoAdminDashboard<AppDbContext>(new AdminDashboardOptions
 });
 ```
 
-### 3. Add the middleware
+#### 3. Add the middleware
 
 ```csharp
 // Program.cs or Startup.Configure
@@ -40,6 +46,64 @@ app.UseNDjangoAdminDashboard("/admin");
 ```
 
 That's it. Navigate to `/admin/` and you have a working admin panel.
+
+### MongoDB
+
+#### 1. Install packages
+
+Add references to `NDjango.Admin.MongoDB` and `NDjango.Admin.AspNetCore.AdminDashboard.Core`.
+
+#### 2. Register MongoDB and admin services
+
+```csharp
+using MongoDB.Driver;
+using NDjango.Admin.AspNetCore.AdminDashboard;
+using NDjango.Admin.AspNetCore.AdminDashboard.Authorization;
+using NDjango.Admin.MongoDB;
+
+// Register MongoDB
+services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://localhost:27017"));
+services.AddSingleton<IMongoDatabase>(sp =>
+    sp.GetRequiredService<IMongoClient>().GetDatabase("MyDatabase"));
+
+// Register admin dashboard for MongoDB
+services.AddNDjangoAdminDashboardMongo(
+    new AdminDashboardOptions
+    {
+        Authorization = new[] { new AllowAllAdminDashboardAuthorizationFilter() },
+        DashboardTitle = "My Admin (MongoDB)",
+    },
+    mongo =>
+    {
+        mongo.AddCollection<Product>("products");
+        mongo.AddCollection<Customer>("customers");
+        mongo.AddCollection<Order>("orders");
+    }
+);
+```
+
+#### 3. Add the middleware
+
+```csharp
+app.UseNDjangoAdminDashboard("/admin");
+```
+
+Navigate to `/admin/` and you have a read-only admin dashboard for your MongoDB collections.
+
+#### MongoDB document requirements
+
+- Documents should have an `Id` property (or a property marked with `[BsonId]`) — this is used as the primary key for URL routing
+- Use `[BsonIgnoreExtraElements]` on document classes for forward compatibility
+- Use `[BsonIgnore]` to hide properties from the dashboard
+- Use `[BsonElement("name")]` to specify the stored field name
+- Implement `IAdminSettings<T>` to enable search on specific fields
+- Collection/complex type properties (e.g., `List<ObjectId>`) are displayed as expandable JSON
+
+#### MongoDB V1 limitations
+
+- **Read-only** — list views, detail views, search, sort, and pagination work; create/edit/delete are not available
+- **No authentication** — the MongoDB provider does not include built-in auth (set `RequireAuthentication = false` or use custom `IAdminDashboardAuthorizationFilter`)
+- **No FK lookups** — references between collections (e.g., `ObjectId RestaurantId`) display as plain IDs, not lookup popups
 
 ## Configuration
 
@@ -309,9 +373,7 @@ On SSO login, the dashboard maps IdP group UUIDs to `auth_group.name` entries. C
 
 ## Sample projects
 
-### sample-project
-
-A working sample is at `./sample-project`. To run it:
+### sample-project (EF Core + SQL Server)
 
 ```bash
 # Start SQL Server (required)
@@ -322,7 +384,20 @@ cd sample-project/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup. Restaurant also demonstrates a custom bulk action ("Mark selected restaurants as featured") alongside the built-in bulk delete.
+Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem, Gift). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup. Restaurant also demonstrates a custom bulk action ("Mark selected restaurants as featured") alongside the built-in bulk delete.
+
+### sample-project-mongodb (MongoDB)
+
+```bash
+# Start MongoDB with replica set (required)
+docker compose up -d mongo mongoClusterSetup
+
+# Run the app
+cd sample-project-mongodb/src
+dotnet run -- api
+```
+
+Open `http://localhost:8001/admin/` to see a read-only dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, and all supported data types.
 
 ### sample-project-sso
 
@@ -331,3 +406,5 @@ Demonstrates SAML SSO with AWS IAM Identity Center. See [`sample-project-sso/REA
 ## Known Gaps
 
 - **M2M relationships** not yet supported in the dashboard
+- **MongoDB write operations** (create/edit/delete) not yet implemented — V1 is read-only
+- **MongoDB authentication** not yet available — use custom `IAdminDashboardAuthorizationFilter` for access control

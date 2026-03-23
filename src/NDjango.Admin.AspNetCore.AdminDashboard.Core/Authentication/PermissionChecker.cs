@@ -11,9 +11,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Authentication
     internal class PermissionChecker
     {
         private const string PermissionsCacheKey = "NDjango.Admin.Auth.Permissions";
-        private readonly AuthStorageQueries _queries;
+        private readonly IAdminAuthQueries _queries;
 
-        public PermissionChecker(AuthStorageQueries queries)
+        public PermissionChecker(IAdminAuthQueries queries)
         {
             _queries = queries;
         }

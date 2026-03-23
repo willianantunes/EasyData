@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NDjango.Admin.MongoDB</RootNamespace>
+    <Description>MongoDB provider for NDjango.Admin library. Read-only admin dashboard for MongoDB collections.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="3.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NDjango.Admin.Core\NDjango.Admin.Core.csproj" />
+    <ProjectReference Include="..\NDjango.Admin.AspNetCore.AdminDashboard.Core\NDjango.Admin.AspNetCore.AdminDashboard.Core.csproj" />
+  </ItemGroup>
+</Project>

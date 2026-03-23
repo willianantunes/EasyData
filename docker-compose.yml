@@ -16,6 +16,31 @@ services:
       retries: 10
       start_period: 10s
 
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    restart: always
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongo:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    entrypoint:
+      ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "myReplicaSet"]
+
+  mongoClusterSetup:
+    image: mongo:8
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/app
+    command:
+      - bash
+      - -c
+      - ./app/mongo-init-replica-set.sh
+
   integration-tests:
     build:
       context: .

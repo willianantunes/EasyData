@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "AspNetSaml": {
+        "type": "Direct",
+        "requested": "[2.*, )",
+        "resolved": "2.1.4",
+        "contentHash": "3CU1CCYQZTcH5j+o7YgiHk44rcbrGjDVrl5bQvCoTbBN53JDlx/Bbt6qj6l3xGIGMGYJaDJOQtpQwi4MHQazeQ==",
+        "dependencies": {
+          "System.Security.Cryptography.Xml": "8.0.2"
+        }
+      },
+      "Newtonsoft.Json": {
+        "type": "Transitive",
+        "resolved": "13.0.4",
+        "contentHash": "pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A=="
+      },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "CoCRHFym33aUSf/NtWSVSZa99dkd0Hm7OCZUxORBjRB16LNhIEOf8THPqzIYlvKM0nNDAPTRBa1FxEECrgaxxA=="
+      },
+      "System.Security.Cryptography.Xml": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "aDM/wm0ZGEZ6ZYJLzgqjp2FZdHbDHh6/OmpGfb7AdZ105zYmPn/83JRU2xLIbwgoNz9U1SLUTJN0v5th3qmvjA==",
+        "dependencies": {
+          "System.Security.Cryptography.Pkcs": "8.0.1"
+        }
+      },
+      "ndjango.admin.aspnetcore": {
+        "type": "Project",
+        "dependencies": {
+          "NDjango.Admin.Core": "[1.0.0, )"
+        }
+      },
+      "ndjango.admin.core": {
+        "type": "Project",
+        "dependencies": {
+          "Newtonsoft.Json": "[13.*, )"
+        }
+      }
+    }
+  }
+}

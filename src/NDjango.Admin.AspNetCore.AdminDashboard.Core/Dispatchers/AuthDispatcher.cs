@@ -52,9 +52,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var password = form["password"].ToString();
             var nextUrl = form["next"].ToString();
 
-            var authDbContext = context.HttpContext.RequestServices.GetService(typeof(AuthDbContext)) as AuthDbContext;
-            var queries = new AuthStorageQueries(authDbContext);
-            var user = await queries.GetUserByUsernameAsync(username, ct);
+            var authQueries = context.HttpContext.RequestServices.GetService(typeof(IAdminAuthQueries)) as IAdminAuthQueries;
+            var user = await authQueries.GetUserByUsernameAsync(username, ct);
 
             if (user == null || !user.Value.IsActive || !PasswordHasher.VerifyPassword(password, user.Value.PasswordHash)) {
                 var model = new LoginViewModel
@@ -69,7 +68,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 return;
             }
 
-            await queries.UpdateLastLoginAsync(user.Value.Id, ct);
+            await authQueries.UpdateLastLoginAsync(user.Value.Id, ct);
 
             var cookieService = GetCookieAuthService(context);
             cookieService?.SetAuthCookie(context.HttpContext, user.Value.Id, user.Value.Username);

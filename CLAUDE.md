@@ -5,8 +5,12 @@
 ALWAYS use `./scripts/filter-failed-tests.csx` when running tests.
 
 ```bash
-# Start SQL Server (required for integration tests and sample project)
+# Start SQL Server (required for integration tests and EF sample project)
 docker compose up -d db
+
+# Start MongoDB (required for MongoDB sample project)
+# In the end, `mongo` is expected to be heahtlhy
+docker compose up --detach --wait --wait-timeout 120 --remove-orphans mongoClusterSetup
 
 # Build everything
 dotnet build NDjango.Admin.sln
@@ -20,9 +24,13 @@ dotnet test NDjango.Admin.sln | dotnet dotnet-script ./scripts/filter-failed-tes
 # Run a single test
 dotnet test NDjango.Admin.sln --filter "FullyQualifiedName~ForeignKeyTests.RestaurantAddForm_RendersCategory_LookupFieldAsync" | dotnet dotnet-script ./scripts/filter-failed-tests.csx
 
-# Run the sample project (requires SQL Server running)
+# Run the EF sample project (requires SQL Server running)
 cd sample-project/src && dotnet run -- api
 # Dashboard at http://localhost:8000/admin/
+
+# Run the MongoDB sample project (requires MongoDB running)
+cd sample-project-mongodb/src && dotnet run -- api
+# Dashboard at http://localhost:8001/admin/
 
 # Coverage report (pipe any dotnet test or docker compose run through it)
 # Shows per-file line/branch percentages + uncovered lines and partial branches
@@ -35,7 +43,7 @@ dotnet test NDjango.Admin.sln --settings "./runsettings.xml" --filter "FkLookupP
 
 ### JavaScript (admin-dashboard.js)
 
-Any change to `src/NDjango.Admin.AspNetCore.AdminDashboard/wwwroot/js/admin-dashboard.js` **must** include corresponding updates to its spec file (`admin-dashboard.spec.js` in the same directory). Tests must pass and maintain >99% code coverage.
+Any change to `src/NDjango.Admin.AspNetCore.AdminDashboard.Core/wwwroot/js/admin-dashboard.js` **must** include corresponding updates to its spec file (`admin-dashboard.spec.js` in the same directory). Tests must pass and maintain >99% code coverage.
 
 ```bash
 # Install dependencies (once)
@@ -57,34 +65,55 @@ The spec uses `jest` + `jest-environment-jsdom`. The source file exposes global 
 ### Project Dependency Graph
 
 ```
-NDjango.Admin.Core                              # Metadata model (MetaData, MetaEntity, MetaEntityAttr)
-├── NDjango.Admin.AspNetCore                    # ASP.NET Core integration (NDjangoAdminManager, middleware)
-├── NDjango.Admin.EntityFrameworkCore.Relational # EF Core → metadata loader (DbContextMetaDataLoader)
+NDjango.Admin.Core                                    # Metadata model (MetaData, MetaEntity, MetaEntityAttr)
+├── NDjango.Admin.AspNetCore                          # ASP.NET Core integration
 │
-NDjango.Admin.AspNetCore.AdminDashboard         # The admin dashboard (depends on all three above)
+NDjango.Admin.AspNetCore.AdminDashboard.Core          # Provider-agnostic dashboard (middleware, dispatchers, views, wwwroot)
+│   → NDjango.Admin.Core
+│   → NDjango.Admin.AspNetCore
+│
+NDjango.Admin.AspNetCore.AdminDashboard               # EF Core dashboard shell (auth DB, DI extension, composite manager)
+│   → NDjango.Admin.AspNetCore.AdminDashboard.Core
+│   → NDjango.Admin.EntityFrameworkCore.Relational
+│
+NDjango.Admin.EntityFrameworkCore.Relational           # EF Core provider (DbContextMetaDataLoader, NDjangoAdminManagerEF)
+│   → NDjango.Admin.Core
+│
+NDjango.Admin.MongoDB                                  # MongoDB provider (MongoMetaDataLoader, NDjangoAdminManagerMongo)
+    → NDjango.Admin.Core
+    → NDjango.Admin.AspNetCore.AdminDashboard.Core
 ```
 
 ### Project Structure
 
 ```
 src/
-  NDjango.Admin.Core/                              # Core metadata model
-  NDjango.Admin.AspNetCore/                        # ASP.NET Core integration
-  NDjango.Admin.EntityFrameworkCore.Relational/    # EF Core metadata loader
-  NDjango.Admin.AspNetCore.AdminDashboard/         # Admin dashboard (this package)
-    Authentication/                           # Login, permissions, password hashing, auth DB
-    Authorization/                            # Auth filters
-    Configuration/                            # DI extensions and options
-    Dispatchers/                              # View rendering and API handlers
-    Middleware/                               # Request pipeline
-    Routing/                                  # URL dispatch
-    Services/                                 # Metadata, entity grouping, composite manager
-    ViewModels/                               # Form and list models
-    wwwroot/                                  # Embedded CSS/JS
+  NDjango.Admin.Core/                                  # Core metadata model
+  NDjango.Admin.AspNetCore/                            # ASP.NET Core integration
+  NDjango.Admin.EntityFrameworkCore.Relational/        # EF Core provider (metadata loader, manager, filters)
+  NDjango.Admin.AspNetCore.AdminDashboard.Core/        # Provider-agnostic dashboard core
+    Authentication/                               # Login, permissions, password hashing, IAdminAuthQueries
+    Authorization/                                # Auth filters
+    Configuration/                                # AdminDashboardOptions, UseNDjangoAdminDashboard()
+    Dispatchers/                                  # View rendering and API handlers
+    Middleware/                                   # Request pipeline
+    Routing/                                      # URL dispatch
+    Services/                                     # Metadata service, entity grouping
+    ViewModels/                                   # Form and list models
+    wwwroot/                                      # Embedded CSS/JS
+  NDjango.Admin.AspNetCore.AdminDashboard/             # EF-specific dashboard shell
+    Authentication/                               # AuthDbContext, AuthBootstrapper, AuthStorageQueries
+    Configuration/                                # AddNDjangoAdminDashboard<TDbContext>()
+    Services/                                     # CompositeNDjangoAdminManager
+  NDjango.Admin.MongoDB/                               # MongoDB provider
+    Extensions/                                   # UseMongoDB(), AddNDjangoAdminDashboardMongo()
+    Filters/                                      # MongoSubstringFilter
+    Services/                                     # NDjangoAdminManagerMongo
 
-test/                                         # Integration & unit tests
-sample-project/                               # Working example app
-sample-project-sso/                           # SSO example (AWS IAM Identity Center)
+test/                                             # Integration & unit tests
+sample-project/                                   # EF Core example app (SQL Server)
+sample-project-mongodb/                           # MongoDB example app
+sample-project-sso/                               # SSO example (AWS IAM Identity Center)
 ```
 
 ### Request Flow
@@ -100,7 +129,10 @@ sample-project-sso/                           # SSO example (AWS IAM Identity Ce
 
 ### Key Data Flow
 
-`DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData` (entities + attributes). The dashboard reads this metadata to auto-generate views. CRUD operations go through `NDjangoAdminManager` → `NDjangoAdminManagerEF` which uses EF Core directly.
+The dashboard is provider-agnostic. The abstract `NDjangoAdminManager` defines the contract; providers implement it:
+
+- **EF Core**: `DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData`. CRUD goes through `NDjangoAdminManagerEF`.
+- **MongoDB**: `MongoMetaDataLoader` scans registered document types via reflection + BSON attributes. Read operations go through `NDjangoAdminManagerMongo` using `collection.AsQueryable()` (LINQ3). V1 is read-only (no create/update/delete).
 
 ### Important Metadata Properties
 

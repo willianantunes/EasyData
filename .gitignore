@@ -402,3 +402,4 @@ prompts
 .claude/worktrees
 .playwright-mcp
 *.png
+coverage

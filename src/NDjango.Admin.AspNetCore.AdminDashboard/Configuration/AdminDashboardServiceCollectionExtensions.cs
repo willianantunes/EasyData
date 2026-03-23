@@ -1,11 +1,14 @@
 using System;
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
 using NDjango.Admin.AspNetCore.AdminDashboard;
 using NDjango.Admin.AspNetCore.AdminDashboard.Authentication;
+using NDjango.Admin.AspNetCore.AdminDashboard.Authentication.Storage;
+using NDjango.Admin.AspNetCore.AdminDashboard.Services;
 using NDjango.Admin.EntityFrameworkCore;
 using NDjango.Admin.Services;
 
@@ -38,12 +41,15 @@ namespace Microsoft.Extensions.DependencyInjection
             // Register auth services eagerly (they are no-ops if RequireAuthentication is false)
             RegisterAuthServices<TDbContext>(services);
 
+            services.AddSingleton<ISearchFilterFactory, SubstringFilterFactory>();
             services.AddSingleton<AuthBootstrapReadinessState>();
 
             if (dashboardOptions.RequireAuthentication && !dashboardOptions.SkipStorageInitialization)
             {
                 services.AddHostedService<AuthBootstrapperHostedService>();
             }
+
+            AdminDashboardApplicationBuilderExtensions.AuthManagerConfigurator = ConfigureCompositeManager;
 
             return services;
         }
@@ -57,6 +63,29 @@ namespace Microsoft.Extensions.DependencyInjection
                 var userDbContext = sp.GetRequiredService<TDbContext>();
                 var connectionString = userDbContext.Database.GetConnectionString();
                 options.UseSqlServer(connectionString);
+            });
+
+            services.AddScoped<IAdminAuthQueries>(sp => {
+                var authDbContext = sp.GetRequiredService<AuthDbContext>();
+                return new AuthStorageQueries(authDbContext);
+            });
+        }
+
+        private static void ConfigureCompositeManager(NDjangoAdminOptions ndjangoAdminOptions)
+        {
+            // Store the original resolver and wrap with composite
+            var originalResolver = ndjangoAdminOptions.ManagerResolver;
+            var authNDjangoAdminOptions = new NDjangoAdminOptions();
+            authNDjangoAdminOptions.UseDbContext<AuthDbContext>();
+
+            var dbContextType = _dbContextType;
+
+            ndjangoAdminOptions.UseManager((services, opts) => {
+                var userManager = originalResolver(services, opts);
+                var authManager = authNDjangoAdminOptions.ManagerResolver(services, authNDjangoAdminOptions);
+                var userDbContext = (DbContext)services.GetService(dbContextType);
+                var authDbCtx = services.GetService(typeof(AuthDbContext)) as DbContext;
+                return new CompositeNDjangoAdminManager(services, opts, userManager, authManager, userDbContext, authDbCtx);
             });
         }
     }

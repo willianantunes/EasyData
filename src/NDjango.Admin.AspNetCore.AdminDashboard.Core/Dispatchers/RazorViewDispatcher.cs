@@ -9,7 +9,6 @@ using NDjango.Admin.AspNetCore.AdminDashboard.Services;
 using NDjango.Admin.AspNetCore.AdminDashboard.ViewModels;
 using NDjango.Admin.Services;
 
-
 namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 {
     internal class RazorViewDispatcher : IDashboardDispatcher
@@ -130,7 +129,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var attrs = entity.Attributes.Where(a => a.Kind != EntityAttrKind.Lookup).ToList();
             var visibleAttrs = attrs.Where(a => a.ShowOnView).ToList();
 
-            var pkAttr = attrs.FirstOrDefault(a => a.IsPrimaryKey);
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            var pkAttr = pkAttrs.FirstOrDefault();
 
             var columns = visibleAttrs.Select(a => new ColumnViewModel
             {
@@ -176,6 +176,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 SortField = sortField,
                 SortDirection = sortDir,
                 PrimaryKeyField = pkAttr?.PropName,
+                PrimaryKeyFields = pkAttrs.Select(a => a.PropName).ToList(),
+                HasCompositeKey = entity.HasCompositeKey,
                 SidebarGroups = sidebarGroups,
                 IsSearchEnabled = isSearchEnabled,
                 IsPopup = isPopup,
@@ -229,12 +231,26 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             string recordId = null;
             if (isEdit) {
                 recordId = match.Values["id"];
-                var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-                if (pkAttr == null) {
+                var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+                if (pkAttrs.Count == 0) {
                     context.HttpContext.Response.StatusCode = 400;
                     return;
                 }
-                var keys = new Dictionary<string, string> { { pkAttr.PropName, recordId } };
+
+                Dictionary<string, string> keys;
+                if (entity.HasCompositeKey) {
+                    try {
+                        var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                        keys = CompositeKeyEncoder.Decode(recordId, pkPropNames);
+                    }
+                    catch (ArgumentException) {
+                        context.HttpContext.Response.StatusCode = 400;
+                        return;
+                    }
+                }
+                else {
+                    keys = new Dictionary<string, string> { { pkAttrs[0].PropName, recordId } };
+                }
                 record = await metadataService.FetchRecordAsync(entityId, keys, ct);
             }
 
@@ -258,6 +274,11 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                         LookupEntityId = attr.LookupEntity != null
                             ? AdminMetadataService.GetEntityName(attr.LookupEntity) : null,
                     };
+
+                    // For edit forms: make PK-linked lookup fields read-only (can't change composite key identity)
+                    if (isEdit && entity.HasCompositeKey && attr.DataAttr != null && attr.DataAttr.IsPrimaryKey) {
+                        field.IsEditable = false;
+                    }
 
                     if (record != null && attr.DataAttr?.PropInfo != null) {
                         field.Value = attr.DataAttr.PropInfo.GetValue(record);
@@ -324,14 +345,31 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             }
 
             var recordId = match.Values["id"];
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr == null) {
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            if (pkAttrs.Count == 0) {
                 context.HttpContext.Response.StatusCode = 400;
                 return;
             }
 
-            var keys = new Dictionary<string, string> { { pkAttr.PropName, recordId } };
+            Dictionary<string, string> keys;
+            if (entity.HasCompositeKey) {
+                try {
+                    var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                    keys = CompositeKeyEncoder.Decode(recordId, pkPropNames);
+                }
+                catch (ArgumentException) {
+                    context.HttpContext.Response.StatusCode = 400;
+                    return;
+                }
+            }
+            else {
+                keys = new Dictionary<string, string> { { pkAttrs[0].PropName, recordId } };
+            }
             var record = await metadataService.FetchRecordAsync(entityId, keys, ct);
+            if (record == null) {
+                context.HttpContext.Response.StatusCode = 404;
+                return;
+            }
 
             var recordValues = new Dictionary<string, object>();
             foreach (var attr in entity.Attributes.Where(a => a.Kind != EntityAttrKind.Lookup && a.ShowOnView)) {
@@ -371,20 +409,35 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                 return;
             }
 
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr == null) {
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            if (pkAttrs.Count == 0) {
                 context.HttpContext.Response.StatusCode = 400;
                 return;
             }
 
-            var recordKeysList = selectedIds
-                .Select(id => new Dictionary<string, string> { { pkAttr.PropName, id } })
-                .ToList();
+            List<Dictionary<string, string>> recordKeysList;
+            if (entity.HasCompositeKey) {
+                try {
+                    var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                    recordKeysList = selectedIds
+                        .Select(id => CompositeKeyEncoder.Decode(id, pkPropNames))
+                        .ToList();
+                }
+                catch (ArgumentException) {
+                    context.HttpContext.Response.StatusCode = 400;
+                    return;
+                }
+            }
+            else {
+                recordKeysList = selectedIds
+                    .Select(id => new Dictionary<string, string> { { pkAttrs[0].PropName, id } })
+                    .ToList();
+            }
 
             var fetchedRecords = await metadataService.FetchRecordsByKeysAsync(entityId, recordKeysList, ct);
 
             var records = new List<Dictionary<string, object>>();
-            foreach (var record in fetchedRecords) {
+            foreach (var record in fetchedRecords.Where(r => r != null)) {
                 var dict = new Dictionary<string, object>();
                 foreach (var attr in entity.Attributes.Where(a => a.Kind != EntityAttrKind.Lookup && a.ShowOnView)) {
                     if (attr.PropInfo != null)

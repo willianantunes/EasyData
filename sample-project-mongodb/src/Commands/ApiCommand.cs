@@ -61,7 +61,7 @@ public class ApiCommand : ICommand
                     DefaultAdminPassword = "admin",
                     EntityGroups = new Dictionary<string, string[]>
                     {
-                        ["Restaurant"] = new[] { "Category", "Restaurant", "RestaurantProfile", "MenuItem", "Ingredient" },
+                        ["Restaurant"] = new[] { "Category", "Restaurant", "RestaurantProfile", "MenuItem", "Ingredient", "MenuItemIngredient" },
                         ["Shop"] = new[] { "Gift" },
                         ["Authentication and Authorization"] = new[] { "MongoAuthUser", "MongoAuthGroup", "MongoAuthPermission", "MongoAuthGroupPermission", "MongoAuthUserGroup" },
                     }
@@ -73,6 +73,7 @@ public class ApiCommand : ICommand
                     mongo.AddCollection<RestaurantProfile>(CollectionNames.RestaurantProfiles);
                     mongo.AddCollection<Ingredient>(CollectionNames.Ingredients);
                     mongo.AddCollection<MenuItem>(CollectionNames.MenuItems);
+                    mongo.AddCollection<MenuItemIngredient>(CollectionNames.MenuItemIngredients);
                     mongo.AddCollection<Gift>(CollectionNames.Gifts);
                 }
             );

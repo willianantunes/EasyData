@@ -164,17 +164,18 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
 
             foreach (var row in model.Rows) {
                 content.Append("<tr>");
-                if (hasActions && model.PrimaryKeyField != null) {
-                    row.TryGetValue(model.PrimaryKeyField, out var pkForCheckbox);
-                    content.Append($"<td class=\"action-checkbox\"><input type=\"checkbox\" name=\"_selected_ids\" value=\"{Encode(pkForCheckbox?.ToString() ?? "")}\" class=\"action-select\" /></td>");
+
+                var encodedPk = GetEncodedPrimaryKey(row, model);
+
+                if (hasActions && encodedPk != null) {
+                    content.Append($"<td class=\"action-checkbox\"><input type=\"checkbox\" name=\"_selected_ids\" value=\"{Encode(encodedPk)}\" class=\"action-select\" /></td>");
                 }
                 var first = true;
                 foreach (var col in model.Columns) {
                     row.TryGetValue(col.PropName, out var cellVal);
                     var displayValue = cellVal?.ToString() ?? "";
-                    if (first && model.PrimaryKeyField != null) {
-                        row.TryGetValue(model.PrimaryKeyField, out var pkVal);
-                        content.Append($"<td><a href=\"{model.BasePath}/{model.EntityId}/{Encode(pkVal?.ToString() ?? "")}/change/\">{Encode(displayValue)}</a></td>");
+                    if (first && encodedPk != null) {
+                        content.Append($"<td><a href=\"{model.BasePath}/{model.EntityId}/{Encode(encodedPk)}/change/\">{Encode(displayValue)}</a></td>");
                     }
                     else {
                         content.Append($"<td>{Encode(displayValue)}</td>");
@@ -240,11 +241,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             sb.Append("</tr></thead><tbody>");
 
             foreach (var row in model.Rows) {
-                var pkValue = "";
-                if (model.PrimaryKeyField != null) {
-                    row.TryGetValue(model.PrimaryKeyField, out var pkVal);
-                    pkValue = pkVal?.ToString() ?? "";
-                }
+                var pkValue = GetEncodedPrimaryKey(row, model) ?? "";
 
                 sb.Append("<tr>");
                 var first = true;
@@ -617,6 +614,32 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
                     parts.Add($"_to_field={System.Net.WebUtility.UrlEncode(model.ToField)}");
             }
             return string.Join("&", parts);
+        }
+
+        /// <summary>
+        /// Builds the encoded primary key string for a row, handling both single and composite keys.
+        /// </summary>
+        private static string GetEncodedPrimaryKey(Dictionary<string, object> row, EntityListViewModel model)
+        {
+            if (model.PrimaryKeyField == null && model.PrimaryKeyFields.Count == 0)
+                return null;
+
+            if (model.HasCompositeKey && model.PrimaryKeyFields.Count > 1) {
+                var keyParts = model.PrimaryKeyFields
+                    .Select(pkField => {
+                        row.TryGetValue(pkField, out var val);
+                        return new KeyValuePair<string, string>(pkField, val?.ToString() ?? "");
+                    })
+                    .ToList();
+                return CompositeKeyEncoder.Encode(keyParts);
+            }
+
+            if (model.PrimaryKeyField != null) {
+                row.TryGetValue(model.PrimaryKeyField, out var pkVal);
+                return pkVal?.ToString() ?? "";
+            }
+
+            return null;
         }
 
         private static string Encode(string value)

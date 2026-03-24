@@ -70,8 +70,18 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var record = await metadataService.CreateRecordAsync(entityId, props, ct);
             var saveAction = form["_save_action"].FirstOrDefault() ?? "save";
 
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            var newId = pkAttr?.PropInfo?.GetValue(record)?.ToString();
+            string newId;
+            var pkAttrsForId = entity.GetPrimaryKeyDataAttributes();
+            if (entity.HasCompositeKey) {
+                var keyParts = pkAttrsForId
+                    .Select(a => new KeyValuePair<string, string>(a.PropName, a.PropInfo?.GetValue(record)?.ToString() ?? ""))
+                    .ToList();
+                newId = CompositeKeyEncoder.Encode(keyParts);
+            }
+            else {
+                var pkAttr = pkAttrsForId.FirstOrDefault();
+                newId = pkAttr?.PropInfo?.GetValue(record)?.ToString();
+            }
 
             var redirectUrl = saveAction switch
             {
@@ -97,9 +107,28 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var form = await context.HttpContext.Request.ReadFormAsync(ct);
             var props = FormToJObject(form, entity);
 
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr != null) {
-                props[pkAttr.PropName] = JToken.FromObject(ConvertValue(recordId, pkAttr.DataType));
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            if (entity.HasCompositeKey) {
+                Dictionary<string, string> decodedKeys;
+                try {
+                    var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                    decodedKeys = CompositeKeyEncoder.Decode(recordId, pkPropNames);
+                }
+                catch (ArgumentException) {
+                    context.HttpContext.Response.StatusCode = 400;
+                    return;
+                }
+                foreach (var pkAttr in pkAttrs) {
+                    if (decodedKeys.TryGetValue(pkAttr.PropName, out var keyValue)) {
+                        props[pkAttr.PropName] = JToken.FromObject(ConvertValue(keyValue, pkAttr.DataType));
+                    }
+                }
+            }
+            else {
+                var pkAttr = pkAttrs.FirstOrDefault();
+                if (pkAttr != null) {
+                    props[pkAttr.PropName] = JToken.FromObject(ConvertValue(recordId, pkAttr.DataType));
+                }
             }
 
             await metadataService.UpdateRecordAsync(entityId, props, ct);
@@ -126,16 +155,32 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             }
 
             var recordId = match.Values["id"];
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr == null) {
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            if (pkAttrs.Count == 0) {
                 context.HttpContext.Response.StatusCode = 400;
                 return;
             }
 
-            var props = new JObject
-            {
-                [pkAttr.PropName] = JToken.FromObject(ConvertValue(recordId, pkAttr.DataType))
-            };
+            var props = new JObject();
+            if (entity.HasCompositeKey) {
+                Dictionary<string, string> decodedKeys;
+                try {
+                    var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                    decodedKeys = CompositeKeyEncoder.Decode(recordId, pkPropNames);
+                }
+                catch (ArgumentException) {
+                    context.HttpContext.Response.StatusCode = 400;
+                    return;
+                }
+                foreach (var pkAttr in pkAttrs) {
+                    if (decodedKeys.TryGetValue(pkAttr.PropName, out var keyValue)) {
+                        props[pkAttr.PropName] = JToken.FromObject(ConvertValue(keyValue, pkAttr.DataType));
+                    }
+                }
+            }
+            else {
+                props[pkAttrs[0].PropName] = JToken.FromObject(ConvertValue(recordId, pkAttrs[0].DataType));
+            }
 
             await metadataService.DeleteRecordAsync(entityId, props, ct);
             context.HttpContext.Response.Redirect($"{context.BasePath}/{entityId}/");
@@ -291,15 +336,30 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Dispatchers
             var form = await context.HttpContext.Request.ReadFormAsync(ct);
             var selectedIds = form["_selected_ids"].ToList();
 
-            var pkAttr = entity.Attributes.FirstOrDefault(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup);
-            if (pkAttr == null) {
+            var pkAttrs = entity.GetPrimaryKeyDataAttributes();
+            if (pkAttrs.Count == 0) {
                 context.HttpContext.Response.StatusCode = 400;
                 return;
             }
 
-            var recordKeysList = selectedIds
-                .Select(id => new Dictionary<string, string> { { pkAttr.PropName, id } })
-                .ToList();
+            List<Dictionary<string, string>> recordKeysList;
+            if (entity.HasCompositeKey) {
+                try {
+                    var pkPropNames = pkAttrs.Select(a => a.PropName).ToList();
+                    recordKeysList = selectedIds
+                        .Select(id => CompositeKeyEncoder.Decode(id, pkPropNames))
+                        .ToList();
+                }
+                catch (ArgumentException) {
+                    context.HttpContext.Response.StatusCode = 400;
+                    return;
+                }
+            }
+            else {
+                recordKeysList = selectedIds
+                    .Select(id => new Dictionary<string, string> { { pkAttrs[0].PropName, id } })
+                    .ToList();
+            }
 
             try {
                 await metadataService.DeleteRecordsByKeysAsync(entityId, recordKeysList, ct);

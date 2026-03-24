@@ -460,10 +460,9 @@ namespace NDjango.Admin
         internal string NormalizeId(string id)
         {
             var num = 1;
-            var baseId = "";
-            if (id == "CustomList value editor")
-                baseId = "CLVE";
-            else baseId = id == "SqlList value editor" ? "SLVE" : id == "DateTime value editor" ? "DTVE" : id == "Text value editor" ? "TxtVE" : id;
+            var baseId = id == "CustomList value editor"
+                ? "CLVE"
+                : id == "SqlList value editor" ? "SLVE" : id == "DateTime value editor" ? "DTVE" : id == "Text value editor" ? "TxtVE" : id;
 
             var result = baseId + num.ToString("D2");
 

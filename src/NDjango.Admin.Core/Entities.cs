@@ -119,6 +119,21 @@ namespace NDjango.Admin
         public int Index { get; set; } = int.MaxValue;
 
         /// <summary>
+        /// Gets a value indicating whether this entity has a composite primary key (more than one PK attribute).
+        /// </summary>
+        public bool HasCompositeKey => Attributes?.Count(a => a.IsPrimaryKey) > 1;
+
+        /// <summary>
+        /// Gets the primary key attributes that are data attributes (excluding lookup/navigation attributes).
+        /// </summary>
+        /// <returns>A read-only list of PK data attributes.</returns>
+        public IReadOnlyList<MetaEntityAttr> GetPrimaryKeyDataAttributes()
+        {
+            return (IReadOnlyList<MetaEntityAttr>)Attributes?.Where(a => a.IsPrimaryKey && a.Kind != EntityAttrKind.Lookup).ToList()
+                ?? Array.Empty<MetaEntityAttr>();
+        }
+
+        /// <summary>
         /// Gets a value indicating whether this instance is empty.
         /// </summary>
         /// <value>

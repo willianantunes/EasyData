@@ -5,5 +5,6 @@ public static class CollectionNames
     public const string RestaurantProfiles = "restaurantProfiles";
     public const string Ingredients = "ingredients";
     public const string MenuItems = "menuItems";
+    public const string MenuItemIngredients = "menuItemIngredients";
     public const string Gifts = "gifts";
 }

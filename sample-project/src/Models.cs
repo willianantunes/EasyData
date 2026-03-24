@@ -52,8 +52,6 @@ public class Ingredient : StandardEntity
 {
     public string Name { get; set; }
     public bool IsAllergen { get; set; }
-
-    public IList<MenuItem> MenuItems { get; set; }
 }
 
 public class MenuItem : StandardEntity
@@ -66,7 +64,15 @@ public class MenuItem : StandardEntity
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; } = true;
 
-    public IList<Ingredient> Ingredients { get; set; }
+}
+
+public class MenuItemIngredient
+{
+    public int MenuItemId { get; set; }
+    public MenuItem MenuItem { get; set; }
+
+    public int IngredientId { get; set; }
+    public Ingredient Ingredient { get; set; }
 }
 
 public class Gift : StandardEntity

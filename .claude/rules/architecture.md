@@ -72,10 +72,14 @@ sample-project-sso/                               # SSO example (AWS IAM Identit
 
 The dashboard is provider-agnostic. The abstract `NDjangoAdminManager` defines the contract; providers implement it:
 
-- **EF Core**: `DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData`. CRUD goes through `NDjangoAdminManagerEF`.
-- **MongoDB**: `MongoMetaDataLoader` scans registered document types via reflection + BSON attributes. CRUD operations go through `NDjangoAdminManagerMongo` using `collection.AsQueryable()` (LINQ3) for reads and direct MongoDB driver calls for create/update/delete. Authentication is supported via MongoDB-backed auth collections (users, groups, permissions).
+- **EF Core**: `DbContextMetaDataLoader` scans a `DbContext` to produce `MetaData`. CRUD goes through `NDjangoAdminManagerEF`. Junction entities with composite primary keys are fully supported — both FK navigation properties produce Lookup attributes with correct `DataAttr` references.
+- **MongoDB**: `MongoMetaDataLoader` scans registered document types via reflection + BSON attributes. CRUD operations go through `NDjangoAdminManagerMongo` using `collection.AsQueryable()` (LINQ3) for reads and direct MongoDB driver calls for create/update/delete. Authentication is supported via MongoDB-backed auth collections (users, groups, permissions). MongoDB junction documents use a standard single `ObjectId` PK (no composite keys).
 
 ## Important Metadata Properties
+
+On `MetaEntity`:
+- `HasCompositeKey` — computed property, `true` when 2+ attributes have `IsPrimaryKey == true` (junction/through entities)
+- `GetPrimaryKeyDataAttributes()` — returns non-Lookup PK attributes (used by dispatchers to encode/decode composite keys)
 
 On `MetaEntityAttr`:
 - `ShowOnCreate` / `ShowOnEdit` / `ShowOnView` — control field visibility per view
@@ -91,6 +95,8 @@ On `MetaEntityAttr`:
 
 Routes are Django-style: `/{entityId}/` (list), `/{entityId}/add/` (create), `/{entityId}/{id}/change/` (edit), `/{entityId}/{id}/delete/` (delete). The `entityId` is the short class name from `MetaEntity.Id` (e.g., `Category`, `MenuItem`).
 
+For entities with composite primary keys (e.g., junction tables), the `{id}` segment contains comma-separated URL-encoded key values: `/{entityId}/{key1},{key2}/change/`. The `CompositeKeyEncoder` static class in `NDjango.Admin.Core` handles encoding/decoding. Individual key values containing commas are percent-encoded as `%2C`.
+
 # Auto-Generated Field Handling
 
 EF Core properties with `HasDefaultValueSql()` or `ValueGeneratedOnAdd()` are automatically hidden from create forms and rendered as readonly text on edit forms. This is the intended pattern for timestamps (`CreatedAt`/`UpdatedAt`) and identity columns.
@@ -101,4 +107,12 @@ MongoDB collections can be marked as read-only via `MongoCollectionDescriptor.Is
 
 # SAML SSO
 
-When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password login. The ACS callback (`/api/security/saml/callback`) is registered as a separate middleware branch via `app.Map()` outside the admin base path. IdP metadata can be auto-fetched at startup from `SamlMetadataUrl`, or certificate/SSO URL can be set manually. Group UUIDs from the SAML response are matched against `auth_group.name` to assign permissions. Uses the `AspNetSaml` NuGet package].
+When `EnableSaml = true`, the dashboard adds SAML 2.0 SSO alongside password login. The ACS callback (`/api/security/saml/callback`) is registered as a separate middleware branch via `app.Map()` outside the admin base path. IdP metadata can be auto-fetched at startup from `SamlMetadataUrl`, or certificate/SSO URL can be set manually. Group UUIDs from the SAML response are matched against `auth_group.name` to assign permissions. Uses the `AspNetSaml` NuGet package.
+
+# M2M Relationships
+
+Supported via explicit junction entities (Django Admin's `through` model pattern). Junction entities appear as first-class entities in the dashboard.
+
+**EF Core**: Junction entities use composite PKs (`HasKey(e => new { e.MenuItemId, e.IngredientId })`). `CompositeKeyEncoder` in `NDjango.Admin.Core` encodes/decodes composite keys for URLs (`/admin/MenuItemIngredient/1,3/change/`). FK lookup fields are editable on add forms, read-only on edit forms (enforced in `RazorViewDispatcher`, not metadata). Malformed keys return 400.
+
+**MongoDB**: Junction documents use standard single `ObjectId` PK. No composite key handling. No cascade delete.

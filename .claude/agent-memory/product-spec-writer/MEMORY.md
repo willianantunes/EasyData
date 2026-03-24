@@ -2,3 +2,4 @@
 
 ## Project
 - [MongoDB Driver API Surface](project_mongo-driver-api-surface.md) - Comprehensive inventory of MongoDB.Driver APIs used in NDjango.Admin.MongoDB, mapped to v2 vs v3 compatibility
+- [M2M Codebase Analysis](project_m2m-codebase-analysis.md) - Analysis of the NDjango.Admin codebase for M2M support: key components, composite key routing constraint, current FK handling flow

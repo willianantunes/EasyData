@@ -110,8 +110,9 @@ The admin home at `/admin/` shows models organized in sections:
 | Category | `/admin/Category/` | Standalone | `SearchFields`: Name, Description |
 | Restaurant | `/admin/Restaurant/` | Has 1:1 RestaurantProfile, has many MenuItems | `SearchFields`: Name, `Actions`: "Mark selected restaurants as featured" |
 | RestaurantProfile | `/admin/RestaurantProfile/` | FK text input + lookup popup → Restaurant (1:1) | None |
-| Ingredient | `/admin/Ingredient/` | Standalone (has M2M with MenuItem, not yet supported in UI) | None |
+| Ingredient | `/admin/Ingredient/` | Standalone | None |
 | MenuItem | `/admin/MenuItem/` | FK text input + lookup popup → Restaurant (N:1) | None |
+| MenuItemIngredient | `/admin/MenuItemIngredient/` | M2M junction: FK lookup → MenuItem + FK lookup → Ingredient (composite PK) | None |
 | Gift | `/admin/Gift/` | Standalone; has DateOnly, TimeOnly, TimeSpan, DateTimeOffset fields | None |
 
 ### Authentication and Authorization (when auth enabled)
@@ -140,6 +141,8 @@ These appear under the "Authentication and Authorization" heading in the sidebar
 | Execute bulk action | `/admin/{Model}/action/` | POST |
 | Bulk delete confirmation | `/admin/{Model}/action/delete/` | GET |
 | Bulk delete execute | `/admin/{Model}/action/delete/` | POST |
+
+**Composite key URLs:** For entities with composite primary keys (e.g., `MenuItemIngredient`), the `{id}` segment contains comma-separated key values. Example: `/admin/MenuItemIngredient/1,3/change/` where `1` is `MenuItemId` and `3` is `IngredientId`. Individual key values containing commas are percent-encoded as `%2C`.
 
 ## Model Details and Form Fields
 
@@ -243,6 +246,31 @@ All models inherit from `StandardEntity` which has `Id`, `CreatedAt`, `UpdatedAt
 
 **Price locale note:** The list view may display prices with comma as decimal separator (e.g., `14,99`) depending on server locale. The form uses `<input type="number" step="any">`.
 
+### MenuItemIngredient (M2M junction entity — composite PK)
+
+`MenuItemIngredient` is a junction/through table for the many-to-many relationship between `MenuItem` and `Ingredient`. It does **not** inherit from `StandardEntity` — it has no `Id`, `CreatedAt`, or `UpdatedAt` fields. Its primary key is a composite of the two FK fields.
+
+**Fields on forms:**
+- `MenuItem` — **text input + lookup popup** (raw FK ID), required, maps to `MenuItemId`. Read-only on edit form (part of composite PK)
+- `Ingredient` — **text input + lookup popup** (raw FK ID), required, maps to `IngredientId`. Read-only on edit form (part of composite PK)
+
+**Composite key URL pattern:** `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/change/`
+
+**Test steps:**
+1. **Ensure at least one MenuItem and one Ingredient exist first**
+2. Navigate to `/admin/MenuItemIngredient/add/`
+3. Verify both fields render as text inputs (`class="vForeignKeyRawIdAdminField"`) with lookup icons
+4. Enter valid MenuItem ID and Ingredient ID
+5. Click Save → redirects to list
+6. Click the row link → opens edit form at composite key URL (e.g., `/admin/MenuItemIngredient/1,3/change/`)
+7. Verify both FK fields are **read-only** on the edit form
+8. Test delete via the edit form's Delete link
+
+**FK field details:**
+- The MenuItem `<input>` has `name="MenuItemId"` (FK property name)
+- The Ingredient `<input>` has `name="IngredientId"` (FK property name)
+- Lookup popups open `/admin/MenuItem/?_to_field=id&_popup=1` and `/admin/Ingredient/?_to_field=id&_popup=1` respectively
+
 ## Auth Entity Details
 
 ### AuthUser
@@ -284,7 +312,7 @@ Permissions are auto-generated at startup for every entity. Four per entity:
 - `delete_{entityname_lower}` / "Can delete {EntityName}"
 - `view_{entityname_lower}` / "Can view {EntityName}"
 
-With 10 entities (5 user + 5 auth), expect 40 permissions total (25 per page, paginated).
+With 11 entities (6 user + 5 auth), expect 44 permissions total (25 per page, paginated).
 
 ### AuthGroupPermission
 
@@ -378,7 +406,7 @@ When running a full E2E test pass, verify in this order:
 ### Phase 2: Dashboard Home & Sidebar
 
 6. **Dashboard home** — `/admin/` loads, shows user models and "Authentication and Authorization" section
-7. **Sidebar** — shows "Models" section and "Authentication and Authorization" section with all 10 entities
+7. **Sidebar** — shows "Models" section and "Authentication and Authorization" section with all 11 entities (6 user + 5 auth)
 
 ### Phase 3: User Entity CRUD (respects FK dependencies)
 
@@ -440,6 +468,114 @@ FK fields render as a plain text input (showing the raw FK ID) plus a lookup ico
 
 12o. **FK value pre-filled on edit** — Navigate to the edit form of the MenuItem created in 12n. Verify the Restaurant text input shows `1` as its value.
 
+### Phase 3b: Many-to-Many (M2M) Relationships via Junction Entity
+
+The `MenuItemIngredient` entity is an explicit junction/through table that links `MenuItem` and `Ingredient` in a many-to-many relationship. It uses a **composite primary key** (`MenuItemId`, `IngredientId`) — no auto-generated `Id`. The dashboard treats it as a first-class entity with its own list, add, edit, and delete pages, matching Django Admin's pattern for M2M with explicit `through` models.
+
+**Key behaviors:**
+- The junction entity appears in the dashboard sidebar and home page like any other entity
+- Both FK fields render as text inputs with lookup popup icons (same as regular FK fields)
+- URLs use comma-separated composite keys: `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/change/`
+- On the edit form, both FK/PK fields are **read-only** (changing them would change the record's identity)
+- Deleting a junction record removes only the relationship, not the parent entities
+- Parent entities (`MenuItem`, `Ingredient`) do NOT show the M2M relationship on their forms
+
+**Prerequisites:** At least one `MenuItem` and one `Ingredient` must exist before creating junction records. Use the IDs from the seeded data or create new ones first.
+
+#### Junction Entity in Dashboard
+
+12p. **MenuItemIngredient appears in dashboard** — Navigate to `/admin/`. Verify `MenuItemIngredient` (or "Menu Item Ingredients") appears in the entity list alongside other models.
+
+12q. **MenuItemIngredient appears in sidebar** — Navigate to any entity list page. Verify `MenuItemIngredient` appears in the left sidebar under the "Models" section.
+
+#### Junction Entity Add Form (Composite Key Create)
+
+12r. **Add form renders two FK lookup fields** — Navigate to `/admin/MenuItemIngredient/add/`. Verify:
+  - Two FK fields are shown: `MenuItem` and `Ingredient`
+  - Each renders as a text input with `class="vForeignKeyRawIdAdminField"` and a lookup icon with `class="related-lookup"`
+  - The MenuItem lookup icon links to `/admin/MenuItem/?_to_field=id&_popup=1`
+  - The Ingredient lookup icon links to `/admin/Ingredient/?_to_field=id&_popup=1`
+  - There are NO `Id`, `CreatedAt`, or `UpdatedAt` fields (junction entity does not inherit from `StandardEntity`)
+  - Three save buttons are present: "Save", "Save and add another", "Save and continue editing"
+
+12s. **Create junction record via Save** — On `/admin/MenuItemIngredient/add/`:
+  1. Enter a valid MenuItem ID (e.g., `1`) in the MenuItem field
+  2. Enter a valid Ingredient ID (e.g., `1`) in the Ingredient field
+  3. Click "Save"
+  4. Verify redirect to `/admin/MenuItemIngredient/` list
+  5. Verify the new record appears in the list showing `MenuItemId` and `IngredientId` columns
+
+12t. **Create junction record via Save and continue editing** — On `/admin/MenuItemIngredient/add/`:
+  1. Enter a MenuItem ID and Ingredient ID (use a combination not yet created, e.g., MenuItem `2`, Ingredient `2`)
+  2. Click "Save and continue editing"
+  3. Verify redirect to `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/change/` (composite key in URL)
+  4. Verify the URL contains the comma-separated composite key (e.g., `/admin/MenuItemIngredient/2,2/change/`)
+
+12u. **Create junction record via Save and add another** — On the edit form from step 12t, click "Save and add another". Verify redirect to `/admin/MenuItemIngredient/add/` (blank form).
+
+#### Junction Entity List View (Composite Key Links)
+
+12v. **List view shows composite key edit links** — Navigate to `/admin/MenuItemIngredient/`. Verify:
+  - The table shows columns for `MenuItemId` and `IngredientId`
+  - The first visible column is a clickable link
+  - The link URL uses comma-separated composite key: `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/change/`
+  - Record count shows the correct number of junction records
+
+12w. **List view checkboxes use composite key values** — Inspect the checkboxes in the list view. Each checkbox `value` should contain the encoded composite key (e.g., `1,1`).
+
+#### Junction Entity Edit Form (Read-Only PK Fields)
+
+12x. **Edit form loads with composite key URL** — Navigate to `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/change/` (use values from a record created above). Verify:
+  - The page loads successfully (200 OK)
+  - Both FK fields show the correct pre-filled values
+  - Both FK/PK fields are rendered as **read-only text** (not editable inputs) — since they are part of the composite primary key, changing them would change the record's identity
+  - A "Delete" link is present
+
+#### Junction Entity Delete
+
+12y. **Delete junction record** — From the edit form of a junction record:
+  1. Click the "Delete" link
+  2. Verify redirect to `/admin/MenuItemIngredient/{menuItemId},{ingredientId}/delete/` (composite key in URL)
+  3. Verify the confirmation page shows "Are you sure?" with the record details
+  4. Click "Yes, I'm sure"
+  5. Verify redirect to `/admin/MenuItemIngredient/` list
+  6. Verify the record is gone from the list
+
+12z. **Delete only removes relationship, not parents** — After deleting a junction record:
+  1. Navigate to `/admin/MenuItem/`. Verify the parent MenuItem still exists
+  2. Navigate to `/admin/Ingredient/`. Verify the parent Ingredient still exists
+
+#### Junction Entity Bulk Delete (Composite Keys)
+
+12aa. **Bulk delete junction records** — On `/admin/MenuItemIngredient/`:
+  1. Create 2 test junction records if needed (e.g., MenuItem 1 + Ingredient 3, MenuItem 1 + Ingredient 4 — create test Ingredients first if needed)
+  2. Select both records via checkboxes
+  3. Select "Delete selected menu item ingredients" from the action dropdown
+  4. Click "Go"
+  5. Verify redirect to bulk delete confirmation page showing "2 menu item ingredients"
+  6. Click "Yes, I'm sure"
+  7. Verify redirect to list with success message "Successfully deleted 2 menu item ingredients."
+  8. Verify both records are gone
+
+#### Malformed Composite Key URLs
+
+12ab. **Invalid composite key returns 400** — Navigate to `/admin/MenuItemIngredient/INVALID/change/`. Verify a 400 Bad Request response (not a 500 server error).
+
+12ac. **Single value for composite key returns 400** — Navigate to `/admin/MenuItemIngredient/1/change/`. Verify a 400 Bad Request response (expects two comma-separated values).
+
+#### Cascade Delete from Parent
+
+12ad. **Deleting parent cascades to junction records** — This tests EF Core cascade delete:
+  1. Create a temporary Ingredient (e.g., "TempIngredient")
+  2. Create a junction record linking any MenuItem to TempIngredient
+  3. Verify the junction record appears in `/admin/MenuItemIngredient/` list
+  4. Delete the TempIngredient from `/admin/Ingredient/`
+  5. Verify the junction record was also deleted (cascade delete)
+
+#### Cleanup
+
+12ae. **Clean up test data** — Delete any test junction records, MenuItems, and Ingredients created during M2M testing. Verify entity counts return to seeded values.
+
 ### Phase 4: Auth Entity CRUD
 
 13. **AuthPermission list** — verify auto-generated permissions exist (e.g., `add_category`, `view_category`)
@@ -458,7 +594,7 @@ FK fields render as a plain text input (showing the raw FK ID) plus a lookup ico
 
 21. **Conditional search** — see Phase 3a above for detailed steps
 22. **Sorting** — click column header, verify sort direction toggle
-23. **Pagination** — AuthPermission list has 40 items (25/page), verify page 2
+23. **Pagination** — AuthPermission list has 44 items (25/page), verify page 2
 
 ### Phase 7: Bulk Actions (Django-Style)
 
@@ -668,7 +804,6 @@ The Gift model (`sample-project/src/Models.cs`) exercises all date/time types: `
 ## What's NOT Tested (Known Gaps)
 
 - **SP-initiated SAML login:** Does not work with AWS IAM Identity Center (403 "No access"). Only IdP-initiated is testable.
-- **M2M relationships:** MenuItem ↔ Ingredient many-to-many is defined in EF Core but the dashboard has no multi-select UI for it yet (Phase 5)
 - **Read-only mode:** `AdminDashboardOptions.IsReadOnly = true` hides all write controls and bulk action bar
 - **Custom authorization filters:** `LocalRequestsOnlyAuthorizationFilter`, custom `IAdminDashboardAuthorizationFilter`
 - **Cookie expiration:** Default 24h, configurable via `AdminDashboardOptions.CookieExpiration`

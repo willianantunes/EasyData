@@ -17,6 +17,7 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
         public DbSet<RestaurantProfile> RestaurantProfiles { get; set; }
         public DbSet<Ingredient> Ingredients { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
+        public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; }
         public DbSet<Gift> Gifts { get; set; }
 
         public TestDbContext(DbContextOptions<TestDbContext> options) : base(options)
@@ -32,6 +33,21 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
 
             modelBuilder.Entity<Gift>()
                 .Property(g => g.Price).HasPrecision(10, 2);
+
+            modelBuilder.Entity<MenuItemIngredient>(entity =>
+            {
+                entity.HasKey(e => new { e.MenuItemId, e.IngredientId });
+
+                entity.HasOne(e => e.MenuItem)
+                    .WithMany()
+                    .HasForeignKey(e => e.MenuItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Ingredient)
+                    .WithMany()
+                    .HasForeignKey(e => e.IngredientId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 
@@ -107,6 +123,15 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
 
         public int RestaurantId { get; set; }
         public Restaurant Restaurant { get; set; }
+    }
+
+    public class MenuItemIngredient
+    {
+        public int MenuItemId { get; set; }
+        public MenuItem MenuItem { get; set; }
+
+        public int IngredientId { get; set; }
+        public Ingredient Ingredient { get; set; }
     }
 
     public class Gift

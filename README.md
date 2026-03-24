@@ -15,6 +15,7 @@ A Django-admin-inspired admin dashboard for ASP.NET Core. Automatically generate
 - **List view** with column sorting, pagination, opt-in search via `IAdminSettings<T>`, and bulk actions (checkboxes + action dropdown)
 - **Bulk actions** — built-in "Delete selected" with confirmation page, plus custom user-defined actions via `AdminActionList<TPk>`
 - **Create/Edit forms** that auto-detect fields, hide auto-generated properties (`Id`, `CreatedAt`, `UpdatedAt`), and render FK relationships as text input + lookup popup (like Django's `raw_id_fields`)
+- **M2M relationships** via explicit junction/through entities with composite key support (EF Core) — junction tables appear as first-class entities in the dashboard, matching Django Admin's pattern
 - **Delete confirmation** page (single record and bulk)
 - **Sidebar** with model navigation and filtering
 - **Zero client-side framework dependency** — all HTML is server-rendered
@@ -97,7 +98,6 @@ Navigate to `/admin/` and you have a working admin dashboard for your MongoDB co
 - Use `[BsonIgnore]` to hide properties from the dashboard
 - Use `[BsonElement("name")]` to specify the stored field name
 - Implement `IAdminSettings<T>` to enable search on specific fields
-- Collection/complex type properties (e.g., `List<ObjectId>`) are displayed as read-only JSON on detail views
 
 #### Auto-timestamp convention (MongoDB)
 
@@ -322,6 +322,74 @@ This replaces preloaded `<select>` dropdowns, which don't scale when the related
 
 The popup opens a simplified version of the related entity's list view (no header, no sidebar) and respects conditional search — if the related entity has `SearchFields`, the popup includes a search box.
 
+### Many-to-many relationships
+
+M2M relationships are supported via explicit junction/through entities, following Django Admin's pattern where the through model is treated as a first-class entity with its own list, add, edit, and delete pages.
+
+#### EF Core — composite primary keys
+
+Create an explicit junction entity with a composite key and register it as a `DbSet`:
+
+```csharp
+// Junction entity — does NOT inherit from StandardEntity (no auto Id/timestamps)
+public class MenuItemIngredient
+{
+    public int MenuItemId { get; set; }
+    public MenuItem MenuItem { get; set; }
+
+    public int IngredientId { get; set; }
+    public Ingredient Ingredient { get; set; }
+}
+
+// DbContext
+public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; }
+
+// OnModelCreating
+modelBuilder.Entity<MenuItemIngredient>(entity =>
+{
+    entity.HasKey(e => new { e.MenuItemId, e.IngredientId });
+
+    entity.HasOne(e => e.MenuItem)
+        .WithMany()
+        .HasForeignKey(e => e.MenuItemId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(e => e.Ingredient)
+        .WithMany()
+        .HasForeignKey(e => e.IngredientId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
+```
+
+The dashboard automatically:
+- Shows the junction entity in the sidebar and dashboard home
+- Renders both FK fields as text inputs with lookup popups on the **add** form
+- Renders both FK fields as **read-only** on the **edit** form (changing PKs would change the record's identity)
+- Encodes composite keys in URLs as comma-separated values: `/admin/MenuItemIngredient/1,3/change/`
+- Supports bulk delete with composite keys
+- Returns 400 for malformed composite key URLs
+
+Parent entities (`MenuItem`, `Ingredient`) do **not** show the M2M relationship on their forms — collection navigations are skipped, matching Django Admin's behavior with explicit `through` models.
+
+#### MongoDB — junction collections
+
+MongoDB junction documents use a standard single `ObjectId` PK (no composite keys):
+
+```csharp
+public class MenuItemIngredient : StandardDocument
+{
+    public ObjectId MenuItemId { get; set; }
+    public ObjectId IngredientId { get; set; }
+}
+
+// Registration
+mongo.AddCollection<MenuItemIngredient>("menuItemIngredients");
+```
+
+The `MenuItemId` and `IngredientId` fields render as plain text inputs for ObjectId hex strings (no lookup popups — consistent with all MongoDB FK-like fields). Standard single-key CRUD applies.
+
+**Key difference from EF Core:** MongoDB has no foreign key constraints, so deleting a parent document does **not** cascade-delete junction records.
+
 ### Bulk actions
 
 List views include Django-style bulk actions: select rows via checkboxes, pick an action from a dropdown, and click "Go". A built-in "Delete selected" action is available on every editable entity. You can register custom actions per entity via `IAdminSettings<T>`.
@@ -442,7 +510,7 @@ cd sample-project/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem, Gift). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup. Restaurant also demonstrates a custom bulk action ("Mark selected restaurants as featured") alongside the built-in bulk delete.
+Open `http://localhost:8000/admin/` to see the dashboard with restaurant domain models (Category, Restaurant, RestaurantProfile, Ingredient, MenuItem, MenuItemIngredient, Gift). Category and Restaurant have `IAdminSettings` with search fields configured; the other models demonstrate the no-search path. FK fields (e.g., MenuItem → Restaurant) use the lookup popup. MenuItemIngredient demonstrates M2M relationships via a junction entity with a composite primary key. Restaurant also demonstrates a custom bulk action ("Mark selected restaurants as featured") alongside the built-in bulk delete.
 
 ### sample-project-mongodb (MongoDB)
 
@@ -455,7 +523,7 @@ cd sample-project-mongodb/src
 dotnet run -- api
 ```
 
-Open `http://localhost:8001/admin/` to see the dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates full CRUD, `ObjectId` primary keys, cross-collection references, `IAdminSettings` search, cookie-based authentication, and all supported data types. Default login: `admin` / `admin`.
+Open `http://localhost:8001/admin/` to see the dashboard with the same restaurant domain models translated to MongoDB documents. Demonstrates full CRUD, `ObjectId` primary keys, cross-collection references, M2M via junction collection (MenuItemIngredient), `IAdminSettings` search, cookie-based authentication, and all supported data types. Default login: `admin` / `admin`.
 
 ### sample-project-sso
 
@@ -463,5 +531,6 @@ Demonstrates SAML SSO with AWS IAM Identity Center. See [`sample-project-sso/REA
 
 ## Known Gaps
 
-- **M2M relationships** not yet supported in the dashboard
 - **MongoDB FK lookups** — references between MongoDB collections display as plain ObjectId strings, not lookup popups like the EF Core provider
+- **MongoDB cascade delete** — deleting a parent document does not auto-delete junction records (MongoDB has no FK constraints)
+- **FK display names in list views** — FK columns show raw IDs, not the related entity's display name (applies to both providers)

@@ -20,6 +20,8 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.ViewModels
         public string SortField { get; set; }
         public string SortDirection { get; set; }
         public string PrimaryKeyField { get; set; }
+        public List<string> PrimaryKeyFields { get; set; } = new List<string>();
+        public bool HasCompositeKey { get; set; }
         public Dictionary<string, List<EntityGroupItem>> SidebarGroups { get; set; }
         public bool IsSearchEnabled { get; set; }
         public bool IsPopup { get; set; }

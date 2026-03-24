@@ -7,6 +7,7 @@ public class AppDbContext : DbContext
     public DbSet<RestaurantProfile> RestaurantProfiles { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<MenuItem> MenuItems { get; set; }
+    public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; }
     public DbSet<Gift> Gifts { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -77,10 +78,22 @@ public class AppDbContext : DbContext
                 .HasForeignKey(mi => mi.RestaurantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(mi => mi.Ingredients)
-                .WithMany(i => i.MenuItems);
-
             entity.HasIndex(mi => new { mi.RestaurantId, mi.Name });
+        });
+
+        modelBuilder.Entity<MenuItemIngredient>(entity =>
+        {
+            entity.HasKey(e => new { e.MenuItemId, e.IngredientId });
+
+            entity.HasOne(e => e.MenuItem)
+                .WithMany()
+                .HasForeignKey(e => e.MenuItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Ingredient)
+                .WithMany()
+                .HasForeignKey(e => e.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

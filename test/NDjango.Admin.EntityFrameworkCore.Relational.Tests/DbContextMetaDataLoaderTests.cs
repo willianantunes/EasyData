@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Xunit;
-
-
 
 namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
 {
@@ -85,6 +84,76 @@ namespace NDjango.Admin.EntityFrameworkCore.Relational.Tests
 
             var attr = entity.FindAttributeByExpression("Customer.TimeCreated");
             Assert.Null(attr);
+        }
+
+        [Fact]
+        public void CompositeKeyEntity_HasCompositeKey_ReturnsTrue()
+        {
+            // Arrange
+            var meta = new MetaData();
+            meta.LoadFromDbContext(_dbContext);
+
+            // Act
+            var orderDetail = meta.FindEntity(ent => ent.ClrType == typeof(OrderDetail));
+
+            // Assert
+            Assert.NotNull(orderDetail);
+            Assert.True(orderDetail.HasCompositeKey);
+        }
+
+        [Fact]
+        public void CompositeKeyEntity_HasMultiplePkAttributes()
+        {
+            // Arrange
+            var meta = new MetaData();
+            meta.LoadFromDbContext(_dbContext);
+
+            // Act
+            var orderDetail = meta.FindEntity(ent => ent.ClrType == typeof(OrderDetail));
+            var pkAttrs = orderDetail.Attributes.Where(a => a.IsPrimaryKey).ToList();
+
+            // Assert
+            Assert.Equal(2, pkAttrs.Count);
+            Assert.Contains(pkAttrs, a => a.PropName == "OrderID");
+            Assert.Contains(pkAttrs, a => a.PropName == "ProductID");
+        }
+
+        [Fact]
+        public void CompositeKeyEntity_FkLookupAttrs_AreEditableAtMetadataLevel()
+        {
+            // Arrange
+            var meta = new MetaData();
+            meta.LoadFromDbContext(_dbContext);
+
+            // Act
+            var orderDetail = meta.FindEntity(ent => ent.ClrType == typeof(OrderDetail));
+            var lookupAttrs = orderDetail.Attributes
+                .Where(a => a.Kind == EntityAttrKind.Lookup)
+                .ToList();
+
+            // Assert
+            Assert.Equal(2, lookupAttrs.Count);
+            // Lookup attrs are editable at the metadata level; the rendering layer
+            // makes them read-only only on edit forms for composite key entities
+            foreach (var lookupAttr in lookupAttrs)
+            {
+                Assert.True(lookupAttr.IsEditable);
+            }
+        }
+
+        [Fact]
+        public void SingleKeyEntity_HasCompositeKey_ReturnsFalse()
+        {
+            // Arrange
+            var meta = new MetaData();
+            meta.LoadFromDbContext(_dbContext);
+
+            // Act
+            var category = meta.FindEntity(ent => ent.ClrType == typeof(Category));
+
+            // Assert
+            Assert.NotNull(category);
+            Assert.False(category.HasCompositeKey);
         }
     }
 }

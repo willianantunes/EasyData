@@ -582,6 +582,28 @@
             <param name="s">The source string.</param>
             <returns>The result identifier</returns>
         </member>
+        <member name="T:NDjango.Admin.CompositeKeyEncoder">
+            <summary>
+            Encodes and decodes composite primary keys for use in URL segments.
+            Values are comma-separated and URL-encoded.
+            </summary>
+        </member>
+        <member name="M:NDjango.Admin.CompositeKeyEncoder.Encode(System.Collections.Generic.IReadOnlyList{System.Collections.Generic.KeyValuePair{System.String,System.String}})">
+            <summary>
+            Encodes a list of key-value pairs into a single comma-separated string.
+            Each value is URL-encoded to handle special characters.
+            </summary>
+            <param name="keyParts">The key parts to encode, each as a name/value pair.</param>
+            <returns>A comma-separated, URL-encoded string representation of the composite key.</returns>
+        </member>
+        <member name="M:NDjango.Admin.CompositeKeyEncoder.Decode(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+            Decodes a comma-separated encoded string back into a dictionary of PK property name to value.
+            </summary>
+            <param name="encoded">The encoded composite key string from the URL.</param>
+            <param name="pkPropNames">The ordered list of PK property names.</param>
+            <returns>A dictionary mapping each PK property name to its decoded value.</returns>
+        </member>
         <member name="M:NDjango.Admin.DataUtils.ReplaceChar(System.String,System.Char,System.Int32)">
             <summary>
              Written to replace char in string 
@@ -747,6 +769,17 @@
             <summary>
             Gets or sets the index of the entity
             </summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntity.HasCompositeKey">
+            <summary>
+            Gets a value indicating whether this entity has a composite primary key (more than one PK attribute).
+            </summary>
+        </member>
+        <member name="M:NDjango.Admin.MetaEntity.GetPrimaryKeyDataAttributes">
+            <summary>
+            Gets the primary key attributes that are data attributes (excluding lookup/navigation attributes).
+            </summary>
+            <returns>A read-only list of PK data attributes.</returns>
         </member>
         <member name="P:NDjango.Admin.MetaEntity.IsEmpty">
             <summary>

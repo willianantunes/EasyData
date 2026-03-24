@@ -580,10 +580,9 @@ namespace NDjango.Admin.EntityFrameworkCore
                 var parsedIds = (System.Collections.IList)Activator.CreateInstance(listType);
                 foreach (var sid in stringIds) {
                     try {
-                        object parsed;
-                        if (pkType == typeof(Guid))
-                            parsed = Guid.Parse(sid);
-                        else parsed = pkType == typeof(long)
+                        var parsed = pkType == typeof(Guid)
+                            ? Guid.Parse(sid)
+                            : pkType == typeof(long)
                             ? long.Parse(sid)
                             : pkType == typeof(int) ? int.Parse(sid) : pkType == typeof(string) ? sid : Convert.ChangeType(sid, pkType);
                         parsedIds.Add(parsed);

@@ -81,12 +81,20 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.Fixtures
             var ing1 = new Ingredient { Name = "Tomato", IsAllergen = false };
             var ing2 = new Ingredient { Name = "Mozzarella", IsAllergen = true };
             var ing3 = new Ingredient { Name = "Basil", IsAllergen = false };
-            context.Ingredients.AddRange(ing1, ing2, ing3);
+            var ing4 = new Ingredient { Name = "Olive Oil", IsAllergen = false };
+            var ing5 = new Ingredient { Name = "Garlic", IsAllergen = false };
+            context.Ingredients.AddRange(ing1, ing2, ing3, ing4, ing5);
             context.SaveChanges();
 
-            context.MenuItems.AddRange(
-                new MenuItem { Name = "Margherita Pizza", Price = 12.99m, RestaurantId = rest1.Id },
-                new MenuItem { Name = "Sushi Roll", Price = 15.50m, RestaurantId = rest2.Id }
+            var mi1 = new MenuItem { Name = "Margherita Pizza", Price = 12.99m, RestaurantId = rest1.Id };
+            var mi2 = new MenuItem { Name = "Sushi Roll", Price = 15.50m, RestaurantId = rest2.Id };
+            context.MenuItems.AddRange(mi1, mi2);
+            context.SaveChanges();
+
+            context.MenuItemIngredients.AddRange(
+                new MenuItemIngredient { MenuItemId = mi1.Id, IngredientId = ing1.Id },
+                new MenuItemIngredient { MenuItemId = mi1.Id, IngredientId = ing2.Id },
+                new MenuItemIngredient { MenuItemId = mi2.Id, IngredientId = ing3.Id }
             );
             context.SaveChanges();
         }

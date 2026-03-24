@@ -4216,5 +4216,262 @@ namespace NDjango.Admin.Core.Tests
         }
 
         #endregion
+
+        #region HasCompositeKey Tests
+
+        [Fact]
+        public void HasCompositeKey_SinglePrimaryKey_ReturnsFalse()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "TestEntity";
+
+            var attr1 = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+            attr1.Id = "TestEntity.Id";
+            attr1.IsPrimaryKey = true;
+            entity.Attributes.Add(attr1);
+
+            var attr2 = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+            attr2.Id = "TestEntity.Name";
+            attr2.IsPrimaryKey = false;
+            entity.Attributes.Add(attr2);
+
+            // Act
+            var result = entity.HasCompositeKey;
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void HasCompositeKey_MultiplePrimaryKeys_ReturnsTrue()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "JunctionEntity";
+
+            var attr1 = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+            attr1.Id = "JunctionEntity.MenuItemId";
+            attr1.IsPrimaryKey = true;
+            entity.Attributes.Add(attr1);
+
+            var attr2 = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+            attr2.Id = "JunctionEntity.IngredientId";
+            attr2.IsPrimaryKey = true;
+            entity.Attributes.Add(attr2);
+
+            // Act
+            var result = entity.HasCompositeKey;
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void HasCompositeKey_NoPrimaryKeys_ReturnsFalse()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "NoPkEntity";
+
+            var attr1 = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+            attr1.Id = "NoPkEntity.Name";
+            attr1.IsPrimaryKey = false;
+            entity.Attributes.Add(attr1);
+
+            // Act
+            var result = entity.HasCompositeKey;
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void HasCompositeKey_NoAttributes_ReturnsFalse()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "EmptyEntity";
+
+            // Act
+            var result = entity.HasCompositeKey;
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void HasCompositeKey_ThreePrimaryKeys_ReturnsTrue()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "TripleKey";
+
+            for (var i = 1; i <= 3; i++)
+            {
+                var attr = model.CreateEntityAttr(new MetaEntityAttrDescriptor { Parent = entity });
+                attr.Id = $"TripleKey.Key{i}";
+                attr.IsPrimaryKey = true;
+                entity.Attributes.Add(attr);
+            }
+
+            // Act
+            var result = entity.HasCompositeKey;
+
+            // Assert
+            Assert.True(result);
+        }
+
+        #endregion
+
+        #region GetPrimaryKeyDataAttributes Tests
+
+        [Fact]
+        public void GetPrimaryKeyDataAttributes_WithDataPkAttributes_ReturnsOnlyPkDataAttributes()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "TestEntity";
+
+            var pkAttr = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Data
+            });
+            pkAttr.Id = "TestEntity.Id";
+            pkAttr.IsPrimaryKey = true;
+            entity.Attributes.Add(pkAttr);
+
+            var regularAttr = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Data
+            });
+            regularAttr.Id = "TestEntity.Name";
+            regularAttr.IsPrimaryKey = false;
+            entity.Attributes.Add(regularAttr);
+
+            // Act
+            var result = entity.GetPrimaryKeyDataAttributes();
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("TestEntity.Id", result[0].Id);
+        }
+
+        [Fact]
+        public void GetPrimaryKeyDataAttributes_WithLookupPkAttributes_ExcludesLookups()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "JunctionEntity";
+
+            var dataAttr1 = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Data
+            });
+            dataAttr1.Id = "JunctionEntity.MenuItemId";
+            dataAttr1.IsPrimaryKey = true;
+            entity.Attributes.Add(dataAttr1);
+
+            var dataAttr2 = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Data
+            });
+            dataAttr2.Id = "JunctionEntity.IngredientId";
+            dataAttr2.IsPrimaryKey = true;
+            entity.Attributes.Add(dataAttr2);
+
+            var lookupAttr = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Lookup
+            });
+            lookupAttr.Id = "JunctionEntity.MenuItem";
+            lookupAttr.IsPrimaryKey = true;
+            entity.Attributes.Add(lookupAttr);
+
+            // Act
+            var result = entity.GetPrimaryKeyDataAttributes();
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Equal("JunctionEntity.MenuItemId", result[0].Id);
+            Assert.Equal("JunctionEntity.IngredientId", result[1].Id);
+        }
+
+        [Fact]
+        public void GetPrimaryKeyDataAttributes_NoPrimaryKeys_ReturnsEmptyList()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "NoPkEntity";
+
+            var attr = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Data
+            });
+            attr.Id = "NoPkEntity.Name";
+            attr.IsPrimaryKey = false;
+            entity.Attributes.Add(attr);
+
+            // Act
+            var result = entity.GetPrimaryKeyDataAttributes();
+
+            // Assert
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetPrimaryKeyDataAttributes_NoAttributes_ReturnsEmptyList()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "EmptyEntity";
+
+            // Act
+            var result = entity.GetPrimaryKeyDataAttributes();
+
+            // Assert
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetPrimaryKeyDataAttributes_OnlyLookupPkAttributes_ReturnsEmptyList()
+        {
+            // Arrange
+            var model = new MetaData();
+            var entity = model.CreateEntity();
+            entity.Id = "LookupOnlyEntity";
+
+            var lookupAttr = model.CreateEntityAttr(new MetaEntityAttrDescriptor
+            {
+                Parent = entity,
+                Kind = EntityAttrKind.Lookup
+            });
+            lookupAttr.Id = "LookupOnlyEntity.Navigation";
+            lookupAttr.IsPrimaryKey = true;
+            entity.Attributes.Add(lookupAttr);
+
+            // Act
+            var result = entity.GetPrimaryKeyDataAttributes();
+
+            // Assert
+            Assert.Empty(result);
+        }
+
+        #endregion
     }
 }

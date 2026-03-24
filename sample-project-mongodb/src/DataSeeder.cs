@@ -9,7 +9,8 @@ public static class DataSeeder
         var (restaurant1Id, restaurant2Id) = await SeedRestaurantsAsync(database);
         await SeedRestaurantProfilesAsync(database, restaurant1Id, restaurant2Id);
         var ingredientIds = await SeedIngredientsAsync(database);
-        await SeedMenuItemsAsync(database, restaurant1Id, restaurant2Id, ingredientIds);
+        var menuItemIds = await SeedMenuItemsAsync(database, restaurant1Id, restaurant2Id);
+        await SeedMenuItemIngredientsAsync(database, menuItemIds, ingredientIds);
         await SeedGiftsAsync(database);
     }
 
@@ -108,15 +109,17 @@ public static class DataSeeder
         return ingredients.Select(i => i.Id).ToList();
     }
 
-    private static async Task SeedMenuItemsAsync(
+    private static async Task<List<ObjectId>> SeedMenuItemsAsync(
         IMongoDatabase database,
         ObjectId restaurant1Id,
-        ObjectId restaurant2Id,
-        List<ObjectId> ingredientIds)
+        ObjectId restaurant2Id)
     {
         var collection = database.GetCollection<MenuItem>(CollectionNames.MenuItems);
         if (await collection.CountDocumentsAsync(FilterDefinition<MenuItem>.Empty) > 0)
-            return;
+        {
+            var existing = await collection.Find(FilterDefinition<MenuItem>.Empty).ToListAsync();
+            return existing.Select(mi => mi.Id).ToList();
+        }
 
         var menuItems = new List<MenuItem>
         {
@@ -127,7 +130,6 @@ public static class DataSeeder
                 Description = "Classic pizza with tomato sauce, mozzarella, and fresh basil",
                 Price = 14.99m,
                 IsAvailable = true,
-                IngredientIds = new List<ObjectId> { ingredientIds[0], ingredientIds[1], ingredientIds[4] },
             },
             new()
             {
@@ -136,7 +138,6 @@ public static class DataSeeder
                 Description = "Traditional Roman pasta with egg, cheese, and pancetta",
                 Price = 16.50m,
                 IsAvailable = true,
-                IngredientIds = new List<ObjectId> { ingredientIds[0] },
             },
             new()
             {
@@ -145,7 +146,6 @@ public static class DataSeeder
                 Description = "Fresh sliced salmon served with soy sauce and wasabi",
                 Price = 18.00m,
                 IsAvailable = true,
-                IngredientIds = new List<ObjectId> { ingredientIds[2], ingredientIds[3] },
             },
             new()
             {
@@ -154,11 +154,38 @@ public static class DataSeeder
                 Description = "Rich miso broth with noodles, pork, and soft-boiled egg",
                 Price = 15.00m,
                 IsAvailable = true,
-                IngredientIds = new List<ObjectId> { ingredientIds[3] },
             },
         };
 
         await collection.InsertManyAsync(menuItems);
+        return menuItems.Select(mi => mi.Id).ToList();
+    }
+
+    private static async Task SeedMenuItemIngredientsAsync(
+        IMongoDatabase database,
+        List<ObjectId> menuItemIds,
+        List<ObjectId> ingredientIds)
+    {
+        var collection = database.GetCollection<MenuItemIngredient>(CollectionNames.MenuItemIngredients);
+        if (await collection.CountDocumentsAsync(FilterDefinition<MenuItemIngredient>.Empty) > 0)
+            return;
+
+        var junctions = new List<MenuItemIngredient>
+        {
+            // Margherita Pizza: Mozzarella, Tomato Sauce, Basil
+            new() { MenuItemId = menuItemIds[0], IngredientId = ingredientIds[0] },
+            new() { MenuItemId = menuItemIds[0], IngredientId = ingredientIds[1] },
+            new() { MenuItemId = menuItemIds[0], IngredientId = ingredientIds[4] },
+            // Spaghetti Carbonara: Mozzarella
+            new() { MenuItemId = menuItemIds[1], IngredientId = ingredientIds[0] },
+            // Salmon Sashimi: Fresh Salmon, Soy Sauce
+            new() { MenuItemId = menuItemIds[2], IngredientId = ingredientIds[2] },
+            new() { MenuItemId = menuItemIds[2], IngredientId = ingredientIds[3] },
+            // Miso Ramen: Soy Sauce
+            new() { MenuItemId = menuItemIds[3], IngredientId = ingredientIds[3] },
+        };
+
+        await collection.InsertManyAsync(junctions);
     }
 
     private static async Task SeedGiftsAsync(IMongoDatabase database)

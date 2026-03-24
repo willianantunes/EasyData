@@ -75,7 +75,7 @@ These paths are served without authentication: `/css/*`, `/js/*`, `/login/`, `/l
 | User collections | Full CRUD | Full CRUD |
 | Auth collections | Full CRUD | Full CRUD |
 | FK relationships | Lookup popups | Plain ObjectId text (no lookups) |
-| Nested collections | Not applicable | Shown as read-only JSON string (e.g., `IngredientIds`) |
+| M2M junction | Composite PK (`MenuItemId,IngredientId`) | Standard ObjectId PK (single key) |
 | Auto-timestamps | `HasDefaultValueSql()` / `ValueGeneratedOnAdd()` | Convention-based (`CreatedAt`, `UpdatedAt` names) |
 | Date/time types | Gift has DateOnly, TimeOnly, TimeSpan | Gift does NOT have DateOnly, TimeOnly, TimeSpan |
 | Auth entity defaults | `IsActive`/`IsSuperuser` have DB defaults (readonly) | All non-PK auth fields are editable on forms (no DB defaults) |
@@ -91,8 +91,9 @@ The admin home at `/admin/` shows models organized by `EntityGroups`, plus an au
 | Category | `/admin/Category/` | Name, Description | Id (PK), CreatedAt, UpdatedAt | `SearchFields`: Name, Description |
 | Restaurant | `/admin/Restaurant/` | Name, Address, Phone | Id (PK), CreatedAt, UpdatedAt | `SearchFields`: Name |
 | RestaurantProfile | `/admin/RestaurantProfile/` | RestaurantId (ObjectId text), Website, OpeningHours, Capacity | Id (PK), CreatedAt, UpdatedAt | None |
-| MenuItem | `/admin/MenuItem/` | RestaurantId (ObjectId text), Name, Description, Price, IsAvailable | Id (PK), CreatedAt, UpdatedAt; IngredientIds (read-only JSON) | None |
+| MenuItem | `/admin/MenuItem/` | RestaurantId (ObjectId text), Name, Description, Price, IsAvailable | Id (PK), CreatedAt, UpdatedAt | None |
 | Ingredient | `/admin/Ingredient/` | Name, IsAllergen | Id (PK), CreatedAt, UpdatedAt | None |
+| MenuItemIngredient | `/admin/MenuItemIngredient/` | MenuItemId (ObjectId text), IngredientId (ObjectId text) | Id (PK), CreatedAt, UpdatedAt | None |
 
 ### Shop Group
 
@@ -121,11 +122,12 @@ The `DataSeeder` populates user collections on first startup:
 | restaurantProfiles | 2 | One per restaurant |
 | ingredients | 5 | Mozzarella, Tomato Sauce, Fresh Salmon, Soy Sauce, Basil |
 | menuItems | 4 | Margherita Pizza, Spaghetti Carbonara, Salmon Sashimi, Miso Ramen |
+| menuItemIngredients | 4 | Links: Margherita→Mozzarella, Margherita→Tomato Sauce, Margherita→Basil, Salmon Sashimi→Fresh Salmon |
 | gifts | 2 | Gourmet Chocolate Box, Ceramic Tea Set |
 
 Auth collections are auto-populated by the bootstrap service:
 - 1 admin superuser (`admin`/`admin`)
-- Permissions: 4 per entity (add/change/delete/view) × 11 entities = 44 permissions
+- Permissions: 4 per entity (add/change/delete/view) × 12 entities = 48 permissions
 
 ## URL Patterns
 
@@ -185,12 +187,12 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 6. **Dashboard home** — `/admin/` loads after login. Verify:
    - Page title contains "Sample Admin (MongoDB)"
    - Three entity group sections visible: "Restaurant", "Shop", and "Authentication and Authorization"
-7. **Restaurant group** — Verify 5 entities listed: Categories, Restaurants, Restaurant Profiles, Menu Items, Ingredients
+7. **Restaurant group** — Verify 6 entities listed: Categories, Restaurants, Restaurant Profiles, Menu Items, Ingredients, Menu Item Ingredients
 8. **Shop group** — Verify 1 entity listed: Gifts
 9. **Auth group** — Verify 5 auth entities listed: Mongo Auth Users, Mongo Auth Groups, Mongo Auth Permissions, Mongo Auth Group Permissions, Mongo Auth User Groups
 10. **Sidebar** — Navigate to any entity list. Verify the left sidebar has:
     - A "Filter models..." text input
-    - "Restaurant" heading with 5 entity links
+    - "Restaurant" heading with 6 entity links (including Menu Item Ingredients)
     - "Shop" heading with 1 entity link
     - "Authentication and Authorization" heading with 5 auth entity links
 11. **Sidebar filter** — Type "cat" in the filter input. Verify only "Categories" remains visible
@@ -238,17 +240,16 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 27. **RestaurantProfile create** — Navigate to `/admin/RestaurantProfile/add/`. Verify `RestaurantId` renders as a plain text input (not a lookup popup — MongoDB has no FK lookups). Copy an existing Restaurant's ObjectId from the Restaurant list, paste into the RestaurantId field. Fill Website = "https://test.com", OpeningHours = "9-5", Capacity = 50. Click "Save". Verify redirect to list, count: "3 restaurant profiles".
 28. **RestaurantProfile edit** — Click the new profile row. Verify RestaurantId shows the ObjectId hex string. Change Capacity to 75. Click "Save". Verify change persisted.
 
-#### MenuItem CRUD (ObjectId reference + decimal + boolean + read-only collection field)
+#### MenuItem CRUD (ObjectId reference + decimal + boolean)
 
 29. **MenuItem create** — Navigate to `/admin/MenuItem/add/`. Verify:
     - `RestaurantId` is a plain text input
-    - `IngredientIds` is NOT shown on the create form (collection type, hidden from create)
     - `Price` is a number input
     - `IsAvailable` is a checkbox
+    - No `IngredientIds` field (removed — M2M is now via junction collection)
 30. **MenuItem create submit** — Paste a Restaurant ObjectId into RestaurantId. Fill Name = "Pad Thai", Description = "Classic noodles", Price = 12.99. Leave IsAvailable checked. Click "Save". Verify redirect to list, "Pad Thai" appears. Count: "5 menu items".
 31. **MenuItem edit** — Click "Pad Thai" row. Verify:
     - All fields pre-filled correctly
-    - `IngredientIds` shown as read-only JSON on the edit form (e.g., `[]`)
     - `Price` shows 12.99
     - `IsAvailable` checkbox is checked
 32. **MenuItem update** — Change Price to 14.50, uncheck IsAvailable. Click "Save". Verify changes persisted.
@@ -278,7 +279,94 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 
 #### Cleanup
 
-36. **Delete test records** — Delete "Test Bistro" restaurant (and its profile), "Pad Thai" menu item, "Test Gift", and "Temp Category" (if still exists). Verify counts return to seeded values: Categories 3, Restaurants 2, RestaurantProfiles 2, Ingredients 5, MenuItems 4, Gifts 2.
+36. **Delete test records** — Delete "Test Bistro" restaurant (and its profile), "Pad Thai" menu item, "Test Gift", and "Temp Category" (if still exists). Verify counts return to seeded values: Categories 3, Restaurants 2, RestaurantProfiles 2, Ingredients 5, MenuItems 4, MenuItemIngredients 4, Gifts 2.
+
+### Phase 3a: Many-to-Many (M2M) Relationships via Junction Collection
+
+The `MenuItemIngredient` collection is a junction/through document that links `MenuItem` and `Ingredient` in a many-to-many relationship. Unlike the EF Core sample (which uses a composite primary key), the MongoDB junction document uses a standard `ObjectId` as its primary key (inherited from `StandardDocument`), with `MenuItemId` and `IngredientId` as plain `ObjectId` fields. No FK lookup popups — ObjectId references are plain text inputs (consistent with all MongoDB FK-like fields).
+
+**Key differences from EF Core M2M:**
+- Single `ObjectId` PK — no composite key encoding in URLs
+- `MenuItemId` and `IngredientId` are plain text inputs for ObjectId hex strings (no lookup popup icons)
+- `CreatedAt` and `UpdatedAt` auto-timestamp fields are present (inherited from `StandardDocument`)
+- No cascade delete — deleting a parent does NOT auto-delete junction documents (MongoDB has no FK constraints)
+
+**Prerequisites:** At least one `MenuItem` and one `Ingredient` must exist. The seeder creates 4 menu items and 5 ingredients with 4 junction records linking them.
+
+#### Junction Collection in Dashboard
+
+36a. **MenuItemIngredient appears in dashboard** — Navigate to `/admin/`. Verify `MenuItemIngredient` (or "Menu Item Ingredients") appears in the "Restaurant" group alongside other models.
+
+36b. **MenuItemIngredient appears in sidebar** — Navigate to any entity list page. Verify `MenuItemIngredient` appears in the left sidebar under the "Restaurant" heading.
+
+#### Junction Collection List View
+
+36c. **List view shows seeded junction records** — Navigate to `/admin/MenuItemIngredient/`. Verify:
+  - The list shows 4 seeded records (from `DataSeeder`)
+  - Columns include `MenuItemId` and `IngredientId` showing ObjectId hex strings
+  - Each row links to an edit page via standard ObjectId URL: `/admin/MenuItemIngredient/{objectId}/change/`
+  - Record count shows "4 menu item ingredients"
+
+#### Junction Collection Add Form
+
+36d. **Add form renders ObjectId text fields** — Navigate to `/admin/MenuItemIngredient/add/`. Verify:
+  - Two editable text input fields: `MenuItemId` and `IngredientId`
+  - Both are plain text inputs (NOT lookup popups — MongoDB has no FK lookups)
+  - `Id`, `CreatedAt`, `UpdatedAt` are NOT shown on the create form (auto-generated)
+  - Three save buttons are present: "Save", "Save and add another", "Save and continue editing"
+
+36e. **Create junction record** — On `/admin/MenuItemIngredient/add/`:
+  1. Copy a MenuItem's ObjectId from `/admin/MenuItem/` list
+  2. Copy an Ingredient's ObjectId from `/admin/Ingredient/` list
+  3. Paste both ObjectIds into the respective fields
+  4. Click "Save"
+  5. Verify redirect to `/admin/MenuItemIngredient/` list
+  6. Verify the new record appears, count now "5 menu item ingredients"
+
+36f. **Create junction record via Save and continue editing** — On `/admin/MenuItemIngredient/add/`:
+  1. Enter different valid MenuItem and Ingredient ObjectIds
+  2. Click "Save and continue editing"
+  3. Verify redirect to `/admin/MenuItemIngredient/{objectId}/change/` (standard ObjectId URL, NOT composite key)
+  4. Verify the edit form shows the correct values
+
+#### Junction Collection Edit Form
+
+36g. **Edit form shows ObjectId values** — Navigate to the edit form of a junction record. Verify:
+  - `MenuItemId` and `IngredientId` fields show the ObjectId hex strings
+  - Both fields are editable text inputs (unlike EF Core where they are read-only PK components)
+  - `Id`, `CreatedAt`, `UpdatedAt` are shown as read-only text
+  - `CreatedAt` and `UpdatedAt` have valid date/time values
+  - A "Delete" link is present
+
+36h. **Update junction record** — Change the `IngredientId` to a different Ingredient's ObjectId. Click "Save". Verify the change persisted (navigate to edit form again to confirm).
+
+#### Junction Collection Delete
+
+36i. **Delete junction record** — From the edit form of a junction record:
+  1. Click the "Delete" link
+  2. Verify the delete confirmation page shows "Are you sure?"
+  3. Click "Yes, I'm sure"
+  4. Verify redirect to `/admin/MenuItemIngredient/` list
+  5. Verify the record is gone
+
+36j. **Delete only removes junction, not parents** — After deleting a junction record:
+  1. Navigate to `/admin/MenuItem/`. Verify the parent MenuItem still exists
+  2. Navigate to `/admin/Ingredient/`. Verify the parent Ingredient still exists
+
+#### Junction Collection Bulk Delete
+
+36k. **Bulk delete junction records** — On `/admin/MenuItemIngredient/`:
+  1. Create 2 temporary junction records (using valid ObjectIds)
+  2. Select both via checkboxes
+  3. Select "Delete selected menu item ingredients" from the action dropdown
+  4. Click "Go"
+  5. Verify redirect to bulk delete confirmation page
+  6. Click "Yes, I'm sure"
+  7. Verify both records are deleted, success message shown
+
+#### Cleanup
+
+36l. **Clean up M2M test data** — Delete any test junction records created during testing. Verify count returns to 4 seeded records.
 
 ### Phase 4: Conditional Search
 
@@ -319,7 +407,7 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 
 ### Phase 7: Auth Entity CRUD
 
-60. **MongoAuthPermission list** — Navigate to `/admin/MongoAuthPermission/`. Verify auto-generated permissions exist (e.g., `add_category`, `view_category`). Should have 44 permissions (4 per entity × 11 entities), paginated at 25 per page.
+60. **MongoAuthPermission list** — Navigate to `/admin/MongoAuthPermission/`. Verify auto-generated permissions exist (e.g., `add_category`, `view_category`). Should have 48 permissions (4 per entity × 12 entities), paginated at 25 per page.
 61. **MongoAuthGroup create** — Navigate to `/admin/MongoAuthGroup/add/`. Fill Name = "viewers". Click Save. Verify redirect to list, "viewers" appears.
 62. **MongoAuthGroupPermission create** — Navigate to `/admin/MongoAuthGroupPermission/add/`. Assign `view_category` permission to the "viewers" group by entering the GroupId and PermissionId. Click Save.
 63. **MongoAuthUser create** — Navigate to `/admin/MongoAuthUser/add/`. Note: unlike EF Core, ALL non-PK fields are editable (no DB defaults). Fill Username = "testuser", Password = "test123". **Check the `IsActive` checkbox** (browsers don't submit unchecked checkboxes, so leaving it unchecked sets `IsActive = false` and the user can't login). Leave IsSuperuser unchecked. Click Save. Verify redirect to list, "testuser" appears with IsActive = True.
@@ -339,8 +427,8 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 ### Phase 9: Pagination
 
 73. **Small collections** — Navigate to `/admin/Ingredient/` (5 items). Verify no pagination controls.
-74. **Pagination on permissions** — Navigate to `/admin/MongoAuthPermission/`. With 44 permissions and 25 per page, verify pagination shows page 1 of 2. Navigate to page 2 and verify remaining 19 permissions.
-75. **Record counts accurate** — Verify counts: Categories: 3, Restaurants: 2, Ingredients: 5, MenuItems: 4, Gifts: 2
+74. **Pagination on permissions** — Navigate to `/admin/MongoAuthPermission/`. With 48 permissions and 25 per page, verify pagination shows page 1 of 2. Navigate to page 2 and verify remaining 23 permissions.
+75. **Record counts accurate** — Verify counts: Categories: 3, Restaurants: 2, Ingredients: 5, MenuItems: 4, MenuItemIngredients: 4, Gifts: 2
 
 ### Phase 10: Breadcrumbs and Navigation
 
@@ -356,7 +444,7 @@ All sample models inherit from `StandardDocument` which has `CreatedAt` and `Upd
 ## What's NOT Tested (Current Limitations)
 
 - **FK lookup popups** — ObjectId references show as plain text, no popup navigation
-- **Nested document editing** — collection/complex type fields (e.g., `IngredientIds`) are read-only JSON, not editable
 - **SAML SSO** — not configured in the MongoDB sample project
+- **Cascade delete on junction records** — MongoDB has no FK constraints, so deleting a parent (MenuItem/Ingredient) does NOT auto-delete junction records (unlike EF Core)
 - **Custom bulk actions** — no sample entity defines `AdminActionList<ObjectId>` with custom actions
 - **Per-collection read-only mode** — `readOnly: true` on `AddCollection<T>` is not demonstrated in the sample project (all user collections are editable)

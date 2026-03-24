@@ -52,7 +52,13 @@ public class MenuItem : StandardDocument
     public string Description { get; set; } = "";
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; } = true;
-    public List<ObjectId> IngredientIds { get; set; } = new();
+}
+
+[BsonIgnoreExtraElements]
+public class MenuItemIngredient : StandardDocument
+{
+    public ObjectId MenuItemId { get; set; }
+    public ObjectId IngredientId { get; set; }
 }
 
 [BsonIgnoreExtraElements]

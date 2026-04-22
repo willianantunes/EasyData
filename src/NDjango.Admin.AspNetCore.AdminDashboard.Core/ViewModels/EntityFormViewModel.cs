@@ -14,6 +14,18 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.ViewModels
         public bool IsReadOnly { get; set; }
         public List<FieldViewModel> Fields { get; set; } = new List<FieldViewModel>();
         public Dictionary<string, List<EntityGroupItem>> SidebarGroups { get; set; }
+
+        /// <summary>
+        /// Per-field validation errors, keyed by <see cref="FieldViewModel.PropName"/>.
+        /// When populated, the form is re-rendered with inline error lists.
+        /// </summary>
+        public Dictionary<string, string> Errors { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Raw submitted values from the failed POST, keyed by prop name.
+        /// Used to preserve user input on validation failure (Django's bound-form behavior).
+        /// </summary>
+        public Dictionary<string, object> SubmittedValues { get; set; } = new Dictionary<string, object>();
     }
 
     public class FieldViewModel
@@ -30,5 +42,17 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.ViewModels
         public Type ClrType { get; set; }
         public string DisplayFormat { get; set; }
         public string LookupEntityId { get; set; }
+
+        public int? MaxLength { get; set; }
+        public int? MinLength { get; set; }
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public DateTime? MinDateTime { get; set; }
+        public DateTime? MaxDateTime { get; set; }
+        public string RegexPattern { get; set; }
+        public string RegexErrorMessage { get; set; }
+        public int? Precision { get; set; }
+        public int? Scale { get; set; }
+        public InputTypeHint InputType { get; set; } = InputTypeHint.Auto;
     }
 }

@@ -26,6 +26,12 @@
             It usually correspond to a navigation property in a model class.
             </summary>
         </member>
+        <member name="T:NDjango.Admin.InputTypeHint">
+            <summary>
+            Hint for the HTML input type used when rendering a field.
+            Maps to HTML5 typed inputs (Django's EmailInput/URLInput/TelInput/ColorInput).
+            </summary>
+        </member>
         <member name="T:NDjango.Admin.MetaEntityAttr">
             <summary>
             Represents one entity attribute of data model.
@@ -226,6 +232,39 @@
             Gets or sets the size of data represented by attribute.
             </summary>
             <value></value>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MaxLength">
+            <summary>Maximum string length (from EF Core or [MaxLength]/[StringLength]).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MinLength">
+            <summary>Minimum string length. Set only when &gt; 0 to avoid redundant `minlength=0` emission.</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MinValue">
+            <summary>Minimum numeric value (from [Range] on numeric types).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MaxValue">
+            <summary>Maximum numeric value (from [Range] on numeric types).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MinDateTime">
+            <summary>Minimum DateTime value (from [Range(typeof(DateTime), ...)]).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.MaxDateTime">
+            <summary>Maximum DateTime value (from [Range(typeof(DateTime), ...)]).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.RegexPattern">
+            <summary>Regex pattern for string validation (from [RegularExpression]).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.RegexErrorMessage">
+            <summary>Error message to surface when regex validation fails.</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.Precision">
+            <summary>Total digits for decimal values (from EF Core HasPrecision).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.Scale">
+            <summary>Fractional digits for decimal values (from EF Core HasPrecision).</summary>
+        </member>
+        <member name="P:NDjango.Admin.MetaEntityAttr.InputType">
+            <summary>Hint for which HTML input type to emit.</summary>
         </member>
         <member name="P:NDjango.Admin.MetaEntityAttr.Expr">
             <summary>
@@ -603,6 +642,25 @@
             <param name="encoded">The encoded composite key string from the URL.</param>
             <param name="pkPropNames">The ordered list of PK property names.</param>
             <returns>A dictionary mapping each PK property name to its decoded value.</returns>
+        </member>
+        <member name="M:NDjango.Admin.DataUtils.ApplyValidationAttributes(NDjango.Admin.MetaEntityAttr,System.Reflection.PropertyInfo)">
+            <summary>
+            Scrapes validation-related DataAnnotations from a property and populates the matching
+            fields on <paramref name="attr"/>. Shared by the EF Core and Mongo metadata loaders.
+            </summary>
+            <remarks>
+            Rules mirror Django's field/widget mapping:
+            <list type="bullet">
+            <item>[Required] is a no-op (handled by IsNullable upstream).</item>
+            <item>[MaxLength]/[StringLength] populate MaxLength (smaller wins when both present
+            or an EF-derived MaxLength was set earlier).</item>
+            <item>[MinLength]/[StringLength] populate MinLength only when the value is greater than 0.</item>
+            <item>[Range] populates numeric MinValue/MaxValue, or MinDateTime/MaxDateTime when the
+            operand type is DateTime.</item>
+            <item>[RegularExpression] populates RegexPattern and RegexErrorMessage.</item>
+            <item>[EmailAddress]/[Url]/[Phone] set the InputType hint (no regex generation).</item>
+            </list>
+            </remarks>
         </member>
         <member name="M:NDjango.Admin.DataUtils.ReplaceChar(System.String,System.Char,System.Int32)">
             <summary>

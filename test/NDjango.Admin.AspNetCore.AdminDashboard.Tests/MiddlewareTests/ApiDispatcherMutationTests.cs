@@ -298,9 +298,9 @@ namespace NDjango.Admin.AspNetCore.AdminDashboard.Tests.MiddlewareTests
             var decodedLocation = Uri.UnescapeDataString(location).Replace(" ", "+").ToLower();
             Assert.Contains("deleted+1+ingredient.", decodedLocation);
 
-            // Verify record is actually gone (fetching a deleted record throws)
-            await Assert.ThrowsAnyAsync<Exception>(
-                () => _client.GetAsync($"/admin/Ingredient/{id}/change/"));
+            // Verify record is actually gone (fetching a deleted record returns 404)
+            var fetchResponse = await _client.GetAsync($"/admin/Ingredient/{id}/change/");
+            Assert.Equal(HttpStatusCode.NotFound, fetchResponse.StatusCode);
         }
 
         [Fact]

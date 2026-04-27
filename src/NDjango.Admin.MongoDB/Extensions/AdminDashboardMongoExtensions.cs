@@ -44,7 +44,7 @@ namespace NDjango.Admin.MongoDB
 
             if (dashboardOptions.RequireAuthentication) {
                 _pendingMongoOptionsBuilder = mongoOptionsBuilder;
-                services.AddDataProtection();
+                DataProtectionConfigurator.ConfigureDataProtection(services);
 
                 services.AddScoped<IAdminAuthQueries>(sp => {
                     var database = sp.GetRequiredService<IMongoDatabase>();

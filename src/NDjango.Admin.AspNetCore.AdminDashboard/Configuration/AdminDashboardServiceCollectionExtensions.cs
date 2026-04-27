@@ -1,7 +1,6 @@
 using System;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -54,7 +53,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static void RegisterAuthServices<TDbContext>(IServiceCollection services)
             where TDbContext : DbContext
         {
-            services.AddDataProtection();
+            DataProtectionConfigurator.ConfigureDataProtection(services);
 
             services.AddDbContext<AuthDbContext>((sp, options) => {
                 var userDbContext = sp.GetRequiredService<TDbContext>();

@@ -217,6 +217,41 @@ services.AddNDjangoAdminDashboard<AppDbContext>(new AdminDashboardOptions
 app.UseNDjangoAdminDashboard("/admin");
 ```
 
+#### `NDJANGO_SECRET_KEY` (required)
+
+The auth cookie is encrypted and signed with AES-GCM keys derived from the `NDJANGO_SECRET_KEY` environment variable. The variable is **required** — startup fails fast with `InvalidOperationException` if it's missing or shorter than 32 characters.
+
+Generate a secret:
+
+```bash
+openssl rand -base64 48
+```
+
+Provide it to every replica. In Kubernetes use a `Secret` (never a `ConfigMap`):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ndjango-admin-secret
+stringData:
+  NDJANGO_SECRET_KEY: "<output from openssl>"
+---
+# In the Deployment spec.template.spec.containers[*].env:
+env:
+  - name: NDJANGO_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: ndjango-admin-secret
+        key: NDJANGO_SECRET_KEY
+```
+
+Why it matters:
+- **Multi-pod / multi-replica deployments**: every replica derives the same keys from the same secret, so a cookie issued by Pod A is accepted by Pod B. Without a shared secret each replica generates ephemeral keys and users hit a redirect-to-login loop whenever the load balancer routes them to a different pod.
+- **Pod restarts**: cookies issued before a restart remain valid afterwards.
+- **Forge resistance**: anyone with the secret can forge any user's cookie (including a superuser's). Treat it as a production credential — Kubernetes Secret, never committed to Git, rotate on suspected leak.
+- **Rotation**: changing the secret invalidates every existing cookie (all users re-login). This is intentional; for zero-downtime rotation, use one of the alternative key persistence stores (shared volume, AWS SSM, Mongo-backed `IXmlRepository`) configured directly on `services.AddDataProtection()`.
+
 When `RequireAuthentication` is enabled:
 - All dashboard pages require login (unauthenticated requests redirect to `/admin/login/`)
 - A default superuser `admin` is created on first startup (when `CreateDefaultAdminUser = true`)
